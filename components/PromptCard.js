@@ -10,7 +10,8 @@ import { useSession } from 'next-auth/react';
 const checkIsLiked = (likedBy, userId) => {
   if (!likedBy || !userId) return false;
   // 确保比较的是字符串或 ObjectId，取决于后端返回的 likedBy 数组中存储的类型
-  return likedBy.includes(userId);
+  // 将 userId 转换为字符串进行比较，以防类型不匹配
+  return likedBy.map(id => id.toString()).includes(userId.toString());
 };
 
 // 辅助函数，用于根据行数和字符数截断文本
@@ -41,13 +42,13 @@ const truncateText = (text, maxLines, maxChars) => {
   return truncatedText + (needsEllipsis ? '...' : '');
 };
 
-export default function PromptCard({ prompt, currentUserId, isAdmin }) {
+export default function PromptCard({ prompt }) {
   if (!prompt) return null; // 添加一个保护，防止 prompt 未定义
 
   const [copied, setCopied] = useState(false); // 状态追踪复制操作
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession(); // 在组件内部获取 session
   const userId = session?.user?.id; // 获取当前登录用户的 ID
   
   // 在客户端渲染后设置 isClient 为 true
@@ -55,18 +56,23 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
     setIsClient(true);
   }, []);
   
-  const isAuthor = currentUserId && prompt.author?._id === currentUserId;
+  // 使用组件内部获取的 userId 判断是否为作者
+  const isAuthor = userId && prompt.author?._id === userId;
+  // 使用组件内部获取的 session 判断是否为管理员
+  const isCurrentUserAdmin = session?.user?.role === 'admin';
 
   // 使用状态来管理点赞数和当前用户是否已点赞
   const [likesCount, setLikesCount] = useState(prompt.likesCount || 0);
+  // 使用组件内部获取的 userId 检查是否已点赞
   const [isLiked, setIsLiked] = useState(checkIsLiked(prompt.likedBy, userId));
   const [isLoading, setIsLoading] = useState(false); // 用于防止重复点击
 
   // 当 prompt 或 session 变化时，更新 isLiked 状态
   useEffect(() => {
+    // 使用组件内部获取的 userId 更新 isLiked 状态
     setIsLiked(checkIsLiked(prompt.likedBy, userId));
     setLikesCount(prompt.likesCount || 0); // 确保在 prompt 数据更新时同步点赞数
-  }, [prompt, userId]);
+  }, [prompt, userId]); // 依赖项包括 userId
   
   // 截断 Prompt 内容到前 5 行或 200 个字符
   const truncatedContent = truncateText(prompt.content, 5, 200);
@@ -113,73 +119,92 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
 
   const formattedDate = prompt.createdAt ? formatDate(prompt.createdAt) : '未知时间';
 
-  const handleDelete = async () => {
+  // 重新定义 canManagePrompts，使用组件内部的 isAuthor 和 isCurrentUserAdmin
+  const canManagePrompts = isAuthor || isCurrentUserAdmin;
+
+  // 处理删除 Prompt
+  const handleDeletePrompt = async () => {
+    // 权限检查：只有作者或管理员才能删除
+    if (!canManagePrompts) {
+        alert('您没有权限删除此 Prompt。');
+        return;
+    }
+
     if (confirmDelete) {
       try {
-        const response = await fetch(`/api/prompts/${prompt._id}`, {
+        const res = await fetch(`/api/prompts/${prompt._id}`, {
           method: 'DELETE',
         });
-        
-        if (response.ok) {
-          // 可以使用一个回调通知父组件进行刷新
-          window.location.reload(); // 临时解决方案，实际应使用状态管理
-        } else {
-          console.error('删除失败');
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || `删除失败: ${res.status}`);
         }
-      } catch (error) {
-        console.error('删除出错:', error);
+        // 删除成功后，可能需要通知父组件刷新列表
+        // 这里简单地移除确认状态
+        setConfirmDelete(false);
+        // 如果 PromptCard 在列表中，父组件需要处理从状态中移除该 Prompt
+        // 例如，通过传递一个 onDelete 回调函数
+        // onDelete(prompt._id);
+        console.log(`Prompt ${prompt._id} 已成功删除。`);
+        // 考虑在删除成功后给用户一个反馈，或者自动刷新列表
+        // alert('Prompt 已成功删除！'); // 简单的提示
+        // router.reload(); // 强制刷新页面 (不推荐)
+        // 更好的做法是父组件监听删除事件并更新状态
+      } catch (err) {
+        console.error("删除 Prompt 失败:", err);
+        alert(`删除 Prompt 失败: ${err.message}`);
+        setConfirmDelete(false); // 删除失败也重置确认状态
       }
     } else {
-      setConfirmDelete(true);
-      // 5秒后重置确认状态
-      setTimeout(() => setConfirmDelete(false), 5000);
+      setConfirmDelete(true); // 第一次点击显示确认
     }
   };
 
+  // 处理点赞/取消点赞
   const handleLike = async () => {
-    // 如果用户未登录，提示登录
-    if (!session) {
-      alert('请先登录才能点赞！'); // 或者使用更友好的方式提示
+    // 只有登录用户才能点赞
+    if (status !== 'authenticated') {
+      alert('请登录后点赞。');
       return;
     }
-
-    // 防止重复点击
-    if (isLoading) return;
+    if (isLoading) return; // 防止重复点击
 
     setIsLoading(true);
+    const method = isLiked ? 'DELETE' : 'POST'; // 如果已点赞，则取消点赞 (DELETE); 否则点赞 (POST)
+    const endpoint = `/api/prompts/${prompt._id}/like`;
 
     try {
-      const response = await fetch(`/api/prompts/${prompt._id}/like`, {
-        method: 'POST',
+      const res = await fetch(endpoint, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
+        // 对于 POST 请求，可能需要发送用户 ID，但后端通常可以从 session 中获取
+        // body: method === 'POST' ? JSON.stringify({ userId }) : null,
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        // 根据 API 返回的数据更新状态
-        setLikesCount(data.data.likesCount);
-        setIsLiked(data.data.likedByCurrentUser);
-        console.log(data.message);
-      } else {
-        console.error('点赞/取消点赞失败:', data.message);
-        alert(`操作失败: ${data.message}`); // 显示错误信息
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `点赞操作失败: ${res.status}`);
       }
-    } catch (error) {
-      console.error('调用点赞 API 发生错误:', error);
-      alert('操作过程中发生错误，请稍后再试');
+
+      const data = await res.json();
+      if (data.success) {
+        // 更新本地状态
+        setIsLiked(!isLiked);
+        setLikesCount(data.likesCount); // 使用后端返回的最新点赞数
+        console.log(`Prompt ${prompt._id} 点赞状态更新成功。`);
+      } else {
+         throw new Error(data.error || '点赞操作失败');
+      }
+
+    } catch (err) {
+      console.error("点赞操作失败:", err);
+      alert(`点赞操作失败: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || [];
-  const isUserAdmin = adminEmails.includes(session?.user?.email);
-
-  const canEditOrDelete = isAdmin || isUserAdmin ||
-                         (session?.user?.email === prompt.author?.email);
 
   return (
     <div className={styles.card}>
@@ -234,7 +259,7 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
         </Link>
         
         <div className={styles.promptContent}>
-          <SafeMarkdown content={truncatedContent} />
+          {isClient ? <SafeMarkdown content={truncatedContent} /> : <p>{truncatedContent}</p>}
         </div>
         
         {/* 标签和价格 */}
@@ -257,14 +282,14 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
             <div className={styles.statItem}>
               <button
                 onClick={handleLike}
-                disabled={isLoading} // 点赞过程中禁用按钮
-                className={styles.likeButton}
-                aria-label={isLiked ? '取消点赞' : '点赞'} // 辅助功能标签
+                disabled={status === 'loading' || isLoading}
+                className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`}
+                aria-label={isLiked ? '取消点赞' : '点赞'}
               >
                 {isLiked ? (
-                  <MdFavorite className={styles.likedIcon} /> // 已点赞的心形图标
+                  <MdFavorite className={styles.likedIcon} />
                 ) : (
-                  <MdFavoriteBorder className={styles.likeIcon} /> // 未点赞的心形图标
+                  <MdFavoriteBorder className={styles.likeIcon} />
                 )}
                 <span className={styles.likesCount}>{likesCount}</span>
               </button>
@@ -282,7 +307,7 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
         </div>
       </div>
       
-      {canEditOrDelete && (
+      {canManagePrompts && (
         <div className={styles.actions}>
           <Link href={`/edit-prompt/${prompt._id}`} className={styles.editButton}>
             <MdEdit size={18} />
@@ -290,7 +315,7 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
           </Link>
           
           <button 
-            onClick={handleDelete} 
+            onClick={handleDeletePrompt} 
             className={`${styles.deleteButton} ${confirmDelete ? styles.confirm : ''}`}
           >
             <MdDelete size={18} />
