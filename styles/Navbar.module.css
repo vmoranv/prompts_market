@@ -1,0 +1,313 @@
+.navbar {
+  width: 100%;
+  padding: 1rem 2rem;
+  background-color: var(--md-surface-container-low);
+  color: var(--md-on-surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-elevation-small);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navLink {
+  color: var(--md-on-surface);
+  text-decoration: none;
+  margin-right: 1.5rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--md-primary);
+}
+
+.loginButton {
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  padding: 0.5rem 1.25rem;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-elevation-extra-small);
+}
+
+.loginButton:hover {
+  background-color: var(--md-primary-hover);
+  box-shadow: var(--shadow-elevation-small);
+}
+
+.loggedInContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* 用户中心链接样式 */
+.dashboardLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--md-on-surface);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dashboardLink:hover {
+  background-color: var(--md-surface-container-highest);
+  color: var(--md-on-surface);
+}
+
+.dashboardIcon {
+  font-size: 1.5rem;
+}
+
+.dashboardText {
+  font-weight: 500;
+}
+
+
+/* 响应式调整 */
+@media (max-width: 600px) {
+  .navbar {
+    padding: 1rem;
+  }
+
+  .navLink {
+    margin-right: 1rem;
+  }
+
+  .loginButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .dashboardLink {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .dashboardText {
+    display: none; /* 在小屏幕上隐藏文字，只显示图标 */
+  }
+}
+
+.navContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px; /* 或者您设定的最大宽度 */
+  width: 100%;
+  margin: 0 auto;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--md-on-surface);
+  text-decoration: none;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem; /* 链接之间的间距 */
+}
+
+.navLink::after { /* 可选的下划线效果 */
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: var(--md-primary);
+  transition: width 0.3s ease;
+}
+
+.navLink:hover::after {
+  width: 100%;
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.signInButton {
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  padding: 0.6rem 1.25rem;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.signInButton:hover {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  box-shadow: var(--shadow-elevation-small);
+}
+
+
+/* 用户头像和下拉菜单 */
+.userMenuContainer {
+  position: relative;
+}
+
+.userAvatarButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.userAvatarButton:focus {
+  outline: 2px solid var(--md-primary); /* 焦点样式 */
+  outline-offset: 2px;
+}
+
+.userAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--md-surface-variant);
+  transition: border-color 0.2s ease;
+}
+
+.userAvatarButton:hover .userAvatar {
+  border-color: var(--md-primary);
+}
+
+.userAvatarIcon {
+  font-size: 2.25rem; /* 36px */
+  color: var(--md-on-surface-variant);
+  transition: color 0.2s ease;
+}
+
+.userAvatarButton:hover .userAvatarIcon {
+  color: var(--md-primary);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 10px); /* 头像下方，带一点间距 */
+  right: 0;
+  background-color: var(--md-surface-container-high); /* Material 3 表面颜色 */
+  border-radius: var(--border-radius-medium); /* 8px */
+  box-shadow: var(--shadow-elevation-medium); /* 对应 Elevation 2 或 3 */
+  z-index: 1001;
+  width: 200px;
+  padding: 0.5rem 0; /* 上下内边距 */
+  border: 1px solid var(--md-outline-variant);
+  animation: fadeInScaleUp 0.2s ease-out;
+}
+
+@keyframes fadeInScaleUp {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdownHeader {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--md-outline-variant);
+  margin-bottom: 0.5rem;
+}
+
+.dropdownUserName {
+  font-weight: 500;
+  color: var(--md-on-surface);
+  font-size: 0.9rem;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdownItem, .dropdownItemButton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: var(--md-on-surface-variant);
+  font-size: 0.9rem;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dropdownItem:hover, .dropdownItemButton:hover {
+  background-color: var(--md-surface-container-highest); /* 悬停背景色 */
+  color: var(--md-primary);
+}
+
+.dropdownIcon {
+  font-size: 1.25rem;
+}
+
+.navLinksLoading { /* 导航栏加载占位符 */
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.loadingPlaceholder {
+  width: 60px;
+  height: 20px;
+  background-color: var(--md-surface-variant);
+  border-radius: 4px;
+  animation: pulseAnimation 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseAnimation {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+  .navContainer {
+    /* 在小屏幕上，可以让 logo 和 actions 分散对齐，navLinks 隐藏或变为汉堡菜单 */
+  }
+  .navLinks {
+    display: none; /* 或者实现汉堡菜单 */
+  }
+  .logo {
+    font-size: 1.3rem;
+  }
+  .userAvatar {
+    width: 32px;
+    height: 32px;
+  }
+  .userAvatarIcon {
+    font-size: 2rem;
+  }
+  .dropdownMenu {
+    /* 可以调整下拉菜单在小屏幕上的位置或宽度 */
+  }
+} 

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from '../styles/PromptCard.module.css';
 import { useState, useEffect } from 'react';
 import { MdContentCopy, MdCheck, MdEdit, MdDelete, MdThumbUp, MdVisibility, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
@@ -9,7 +10,6 @@ import { useSession } from 'next-auth/react';
 const checkIsLiked = (likedBy, userId) => {
   if (!likedBy || !userId) return false;
   // 确保比较的是字符串或 ObjectId，取决于后端返回的 likedBy 数组中存储的类型
-  // 假设 likedBy 存储的是用户 ID 字符串
   return likedBy.includes(userId);
 };
 
@@ -69,7 +69,7 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
   }, [prompt, userId]);
   
   // 截断 Prompt 内容到前 5 行或 200 个字符
-  const truncatedContent = truncateText(prompt.content, 5, 100);
+  const truncatedContent = truncateText(prompt.content, 5, 200);
 
   const handleCopy = () => {
     // 复制完整内容，而不是截断后的内容
@@ -185,17 +185,36 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <div className={styles.authorInfo}>
-          {prompt.author?.image && (
-            <img 
-              src={prompt.author.image} 
-              alt={prompt.author.name || '用户头像'} 
-              className={styles.authorImage}
-            />
+          {prompt.author ? (
+            <Link href={`/dashboard?userId=${prompt.author._id}`} className={styles.authorLink}>
+              <Image
+                src={prompt.author.image || '/default-avatar.png'}
+                alt={prompt.author.name || '作者头像'}
+                width={44}
+                height={44}
+                className={styles.authorImage}
+                onError={(e) => { e.target.onerror = null; e.target.src='/default-avatar.png'; }}
+              />
+              <div className={styles.authorText}>
+                <span className={styles.authorName}>{prompt.author.name || '匿名作者'}</span>
+                <span className={styles.promptDate}>{formattedDate}</span>
+              </div>
+            </Link>
+          ) : (
+            <div className={styles.authorInfo}>
+              <Image
+                src={'/default-avatar.png'}
+                alt={'匿名作者头像'}
+                width={44}
+                height={44}
+                className={styles.authorImage}
+              />
+              <div className={styles.authorText}>
+                <span className={styles.authorName}>匿名作者</span>
+                <span className={styles.promptDate}>{formattedDate}</span>
+              </div>
+            </div>
           )}
-          <div className={styles.authorText}>
-            <h3 className={styles.authorName}>{prompt.author?.name || '匿名用户'}</h3>
-            <p className={styles.promptDate}>{formattedDate}</p>
-          </div>
         </div>
         {isClient && (
           <button
@@ -204,7 +223,7 @@ export default function PromptCard({ prompt, currentUserId, isAdmin }) {
             title="复制内容"
           >
             {copied ? <MdCheck size={18} /> : <MdContentCopy size={18} />}
-            <span>{copied ? '已复制' : '复制'}</span>
+            <span className={styles.copyButtonText}>{copied ? '已复制' : '复制'}</span>
           </button>
         )}
       </div>

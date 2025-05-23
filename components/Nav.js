@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { MdAddCircleOutline } from 'react-icons/md'; // 导入 Material Design 的加号图标
+import { MdAddCircleOutline } from 'react-icons/md';
 import ThemeToggle from './ThemeToggle';
-import styles from '../styles/Nav.module.css'; // 假设您有一个导航栏样式文件
+import styles from '../styles/Nav.module.css';
 
 export default function Nav() {
   const { data: session, status } = useSession();
@@ -29,13 +29,13 @@ export default function Nav() {
                 </Link>
               )}
               
-              {/* 创建新 Prompt 按钮 - 使用图标替代文本 */}
+              {/* 创建新 Prompt 按钮 */}
               <Link href="/create-prompt" className={styles.iconLink} title="创建新 Prompt">
                 <MdAddCircleOutline size={24} />
               </Link>
               
               {/* 用户信息和登出按钮 */}
-              <div className={styles.userInfo}>
+              <Link href="/dashboard" className={styles.userInfo}>
                 {session.user.image && (
                   <img 
                     src={session.user.image} 
@@ -44,7 +44,7 @@ export default function Nav() {
                   />
                 )}
                 <span>{session.user.name || session.user.email}</span>
-              </div>
+              </Link>
               
               <button onClick={() => signOut()} className={styles.signButton}>
                 退出

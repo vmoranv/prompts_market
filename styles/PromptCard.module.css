@@ -31,6 +31,18 @@
   gap: 0.75rem;
 }
 
+.authorLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.authorLink:hover .authorName {
+  color: var(--md-primary);
+}
+
 .authorImage {
   width: 2.75rem;
   height: 2.75rem;

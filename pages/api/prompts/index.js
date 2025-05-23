@@ -2,6 +2,7 @@ import dbConnect from '../../../lib/dbConnect';
 import Prompt from '../../../models/Prompt';
 import User from '../../../models/User'; 
 import { getToken } from 'next-auth/jwt'; 
+import { getSession } from 'next-auth/react'; // 导入 getSession
 
 // 定义与前端一致的字数限制常量
 const MAX_TITLE_LENGTH = 50;
@@ -17,140 +18,85 @@ export default async function handler(req, res) {
   const { method } = req;
   await dbConnect();
 
+  const { page = 1, limit = 12, search, sort, userId } = req.query; // 添加 userId
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(limit, 10);
+
   switch (method) {
     case 'GET':
       try {
-        const page = parseInt(req.query.page) || 1; 
-        const limit = parseInt(req.query.limit) || 10; 
-        const skip = (page - 1) * limit;
-        
-        const query = { status: 'published' }; 
-        
-        if (req.query.search) {
-          const searchRegex = new RegExp(req.query.search, 'i');
+        let query = {};
+
+        // 添加 userId 过滤
+        if (userId) {
+          query.author = userId;
+        }
+
+        // 添加搜索过滤
+        if (search) {
           query.$or = [
-            { title: searchRegex }, 
-            { content: searchRegex }
+            { title: { $regex: search, $options: 'i' } },
+            { content: { $regex: search, $options: 'i' } },
+            { tags: { $regex: search, $options: 'i' } },
           ];
         }
-        
-        if (req.query.title) {
-          query.title = { $regex: req.query.title, $options: 'i' };
-        }
-        
-        if (req.query.content) {
-          query.content = { $regex: req.query.content, $options: 'i' };
-        }
-        
-        if (req.query.tags) {
-          const tags = req.query.tags.split(',').map(tag => tag.trim());
-          query.tags = { $in: tags };
-        }
-        
-        if (req.query.authorId) {
-          query.author = req.query.authorId;
-        }
-        
-        let sortOption = { createdAt: -1 }; 
-        if (req.query.sort) {
-          const sortField = req.query.sort.startsWith('-') ? 
-            req.query.sort.substring(1) : req.query.sort;
-          const sortOrder = req.query.sort.startsWith('-') ? -1 : 1;
-          sortOption = { [sortField]: sortOrder };
-        }
-        
-        const total = await Prompt.countDocuments(query);
-        const totalPages = Math.ceil(total / limit);
-        
-        const prompts = await Prompt.find(query)
-          .populate({
-            path: 'author',
-            select: 'name image email',
-          })
-          .select('+likedBy') 
-          .sort(sortOption)
-          .skip(skip)
-          .limit(limit)
-          .lean(); 
 
-        res.status(200).json({ 
-          success: true, 
+        // 添加排序
+        let sortOption = { createdAt: -1 }; // 默认按创建时间降序
+        if (sort) {
+          // 示例: sort=viewCount 或 sort=-viewCount
+          const sortField = sort.startsWith('-') ?
+            sort.substring(1) : sort;
+          const sortOrder = sort.startsWith('-') ? -1 : 1;
+          // 确保排序字段是 Prompt 模型中存在的字段
+          if (['createdAt', 'likesCount', 'viewCount'].includes(sortField)) {
+             sortOption = { [sortField]: sortOrder };
+          }
+        }
+
+        const totalPrompts = await Prompt.countDocuments(query);
+        const prompts = await Prompt.find(query)
+          .sort(sortOption) // 应用排序
+          .limit(limitNumber)
+          .skip((pageNumber - 1) * limitNumber)
+          .populate('author', 'name image'); // 关联作者信息
+
+        const totalPages = Math.ceil(totalPrompts / limitNumber);
+        const hasMore = pageNumber < totalPages;
+
+        res.status(200).json({
+          success: true,
           data: prompts,
           pagination: {
-            totalPrompts: total,
-            totalPages: Math.ceil(total / limit),
-            currentPage: page,
-            pageSize: limit,
-            hasMore: page * limit < total
-          }
+            totalPrompts,
+            totalPages,
+            currentPage: pageNumber,
+            pageSize: limitNumber,
+            hasMore,
+          },
         });
       } catch (error) {
-        console.error("Error fetching prompts:", error);
-        res.status(400).json({ success: false, message: 'Error fetching prompts' });
+        res.status(400).json({ success: false, error: error.message });
       }
       break;
     case 'POST':
       try {
-        const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-        if (!token || !token.sub) {
-          return res.status(401).json({ success: false, message: '未认证，无法创建 Prompt' });
-        }
-        const userId = token.sub;
-        console.log('[Create Prompt API] Token details:', JSON.stringify(token, null, 2)); 
-        console.log('[Create Prompt API] User ID from token.sub:', userId); 
-
-        const { title, content, tags } = req.body;
-
-        // 后端验证：标题和内容不能为空
-        if (!title || !content) {
-          return res.status(400).json({ success: false, message: '标题和内容不能为空' });
+        const session = await getSession({ req });
+        if (!session) {
+          return res.status(401).json({ success: false, error: '需要登录才能创建 Prompt' });
         }
 
-        // 后端验证：标题字数限制 (使用 Unicode 字符计数)
-        if (countUnicodeCharacters(title) > MAX_TITLE_LENGTH) {
-           return res.status(400).json({ success: false, message: `标题字数不能超过 ${MAX_TITLE_LENGTH} 字` });
-        }
-
-        // 后端验证：内容字数限制 (使用 Unicode 字符计数)
-        if (countUnicodeCharacters(content) > MAX_CONTENT_LENGTH) {
-          return res.status(400).json({ success: false, message: `内容字数不能超过 ${MAX_CONTENT_LENGTH} 字` });
-        }
-
-        // 后端验证：标签格式和字数限制
-        let processedTags = [];
-        if (tags && Array.isArray(tags)) {
-            processedTags = tags
-                .map(tag => typeof tag === 'string' ? tag.trim() : '') // 确保是字符串并去除空白
-                .filter(tag => tag !== ''); // 过滤掉空字符串
-
-            // 验证每个标签的字数 (使用 Unicode 字符计数)
-            for (const tag of processedTags) {
-                if (countUnicodeCharacters(tag) > MAX_TAG_LENGTH) {
-                    return res.status(400).json({ success: false, message: `单个标签字数不能超过 ${MAX_TAG_LENGTH} 字` });
-                }
-            }
-        }
-
-        const newPrompt = new Prompt({
-          title,
-          content,
-          tags: processedTags,
-          author: userId,
-          status: 'pending', 
+        const prompt = await Prompt.create({
+          ...req.body,
+          author: session.user.id, // 将当前登录用户的 ID 关联到 Prompt
         });
-
-        await newPrompt.save();
-        const populatedPrompt = await Prompt.findById(newPrompt._id).populate('author', 'name image').lean();
-
-        res.status(201).json({ success: true, data: populatedPrompt, message: 'Prompt 创建成功，等待审核' });
+        res.status(201).json({ success: true, data: prompt });
       } catch (error) {
-        console.error("Create prompt error:", error);
-        res.status(500).json({ success: false, message: error.message || '创建 Prompt 失败' });
+        res.status(400).json({ success: false, error: error.message });
       }
       break;
     default:
-      res.setHeader('Allow', ['GET', 'POST']);
-      res.status(405).json({ success: false, message: `Method ${method} Not Allowed` });
+      res.status(400).json({ success: false, error: 'Method not allowed' });
       break;
   }
 } 

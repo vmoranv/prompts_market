@@ -53,7 +53,14 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  max-width: 200px;
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.userInfo:hover {
+  opacity: 0.85;
 }
 
 .userAvatar {
