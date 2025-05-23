@@ -87,7 +87,6 @@ export const authOptions = {
     },
     async signIn({ user, account, profile }) {
       // if (account.provider === 'google') {
-      //   // 处理Google登录后的额外操作
       //   console.log('Google用户数据:', profile);
       // }
       return true;

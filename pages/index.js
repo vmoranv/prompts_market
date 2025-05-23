@@ -4,7 +4,7 @@ import PromptsList from '../components/PromptsList';
 import Head from 'next/head';
 import { useTheme } from '../contexts/ThemeContext';
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import { MdLightbulb, MdShare, MdSync, MdSearch, MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
+import { MdLightbulb, MdShare, MdSync, MdSearch, MdKeyboardArrowLeft, MdKeyboardArrowRight, MdTrendingUp, MdFavorite, MdAccessTime, MdVisibility } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 
 export default function Home() {
@@ -13,6 +13,8 @@ export default function Home() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [paginationInfo, setPaginationInfo] = useState({
     totalPages: 1,
     hasMore: false,
@@ -20,9 +22,15 @@ export default function Home() {
   });
   
   // 判断当前用户是否为管理员
-  // 从环境变量获取管理员邮箱列表，并分割成数组
-  const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : [];
+  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(',') : [];
   const isAdmin = session?.user?.email ? adminEmails.includes(session.user.email) : false;
+  
+  // 排序选项配置
+  const sortOptions = [
+    { value: 'createdAt', label: '最新', icon: MdAccessTime },
+    { value: 'likesCount', label: '最受欢迎', icon: MdFavorite },
+    { value: 'viewCount', label: '最多浏览', icon: MdVisibility },
+  ];
   
   // 搜索处理函数
   const handleSearch = (e) => {
@@ -38,6 +46,19 @@ export default function Home() {
     setCurrentPage(1);
   };
   
+  // 处理排序改变
+  const handleSortChange = (newSortBy) => {
+    if (sortBy === newSortBy) {
+      // 如果点击同一个排序字段，切换排序顺序
+      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+    } else {
+      // 如果是新的排序字段，默认使用降序
+      setSortBy(newSortBy);
+      setSortOrder('desc');
+    }
+    setCurrentPage(1); // 排序改变时重置到第一页
+  };
+  
   // 分页处理函数
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= (paginationInfo.totalPages || 1)) {
@@ -51,6 +72,12 @@ export default function Home() {
     if (newPagination.currentPage !== currentPage) {
         setCurrentPage(newPagination.currentPage);
     }
+  };
+  
+  // 构建排序字符串用于API调用
+  const getSortString = () => {
+    const prefix = sortOrder === 'desc' ? '-' : '';
+    return `${prefix}${sortBy}`;
   };
   
   return (
@@ -87,40 +114,65 @@ export default function Home() {
       </div>
 
       <main className={styles.mainContent}>
-        {/* 搜索栏 */}
-        <div className={styles.searchContainer}>
-          <form onSubmit={handleSearch} className={styles.searchForm}>
-            <div className={styles.searchInputWrapper}>
-              <MdSearch className={styles.searchIcon} />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="搜索提示词..."
-                className={styles.searchInput}
-              />
+        {/* 搜索和排序区域 */}
+        <div className={styles.searchAndSortContainer}>
+          {/* 搜索栏 */}
+          <div className={styles.searchContainer}>
+            <form onSubmit={handleSearch} className={styles.searchForm}>
+              <div className={styles.searchInputWrapper}>
+                <MdSearch className={styles.searchIcon} />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="搜索提示词..."
+                  className={styles.searchInput}
+                />
+              </div>
+              {search && (
+                <button type="button" onClick={clearSearch} className={styles.clearButton}>
+                  清除
+                </button>
+              )}
+            </form>
+          </div>
+          
+          {/* 排序按钮组 */}
+          <div className={styles.sortContainer}>
+            <div className={styles.sortButtonGroup}>
+              {sortOptions.map((option) => {
+                const IconComponent = option.icon;
+                const isActive = sortBy === option.value;
+                const isDescending = sortOrder === 'desc';
+                
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => handleSortChange(option.value)}
+                    className={`${styles.sortButton} ${isActive ? styles.sortButtonActive : ''}`}
+                    title={`按${option.label}${isActive ? (isDescending ? '降序' : '升序') : '排序'}`}
+                  >
+                    <IconComponent className={styles.sortButtonIcon} />
+                    <span className={styles.sortButtonText}>{option.label}</span>
+                    {isActive && (
+                      <span className={`${styles.sortOrder} ${isDescending ? styles.sortDesc : styles.sortAsc}`}>
+                        {isDescending ? '↓' : '↑'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            <button type="submit" className={styles.searchButton}>
-              搜索
-            </button>
-            {isSearching && (
-              <button 
-                type="button" 
-                onClick={clearSearch} 
-                className={styles.clearButton}
-              >
-                清除
-              </button>
-            )}
-          </form>
+          </div>
         </div>
         
         {/* 提示列表组件，传递搜索和分页参数，以及回调 */}
         <PromptsList 
-          searchQuery={isSearching ? search : ''} 
+          searchQuery={search} 
           currentPage={currentPage}
           onPaginationChange={handlePaginationUpdate}
           isAdmin={isAdmin}
+          sortBy={getSortString()}
         />
         
         {/* 分页控件 */}

@@ -91,6 +91,222 @@
   margin-top: 2rem;
 }
 
+/* 搜索和排序区域 */
+.searchAndSortContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  background-color: var(--md-surface);
+  border-radius: var(--border-radius-extra-large);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-elevation-low);
+  border: 1px solid var(--md-outline-variant);
+}
+
+/* 搜索区域样式 */
+.searchContainer {
+  width: 100%;
+}
+
+.searchForm {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.searchInputWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  color: var(--md-on-surface-variant);
+  z-index: 1;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 1px solid var(--md-outline);
+  border-radius: 28px;
+  background-color: var(--md-surface-container-highest);
+  color: var(--md-on-surface);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 2px rgba(103, 80, 164, 0.2);
+}
+
+.searchInput::placeholder {
+  color: var(--md-on-surface-variant);
+}
+
+.clearButton {
+  padding: 0.875rem 1.25rem;
+  background-color: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  border: none;
+  border-radius: 28px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9375rem;
+}
+
+.clearButton:hover {
+  background-color: var(--md-error-container);
+  color: var(--md-on-error-container);
+}
+
+/* 排序区域样式 */
+.sortContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sortLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
+  font-size: 0.9375rem;
+  white-space: nowrap;
+}
+
+.sortIcon {
+  font-size: 1.25rem;
+  color: var(--md-primary);
+}
+
+.sortButtonGroup {
+  display: flex;
+  border-radius: 28px;
+  background-color: var(--md-surface-container);
+  border: 1px solid var(--md-outline-variant);
+  overflow: hidden;
+  box-shadow: var(--shadow-elevation-low);
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: transparent;
+  color: var(--md-on-surface-variant);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+  white-space: nowrap;
+  border-right: 1px solid var(--md-outline-variant);
+}
+
+.sortButton:last-child {
+  border-right: none;
+}
+
+.sortButton:hover {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+.sortButtonActive {
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.sortButtonActive:hover {
+  background-color: var(--md-primary);
+}
+
+.sortButtonIcon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.sortButtonText {
+  font-weight: 500;
+}
+
+.sortOrder {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.25rem;
+  opacity: 0.8;
+}
+
+.sortDesc {
+  color: inherit;
+}
+
+.sortAsc {
+  color: inherit;
+}
+
+/* 分页控件样式 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2.5rem;
+  gap: 1rem;
+}
+
+.pageButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  border: none;
+  border-radius: 28px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9375rem;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageButton:not(:disabled):hover {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevation-medium);
+}
+
+.pageButton:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.pageInfo {
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
+  padding: 0 0.5rem;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .title {
@@ -114,133 +330,87 @@
   .hero {
     padding: 2rem 1rem 3rem;
   }
+
+  .searchAndSortContainer {
+    padding: 1rem;
+    border-radius: var(--border-radius-large);
+  }
+
+  .searchForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchInputWrapper {
+    min-width: auto;
+  }
+
+  .searchButton, 
+  .clearButton {
+    width: 100%;
+    text-align: center;
+  }
+
+  .sortContainer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .sortLabel {
+    justify-content: center;
+  }
+
+  .sortButtonGroup {
+    justify-content: center;
+    border-radius: 20px;
+  }
+
+  .sortButton {
+    flex: 1;
+    justify-content: center;
+    padding: 0.875rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .sortButtonText {
+    display: none;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .pageInfo {
+    order: -1;
+  }
 }
 
-/* 搜索区域样式 */
-.searchContainer {
-  margin-bottom: 2rem;
-  width: 100%;
+@media (max-width: 480px) {
+  .sortButton {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .sortButtonIcon {
+    font-size: 1rem;
+  }
 }
 
-.searchForm {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
+/* 桌面端优化 */
+@media (min-width: 1024px) {
+  .searchAndSortContainer {
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+  }
 
-.searchInputWrapper {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-}
+  .searchContainer {
+    flex: 2;
+  }
 
-.searchIcon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.25rem;
-  color: var(--on-surface-variant);
-}
-
-.searchInput {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.75rem;
-  border: 1px solid var(--outline);
-  border-radius: 50px;
-  background-color: var(--surface-container-highest);
-  color: var(--on-surface);
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.searchInput:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-transparent);
-  outline: none;
-}
-
-.searchInput::placeholder {
-  color: var(--on-surface-variant);
-}
-
-.searchButton {
-  padding: 0.75rem 1.5rem;
-  background-color: var(--primary);
-  color: var(--on-primary);
-  border: none;
-  border-radius: 50px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  white-space: nowrap;
-}
-
-.searchButton:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-2px);
-}
-
-.searchButton:active {
-  transform: translateY(0);
-}
-
-.clearButton {
-  padding: 0.75rem 1.25rem;
-  background-color: var(--surface-variant);
-  color: var(--on-surface-variant);
-  border: none;
-  border-radius: 50px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.clearButton:hover {
-  background-color: var(--error-container);
-  color: var(--on-error-container);
-}
-
-/* 分页控件样式 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 2.5rem;
-  gap: 1rem;
-}
-
-.pageButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: var(--surface-variant);
-  color: var(--on-surface-variant);
-  border: none;
-  border-radius: 50px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-}
-
-.pageButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pageButton:not(:disabled):hover {
-  background-color: var(--primary-container);
-  color: var(--on-primary-container);
-  transform: translateY(-2px);
-}
-
-.pageButton:not(:disabled):active {
-  transform: translateY(0);
-}
-
-.pageInfo {
-  font-weight: 500;
-  color: var(--on-surface-variant);
+  .sortContainer {
+    flex: 1;
+    justify-content: flex-end;
+  }
 } 

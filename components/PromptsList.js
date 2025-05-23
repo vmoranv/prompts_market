@@ -3,9 +3,9 @@ import { useSession } from 'next-auth/react';
 import PromptCard from './PromptCard';
 import styles from '../styles/PromptsList.module.css'; // 我们将为列表添加一些样式
 import Link from 'next/link';
-import { MdInfo } from 'react-icons/md';
+import { MdInfo, MdSentimentDissatisfied } from 'react-icons/md';
 
-export default function PromptsList({ searchQuery = '', currentPage = 1, onPaginationChange, isAdmin }) {
+export default function PromptsList({ searchQuery = '', currentPage = 1, onPaginationUpdate, isAdmin, sortBy }) {
   const [prompts, setPrompts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,54 +22,53 @@ export default function PromptsList({ searchQuery = '', currentPage = 1, onPagin
   const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
-    async function fetchPrompts() {
+    const fetchPrompts = async () => {
       setLoading(true);
       setError(null);
-      
       try {
-        let url = `/api/prompts?page=${currentPage}&limit=${ITEMS_PER_PAGE}`;
+        // 构建查询参数
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: ITEMS_PER_PAGE.toString()
+        });
         
-        // 如果有搜索查询，添加到 URL 参数中
         if (searchQuery) {
-          url += `&search=${encodeURIComponent(searchQuery)}`;
+          params.append('search', searchQuery);
         }
         
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error('获取提示列表失败');
+        if (sortBy) {
+          params.append('sort', sortBy);
         }
-        
-        const data = await response.json();
+
+        const res = await fetch(`/api/prompts?${params.toString()}`);
+        if (!res.ok) {
+          throw new Error(`Error: ${res.status}`);
+        }
+        const data = await res.json();
         console.log('API 响应数据:', data); // 添加日志
+        setPrompts(data.data || []);
         
-        if (data.success) {
-          setPrompts(data.data);
-          console.log('分页信息:', data.pagination); // 添加日志
-          const newPagination = data.pagination || {
-            totalPrompts: 0,
-            totalPages: 0,
-            currentPage: 1,
-            pageSize: ITEMS_PER_PAGE,
-            hasMore: false
-          };
-          setPagination(newPagination);
-          if (onPaginationChange) {
-            onPaginationChange(newPagination);
-          }
-        } else {
-          throw new Error(data.message || '获取提示列表失败');
+        // 调用回调函数更新父组件的分页信息
+        setPagination({
+          totalPrompts: data.pagination?.totalPrompts || 0,
+          totalPages: data.pagination?.totalPages || 1,
+          currentPage: data.pagination?.currentPage || currentPage,
+          pageSize: ITEMS_PER_PAGE,
+          hasMore: data.pagination?.hasMore || false
+        });
+        if (onPaginationUpdate) {
+          onPaginationUpdate(pagination);
         }
       } catch (err) {
-        console.error('获取提示列表错误:', err);
+        console.error("Failed to fetch prompts:", err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
-    }
-    
+    };
+
     fetchPrompts();
-  }, [searchQuery, currentPage]);
+  }, [searchQuery, currentPage, onPaginationUpdate, sortBy]); // 添加 sortBy 作为依赖项
 
   if (loading) {
     return (
@@ -99,9 +98,12 @@ export default function PromptsList({ searchQuery = '', currentPage = 1, onPagin
   if (searchQuery && prompts.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <MdInfo className={styles.emptyIcon} />
-        <p>未找到匹配 "{searchQuery}" 的提示词</p>
-        <p className={styles.emptySuggestion}>尝试使用不同的关键词或浏览我们的全部内容</p>
+        <MdSentimentDissatisfied className={styles.emptyIcon} />
+        <h3>没有找到提示词</h3>
+        <p className={styles.emptySuggestion}>
+          尝试使用其他关键词搜索，或者
+          <Link href="/create-prompt" className={styles.emptyLink}>创建一个新的提示词</Link>
+        </p>
       </div>
     );
   }
