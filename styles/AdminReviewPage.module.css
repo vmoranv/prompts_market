@@ -1,0 +1,533 @@
+/* Material Design 3 风格的管理员审核页面样式 */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 头部区域 */
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+  margin-left: 1.5rem;
+  line-height: 1.2;
+  flex: 1;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--text-secondary);
+  padding: 0.75rem;
+  border-radius: 50%;
+  background-color: var(--surface-variant);
+  transition: all 0.2s ease;
+}
+
+.backButton span {
+  display: none;
+}
+
+.backButton:hover {
+  background-color: var(--surface-variant-hover);
+  transform: scale(1.05);
+}
+
+.backButton:active {
+  transform: scale(0.95);
+}
+
+/* 统计栏 */
+.statsBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--elevation-1);
+}
+
+.statsCount {
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.filterToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--surface-variant);
+  color: var(--on-surface-variant);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.filterToggle:hover {
+  background-color: var(--surface-variant-hover);
+}
+
+/* 批量筛选区域 */
+.batchFilterSection {
+  background-color: var(--surface);
+  border-radius: 24px;
+  box-shadow: var(--elevation-2);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--outline-variant);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.batchFilterTitle {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--on-surface);
+  margin-bottom: 1.5rem;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.filterLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+  margin-bottom: 0.5rem;
+}
+
+.filterInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  background-color: var(--surface-container-highest);
+  color: var(--on-surface);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filterInput::placeholder {
+  color: var(--on-surface-variant);
+}
+
+.filterInput:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-transparent);
+  outline: none;
+}
+
+/* 批量操作按钮区域 */
+.batchActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: flex-end; /* 将按钮推到右侧 */
+}
+
+/* 通用按钮样式，确保与创建/编辑页面一致 */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px; /* 药丸形状 */
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+  box-shadow: var(--elevation-1);
+}
+
+.button:hover {
+  box-shadow: var(--elevation-2);
+}
+
+.button:active {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+.buttonIcon {
+  font-size: 1.25rem;
+}
+
+.batchApproveButton {
+  flex: 1;
+  background-color: var(--success); /* 使用变量 */
+  color: var(--on-success); /* 使用变量 */
+}
+
+.batchApproveButton:hover {
+  background-color: var(--success-hover); /* 使用变量 */
+}
+
+.batchRejectButton {
+  /* flex: 1; */ /* 移除 flex: 1 以避免按钮宽度不一致 */
+  background-color: var(--error); /* 使用变量 */
+  color: var(--on-error); /* 使用变量 */
+}
+
+.batchRejectButton:hover {
+  background-color: var(--error-hover); /* 使用变量 */
+}
+
+/* 消息提示 */
+.actionMessage {
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  animation: fadeInOut 0.3s ease-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.success {
+  background-color: var(--success-container);
+  color: var(--on-success-container);
+}
+
+.error {
+  background-color: var(--error-container);
+  color: var(--on-error-container);
+}
+
+/* 待审核提示卡片容器 */
+.promptsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+/* 单个提示卡片 */
+.promptCard {
+  background-color: var(--surface);
+  border-radius: 24px;
+  box-shadow: var(--elevation-1);
+  padding: 1.5rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+  border: 1px solid var(--outline-variant);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.promptCard:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--elevation-2);
+}
+
+.promptHeader {
+  margin-bottom: 1rem;
+}
+
+.promptTitle {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.authorInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.authorImage {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary);
+}
+
+.authorDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.authorName {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.promptDate {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.promptContentPreview {
+  flex: 1;
+  background-color: var(--surface-variant);
+  padding: 1rem;
+  border-radius: 16px;
+  margin-bottom: 1rem;
+  font-size: 0.975rem;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+  overflow-y: auto;
+  max-height: 200px;
+}
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.tag {
+  background-color: var(--secondary-container);
+  color: var(--on-secondary-container);
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.noTags {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* 操作按钮 */
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.approveButton {
+  background-color: var(--success);
+  color: var(--on-success);
+}
+
+.approveButton:hover {
+  background-color: var(--success-hover);
+  transform: translateY(-2px);
+}
+
+.rejectButton {
+  background-color: var(--error);
+  color: var(--on-error);
+}
+
+.rejectButton:hover {
+  background-color: var(--error-hover);
+  transform: translateY(-2px);
+}
+
+.cancelButton {
+  background-color: var(--surface-variant);
+  color: var(--on-surface-variant);
+}
+
+.cancelButton:hover {
+  background-color: var(--surface-variant-hover);
+}
+
+.confirmRejectButton {
+  background-color: var(--error);
+  color: var(--on-error);
+}
+
+.confirmRejectButton:hover {
+  background-color: var(--error-hover);
+}
+
+/* 拒绝输入区域 */
+.rejectionSection {
+  margin-top: 0.75rem;
+  animation: fadeIn 0.3s;
+}
+
+.rejectionInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  margin-bottom: 0.75rem;
+  resize: vertical;
+}
+
+.rejectionInput:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-transparent);
+  outline: none;
+}
+
+.rejectionActions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* 空状态 */
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: var(--surface);
+  border-radius: 24px;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  border: 1px dashed var(--outline-variant);
+}
+
+/* 加载状态 */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  color: var(--text-secondary);
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--surface-variant);
+  border-top: 5px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.errorContainer {
+  text-align: center;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 500px;
+  background-color: var(--surface);
+  border-radius: 24px;
+  box-shadow: var(--elevation-1);
+}
+
+.errorMessage {
+  color: var(--error);
+  margin-bottom: 1.5rem;
+}
+
+.retryButton {
+  background-color: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retryButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+/* 响应式设计 */
+@media (min-width: 768px) {
+  .backButton {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+  }
+  
+  .backButton span {
+    display: inline;
+  }
+  
+  .filterRow {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+  
+  .formGroup {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .statsBar {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  
+  .batchFilterSection {
+    padding: 1.25rem;
+  }
+  
+  .actions,
+  .rejectionActions,
+  .batchActions {
+    flex-direction: column;
+  }
+  
+  .promptsContainer {
+    grid-template-columns: 1fr;
+  }
+} 

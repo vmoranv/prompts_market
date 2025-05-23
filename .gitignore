@@ -1,0 +1,96 @@
+# 依赖包
+/node_modules
+/.pnp
+.pnp.js
+yarn.lock
+package-lock.json
+
+# 测试
+/coverage
+
+# Next.js 构建产物
+/.next/
+/out/
+
+# 生产环境构建
+/build
+
+# 静态站点导出
+/dist
+
+# 开发和调试文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# 环境变量和配置文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local.copy
+
+# Vercel 部署
+.vercel
+
+# PWA相关文件
+**/public/sw.js
+**/public/workbox-*.js
+**/public/worker-*.js
+**/public/sw.js.map
+**/public/workbox-*.js.map
+**/public/worker-*.js.map
+
+# 编辑器和IDE配置文件
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+Icon?
+
+# 调试和日志文件
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# 缓存
+.sass-cache/
+.eslintcache
+.stylelintcache
+.cache/
+
+# TypeScript缓存
+*.tsbuildinfo
+next-env.d.ts
+
+# 自定义临时文件或目录
+.scratch/ 

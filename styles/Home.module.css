@@ -1,0 +1,246 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero {
+  text-align: center;
+  padding: 3rem 1rem 4rem;
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  margin-bottom: 2rem;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  position: relative;
+}
+
+.heroDark {
+  background-color: var(--md-primary-dark);
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.5px;
+  font-weight: 700;
+}
+
+.description {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  opacity: 0.9;
+  max-width: 700px;
+  margin: 0 auto 2rem;
+}
+
+.features {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+
+.featureItem {
+  background-color: var(--md-surface);
+  border-radius: var(--border-radius-large);
+  padding: 1.5rem;
+  width: 260px;
+  box-shadow: var(--shadow-elevation-medium);
+  color: var(--md-on-surface);
+  transition: transform var(--transition-medium) ease,
+              box-shadow var(--transition-medium) ease;
+}
+
+.featureItem:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-elevation-high);
+}
+
+.featureIcon {
+  font-size: 2.5rem;
+  color: var(--md-primary);
+  margin-bottom: 1rem;
+}
+
+.featureItem h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.featureItem p {
+  font-size: 0.95rem;
+  color: var(--md-on-surface-variant);
+  line-height: 1.5;
+}
+
+.mainContent {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem 3rem;
+}
+
+.footer {
+  padding: 2rem 1rem;
+  background-color: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .title {
+    font-size: 2rem;
+  }
+  
+  .description {
+    font-size: 1rem;
+  }
+  
+  .features {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .featureItem {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .hero {
+    padding: 2rem 1rem 3rem;
+  }
+}
+
+/* 搜索区域样式 */
+.searchContainer {
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.searchForm {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.searchInputWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  color: var(--on-surface-variant);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  border: 1px solid var(--outline);
+  border-radius: 50px;
+  background-color: var(--surface-container-highest);
+  color: var(--on-surface);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.searchInput:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-transparent);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--on-surface-variant);
+}
+
+.searchButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  border-radius: 50px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.searchButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.searchButton:active {
+  transform: translateY(0);
+}
+
+.clearButton {
+  padding: 0.75rem 1.25rem;
+  background-color: var(--surface-variant);
+  color: var(--on-surface-variant);
+  border: none;
+  border-radius: 50px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clearButton:hover {
+  background-color: var(--error-container);
+  color: var(--on-error-container);
+}
+
+/* 分页控件样式 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2.5rem;
+  gap: 1rem;
+}
+
+.pageButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--surface-variant);
+  color: var(--on-surface-variant);
+  border: none;
+  border-radius: 50px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageButton:not(:disabled):hover {
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+  transform: translateY(-2px);
+}
+
+.pageButton:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.pageInfo {
+  font-weight: 500;
+  color: var(--on-surface-variant);
+} 

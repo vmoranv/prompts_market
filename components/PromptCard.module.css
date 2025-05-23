@@ -1,0 +1,121 @@
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+  margin-bottom: 0; /* 因为网格布局会处理间距 */
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* 让内容和按钮/点赞部分分开 */
+  min-height: 280px; /* 给卡片一个最小高度 */
+}
+
+.card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
+}
+
+.titleLink {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 1.3em; /* 调整标题大小 */
+  font-weight: bold;
+  margin-bottom: 10px;
+  display: block; /* 让标题占据一行 */
+}
+
+.titleLink:hover {
+  text-decoration: underline;
+  color: #2980b9;
+}
+
+.authorInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.authorImage {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.contentPreview {
+  font-size: 1em;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  /* 控制文本溢出 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* 显示3行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: calc(1.6em * 3); /* 确保至少有3行的高度 */
+}
+
+
+.tags {
+  font-size: 0.85em;
+  color: #7f8c8d; /* 标签颜色 */
+  margin-bottom: 15px;
+}
+
+.tags span {
+  background-color: #ecf0f1; /* 标签背景色 */
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-right: 5px;
+  display: inline-block;
+  margin-bottom: 5px; /* 确保换行时有间距 */
+}
+
+/* 复制按钮样式 */
+.copyButton {
+  padding: 6px 10px;
+  font-size: 0.8em;
+  background-color: #7f8c8d; /* 中性色 */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap; /* 防止文字换行 */
+  flex-shrink: 0; /* 防止按钮被压缩 */
+}
+
+.copyButton:hover {
+  background-color: #95a5a6;
+}
+
+.copyButton:active {
+  background-color: #6c7a7b;
+}
+
+/* LikeButton 容器的样式可以放在 LikeButton.module.css 中，
+   或者如果只是简单调整间距，可以在这里加一个包裹 div */
+.actionsContainer {
+  margin-top: auto; /* 将点赞按钮推到底部 */
+  padding-top: 10px; /* 与上方内容留出一些间距 */
+  border-top: 1px solid #f0f0f0; /* 可选的分割线 */
+}
+
+/* 新增卡片头部样式 */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* 垂直方向顶部对齐 */
+  margin-bottom: 10px;
+}
+
+.titleContainer {
+  margin: 0; /* 移除 h3 的默认 margin */
+  flex-grow: 1; /* 让标题占据多余空间 */
+  margin-right: 10px; /* 与复制按钮的间距 */
+} 

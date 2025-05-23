@@ -1,0 +1,79 @@
+.themeToggleContainer {
+  position: relative;
+  z-index: 1000;
+}
+
+.themeToggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--nav-text);
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  gap: 4px;
+}
+
+.themeToggleButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.arrow {
+  font-size: 1.2rem;
+  transition: transform 0.2s ease;
+}
+
+.arrowUp {
+  transform: rotate(180deg);
+}
+
+.themeOptions {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 100;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: var(--shadow-elevation-medium);
+  padding: 0.5rem;
+  width: 150px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--card-border);
+}
+
+.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.themeOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.themeOption:hover {
+  background-color: var(--hover-overlay);
+}
+
+.themeOption.active {
+  background-color: var(--selected-state);
+  color: var(--primary-contrast);
+} 

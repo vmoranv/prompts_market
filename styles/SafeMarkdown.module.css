@@ -1,0 +1,98 @@
+.markdownContainer {
+  width: 100%;
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+/* 浅色主题 */
+.light {
+  color: #333;
+  background-color: transparent;
+}
+
+/* 深色主题 */
+.dark {
+  color: #eee;
+  background-color: transparent;
+}
+
+/* 代码区块样式 */
+.markdownContainer pre {
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.light pre {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+}
+
+.dark pre {
+  background-color: #2d2d2d;
+  border: 1px solid #444;
+}
+
+/* 禁用的链接样式 */
+.disabledLink {
+  color: #666;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+/* 图片样式 */
+.safeImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+.light .safeImage {
+  border: 1px solid #ddd;
+}
+
+.dark .safeImage {
+  border: 1px solid #444;
+}
+
+/* 引用样式 */
+.markdownContainer blockquote {
+  padding-left: 1rem;
+  margin-left: 0;
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.light blockquote {
+  border-left-color: #ccc;
+}
+
+.dark blockquote {
+  border-left-color: #555;
+}
+
+/* 表格样式 */
+.markdownContainer table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.markdownContainer th,
+.markdownContainer td {
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.light th,
+.light td {
+  border: 1px solid #ddd;
+}
+
+.dark th,
+.dark td {
+  border: 1px solid #444;
+} 

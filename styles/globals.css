@@ -1,0 +1,282 @@
+/* 引入Google字体 */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+/* 定义基础变量 - Material Design M3 */
+:root {
+  /* Material Design M3 调色板 - 浅色模式 */
+  --md-primary: #6750A4;
+  --md-primary-container: #EADDFF;
+  --md-on-primary: #FFFFFF;
+  --md-on-primary-container: #21005E;
+  --md-secondary: #625B71;
+  --md-secondary-container: #E8DEF8;
+  --md-on-secondary: #FFFFFF;
+  --md-on-secondary-container: #1E192B;
+  --md-tertiary: #7D5260;
+  --md-tertiary-container: #FFD8E4;
+  --md-on-tertiary: #FFFFFF;
+  --md-on-tertiary-container: #370B1E;
+  --md-error: #B3261E;
+  --md-error-container: #F9DEDC;
+  --md-on-error: #FFFFFF;
+  --md-on-error-container: #410E0B;
+  --md-background: #FFFBFE;
+  --md-on-background: #1C1B1F;
+  --md-surface: #FFFBFE;
+  --md-on-surface: #1C1B1F;
+  --md-surface-variant: #E7E0EC;
+  --md-on-surface-variant: #49454E;
+  --md-outline: #79747E;
+  --md-outline-variant: #CAC4D0;
+  --md-shadow: #000000;
+  --md-inverse-surface: #313033;
+  --md-inverse-on-surface: #F4EFF4;
+  --md-inverse-primary: #D0BCFF;
+  
+  /* 阴影 */
+  --shadow-elevation-low: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-elevation-medium: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-elevation-high: 0 8px 16px rgba(0, 0, 0, 0.14);
+  
+  /* 交互状态层 */
+  --hover-overlay: rgba(0, 0, 0, 0.04);
+  --focus-overlay: rgba(0, 0, 0, 0.1);
+  --pressed-overlay: rgba(0, 0, 0, 0.1);
+  --selected-state: var(--md-primary-container);
+  --primary-contrast: var(--md-on-primary-container);
+  
+  /* 应用变量 */
+  --background: var(--md-background);
+  --text-primary: var(--md-on-background);
+  --text-secondary: var(--md-on-surface-variant);
+  --accent-color: var(--md-primary);
+  --accent-hover: var(--md-primary);
+  --card-bg: var(--md-surface);
+  --card-border: var(--md-outline-variant);
+  --nav-bg: var(--md-primary);
+  --nav-text: var(--md-on-primary);
+  --footer-bg: var(--md-surface-variant);
+  --footer-border: var(--md-outline-variant);
+  --error-color: var(--md-error);
+  --success-color: #2ecc71;
+  --prompt-list-bg: var(--md-surface);
+  --hero-bg: var(--md-primary);
+  --hero-text: var(--md-on-primary);
+  
+  /* 圆角 */
+  --border-radius-small: 4px;
+  --border-radius-medium: 8px;
+  --border-radius-large: 16px;
+  --border-radius-extra-large: 28px;
+  
+  /* 过渡动画 */
+  --transition-fast: 100ms;
+  --transition-medium: 200ms;
+  --transition-slow: 300ms;
+}
+
+/* 深色模式变量 */
+[data-theme="dark"] {
+  /* Material Design M3 调色板 - 深色模式 */
+  --md-primary: #D0BCFF;
+  --md-primary-container: #4F378B;
+  --md-on-primary: #371E73;
+  --md-on-primary-container: #EADDFF;
+  --md-secondary: #CCC2DC;
+  --md-secondary-container: #4A4458;
+  --md-on-secondary: #332D41;
+  --md-on-secondary-container: #E8DEF8;
+  --md-tertiary: #EFB8C8;
+  --md-tertiary-container: #633B48;
+  --md-on-tertiary: #492532;
+  --md-on-tertiary-container: #FFD8E4;
+  --md-error: #F2B8B5;
+  --md-error-container: #8C1D18;
+  --md-on-error: #601410;
+  --md-on-error-container: #F9DEDC;
+  --md-background: #1C1B1F;
+  --md-on-background: #E6E1E5;
+  --md-surface: #1C1B1F;
+  --md-on-surface: #E6E1E5;
+  --md-surface-variant: #49454F;
+  --md-on-surface-variant: #CAC4D0;
+  --md-outline: #938F99;
+  --md-outline-variant: #49454F;
+  --md-shadow: #000000;
+  --md-inverse-surface: #E6E1E5;
+  --md-inverse-on-surface: #313033;
+  --md-inverse-primary: #6750A4;
+  
+  /* 阴影 */
+  --shadow-elevation-low: 0 1px 3px rgba(0, 0, 0, 0.24);
+  --shadow-elevation-medium: 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-elevation-high: 0 8px 16px rgba(0, 0, 0, 0.4);
+  
+  /* 交互状态层 */
+  --hover-overlay: rgba(255, 255, 255, 0.08);
+  --focus-overlay: rgba(255, 255, 255, 0.12);
+  --pressed-overlay: rgba(255, 255, 255, 0.12);
+  --selected-state: var(--md-primary-container);
+  --primary-contrast: var(--md-on-primary-container);
+  
+  /* 应用变量 */
+  --background: var(--md-background);
+  --text-primary: var(--md-on-background);
+  --text-secondary: var(--md-on-surface-variant);
+  --accent-color: var(--md-primary);
+  --accent-hover: var(--md-primary);
+  --card-bg: var(--md-surface);
+  --card-border: var(--md-outline-variant);
+  --nav-bg: var(--md-primary-container);
+  --nav-text: var(--md-on-primary-container);
+  --footer-bg: var(--md-surface-variant);
+  --footer-border: var(--md-outline-variant);
+  --error-color: var(--md-error);
+  --success-color: #2ecc71;
+  --prompt-list-bg: var(--md-surface);
+  --hero-bg: var(--md-primary-container);
+  --hero-text: var(--md-on-primary-container);
+}
+
+/* 基础样式重置 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  font-family: 'Roboto', 'Noto Sans SC', sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
+  transition: background-color var(--transition-medium) ease, 
+              color var(--transition-medium) ease;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--accent-color);
+  text-decoration: none;
+  transition: color var(--transition-fast) ease;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+button, .button {
+  font-family: 'Roboto', 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--border-radius-medium);
+  padding: 0.625rem 1.25rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.0892857143em;
+  transition: background-color var(--transition-fast) ease,
+              box-shadow var(--transition-fast) ease;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 2.125rem;
+  line-height: 2.75rem;
+}
+
+h2 {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+/* Material Design Button Styles */
+.md-button-filled {
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  box-shadow: var(--shadow-elevation-low);
+}
+
+.md-button-filled:hover {
+  background-color: var(--md-primary);
+  box-shadow: var(--shadow-elevation-medium);
+}
+
+.md-button-outlined {
+  background-color: transparent;
+  color: var(--md-primary);
+  border: 1px solid var(--md-outline);
+}
+
+.md-button-outlined:hover {
+  background-color: var(--hover-overlay);
+}
+
+.md-button-text {
+  background-color: transparent;
+  color: var(--md-primary);
+  padding: 0.625rem 0.75rem;
+}
+
+.md-button-text:hover {
+  background-color: var(--hover-overlay);
+}
+
+/* 主要内容区样式 */
+.main-content {
+  padding: 0 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 自适应响应式排版 */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+  
+  .main-content {
+    padding: 0 1rem;
+  }
+}
+
+/* 通用容器样式 */
+.container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* 通用标题样式 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+/* 您可以在这里添加更多的全局样式 */ 

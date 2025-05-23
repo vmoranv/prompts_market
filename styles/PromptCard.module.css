@@ -1,0 +1,333 @@
+.card {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-large);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-elevation-low);
+  transition: all var(--transition-medium) ease;
+  position: relative;
+  border: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 300px;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-elevation-medium);
+  transform: translateY(-4px);
+}
+
+/* 卡片头部 - 作者信息和复制按钮 */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.authorInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.authorImage {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--md-primary-container);
+}
+
+.authorText {
+  display: flex;
+  flex-direction: column;
+}
+
+.authorName {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.2rem 0;
+  font-size: 0.95rem;
+}
+
+.promptDate {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.copyButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-small);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+}
+
+.copyButton:hover {
+  background-color: var(--hover-overlay);
+  color: var(--text-primary);
+}
+
+/* 卡片内容区 */
+.cardContent {
+  flex-grow: 1;
+  margin-bottom: 1.25rem;
+}
+
+.promptLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.promptTitle {
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  transition: color 0.2s ease;
+  line-height: 1.4;
+}
+
+.promptLink:hover .promptTitle {
+  color: var(--md-primary);
+}
+
+.promptContent {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+}
+
+/* 卡片底部 - 标签和元数据 */
+.cardFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tag {
+  background-color: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 1rem;
+  font-weight: 500;
+}
+
+.metaInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.price {
+  font-weight: 600;
+  color: var(--md-tertiary);
+  background-color: var(--md-tertiary-container);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--border-radius-small);
+  font-size: 0.9rem;
+}
+
+.free {
+  font-weight: 600;
+  color: var(--md-primary);
+  background-color: var(--md-primary-container);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--border-radius-small);
+  font-size: 0.9rem;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  color: var(--on-surface-variant);
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 16px;
+  background-color: var(--surface-variant);
+  margin-right: 0.75rem;
+}
+
+.statIcon {
+  margin-right: 0.35rem;
+  font-size: 1.1rem;
+}
+
+.statValue {
+  font-weight: 500;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background-color: var(--outline);
+  margin: 0 0.5rem;
+  display: none; /* 默认不显示分隔线，使用外边距分开 */
+}
+
+.detailsLink {
+  color: var(--md-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.detailsLink:hover {
+  color: var(--md-primary-hover);
+  text-decoration: underline;
+}
+
+/* 编辑和删除操作按钮 */
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--card-border);
+  padding-top: 1.25rem;
+}
+
+.editButton, .deleteButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-small);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  border: none;
+  text-decoration: none;
+}
+
+.editButton:hover {
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.deleteButton {
+  background-color: transparent;
+  color: var(--md-error);
+  border: 1px solid var(--md-error);
+}
+
+.deleteButton:hover {
+  background-color: var(--md-error);
+  color: var(--md-on-error);
+}
+
+.confirm {
+  background-color: var(--md-error);
+  color: var(--md-on-error);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 1.25rem;
+    min-height: 250px;
+  }
+  
+  .promptTitle {
+    font-size: 1.2rem;
+  }
+  
+  .authorImage {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  
+  .cardHeader {
+    margin-bottom: 1rem;
+  }
+  
+  .actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.likeButton {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+  color: var(--color-icon);
+}
+
+.likeButton:hover:not(:disabled) {
+  background-color: var(--color-hover-background);
+}
+
+.likeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.likeIcon,
+.likedIcon {
+  font-size: 20px;
+  margin-right: 4px;
+}
+
+.likedIcon {
+  color: var(--color-liked-icon);
+}
+
+.likesCount {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+} 

@@ -1,0 +1,92 @@
+.nav {
+  background-color: var(--nav-bg);
+  color: var(--nav-text);
+  padding: 0.8rem 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--nav-text);
+  text-decoration: none;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navLink {
+  color: var(--nav-text);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.navLink:hover {
+  color: var(--accent-color);
+}
+
+.iconLink {
+  color: var(--nav-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.iconLink:hover {
+  color: var(--accent-color);
+  transform: scale(1.1);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 200px;
+}
+
+.userAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.signButton {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.signButton:hover {
+  background-color: var(--accent-hover);
+}
+
+/* 确保在小屏幕上导航栏也能良好显示 */
+@media (max-width: 768px) {
+  .navContainer {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .navLinks {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+} 
