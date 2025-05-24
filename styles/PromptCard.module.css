@@ -156,24 +156,6 @@
   gap: 0.75rem;
 }
 
-.price {
-  font-weight: 600;
-  color: var(--md-tertiary);
-  background-color: var(--md-tertiary-container);
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--border-radius-small);
-  font-size: 0.9rem;
-}
-
-.free {
-  font-weight: 600;
-  color: var(--md-primary);
-  background-color: var(--md-primary-container);
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--border-radius-small);
-  font-size: 0.9rem;
-}
-
 .stats {
   display: flex;
   align-items: center;

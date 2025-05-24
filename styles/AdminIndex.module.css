@@ -1,0 +1,104 @@
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  background-color: var(--md-background);
+  color: var(--md-on-background);
+  min-height: calc(100vh - var(--nav-height, 4rem) - var(--footer-height, 4rem)); /* 确保内容区域至少占满视口高度 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  width: 100%; /* 确保 header 占满容器宽度 */
+  margin-bottom: 2rem;
+  justify-content: space-between; /* 在返回按钮和标题之间创建空间 */
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0; /* 移除 margin-bottom */
+  color: var(--md-on-background);
+  text-align: center;
+  flex-grow: 1; /* 让标题占据剩余空间 */
+}
+
+.linkContainer {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.adminLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  border-radius: var(--border-radius-large); /* 使用较大的圆角 */
+  text-decoration: none;
+  font-size: 1.125rem;
+  font-weight: 500;
+  transition: background-color var(--transition-medium) ease, box-shadow var(--transition-medium) ease;
+  box-shadow: var(--shadow-elevation-low);
+  min-width: 200px; /* 确保按钮有最小宽度 */
+  text-align: center;
+}
+
+.adminLink:hover {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  box-shadow: var(--shadow-elevation-medium);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  font-size: 1.5rem;
+  color: var(--md-on-background);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--md-on-surface-variant); /* 使用合适的颜色变量 */
+  padding: 0.75rem;
+  border-radius: 50%;
+  background-color: var(--md-surface-container-low); /* 使用合适的背景色变量 */
+  transition: all 0.2s ease;
+  flex-shrink: 0; /* 防止按钮被压缩 */
+}
+
+.backButton span {
+  display: none; /* 在小屏幕上隐藏文本 */
+}
+
+.backButton:hover {
+  background-color: var(--md-surface-container-medium); /* 使用合适的悬停背景色变量 */
+  transform: scale(1.05);
+}
+
+.backButton:active {
+  transform: scale(0.95);
+}
+
+/* 媒体查询：在大屏幕上显示返回按钮文本 */
+@media (min-width: 600px) {
+  .backButton span {
+    display: inline;
+  }
+  .backButton {
+    border-radius: var(--border-radius-medium); /* 在大屏幕上使用矩形按钮 */
+    padding: 0.5rem 1rem;
+  }
+}

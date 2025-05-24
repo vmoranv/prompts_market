@@ -3,7 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import { MdArrowBack, MdCheck, MdClose, MdSearch, MdFilterList, MdCheckCircle, MdCancel } from 'react-icons/md';
+import { MdCheck, MdClose, MdSearch, MdFilterList, MdCheckCircle, MdCancel, MdArrowBack } from 'react-icons/md';
 import styles from '../../styles/AdminReviewPage.module.css';
 import SafeMarkdown from '../../components/SafeMarkdown';
 
@@ -327,9 +327,9 @@ export default function AdminReviewPage() {
       </Head>
       <div className={styles.container}>
         <div className={styles.header}>
-          <Link href="/" className={styles.backButton}>
+          <Link href="/admin" className={styles.backButton}>
             <MdArrowBack />
-            <span>返回主页</span>
+            <span>返回管理员页</span>
           </Link>
           <h1 className={styles.title}>审核提示</h1>
         </div>

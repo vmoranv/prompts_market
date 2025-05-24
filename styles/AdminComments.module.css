@@ -1,0 +1,489 @@
+.container {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  background-color: var(--md-background);
+  color: var(--md-on-background);
+}
+
+/* 添加 header 样式 - 复制自 AdminIndex.module.css */
+.header {
+  display: flex;
+  align-items: center;
+  width: 100%; /* 确保 header 占满容器宽度 */
+  margin-bottom: 2rem;
+  justify-content: space-between; /* 在返回按钮和标题之间创建空间 */
+}
+
+/* 调整标题样式以适应 header */
+.title {
+  font-size: 2.25rem; /* 根据需要调整字体大小 */
+  font-weight: 500;
+  color: var(--md-on-background); /* 使用合适的颜色变量 */
+  margin: 0; /* 移除 margin-bottom */
+  line-height: 1.2;
+  flex: 1;
+  text-align: center; /* 标题居中 */
+}
+
+/* 返回按钮样式 - 复制自 AdminIndex.module.css */
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--md-on-surface-variant); /* 使用合适的颜色变量 */
+  padding: 0.75rem;
+  border-radius: 50%;
+  background-color: var(--md-surface-container-low); /* 使用合适的背景色变量 */
+  transition: all 0.2s ease;
+  flex-shrink: 0; /* 防止按钮被压缩 */
+}
+
+.backButton span {
+  display: none; /* 在小屏幕上隐藏文本 */
+}
+
+.backButton:hover {
+  background-color: var(--md-surface-container-medium); /* 使用合适的悬停背景色变量 */
+  transform: scale(1.05);
+}
+
+.backButton:active {
+  transform: scale(0.95);
+}
+
+/* 媒体查询：在大屏幕上显示返回按钮文本 */
+@media (min-width: 600px) {
+  .backButton span {
+    display: inline;
+  }
+  .backButton {
+    border-radius: var(--border-radius-medium); /* 在大屏幕上使用矩形按钮 */
+    padding: 0.5rem 1rem;
+  }
+}
+
+.commentList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.commentItem {
+  background-color: var(--md-surface-container-low);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--border-radius-medium);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-elevation-extra-small);
+  display: flex; /* 使用 Flexbox 布局 */
+  flex-direction: column; /* 垂直排列内部元素 */
+  gap: 1rem; /* 增加元素之间的间距 */
+}
+
+.commentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem; /* 增加作者信息和举报/状态之间的间距 */
+  flex-wrap: wrap; /* 允许换行 */
+}
+
+.authorInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* 作者头像和文字的间距 */
+}
+
+.authorLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit; /* 继承父元素颜色 */
+}
+
+.authorImage {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.authorText {
+  display: flex;
+  flex-direction: column;
+}
+
+.authorName {
+  font-weight: 600;
+  color: var(--md-on-surface);
+}
+
+.commentDate {
+  font-size: 0.875rem;
+  color: var(--md-on-surface-variant);
+}
+
+.commentContent {
+  margin-top: 0.5rem; /* 内容与 header 的间距 */
+  color: var(--md-on-surface);
+  line-height: 1.6;
+  word-break: break-word; /* 防止长单词溢出 */
+}
+
+.commentContent p {
+  margin: 0; /* 移除默认段落外边距 */
+}
+
+.commentMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* 允许换行 */
+  gap: 1rem; /* 增加元信息和操作之间的间距 */
+  margin-top: 1rem; /* 元信息与内容的间距 */
+  padding-top: 1rem; /* 上边距 */
+  border-top: 1px solid var(--md-outline-variant); /* 添加分隔线 */
+}
+
+.commentStats {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* 统计项之间的间距 */
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; /* 图标和文字的间距 */
+  color: var(--md-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.statIcon {
+  font-size: 1rem;
+}
+
+.commentStatus {
+  /* 新增状态标签样式 */
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--border-radius-small);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block; /* 使其成为行内块元素 */
+}
+
+.statusPending {
+  background-color: var(--md-surface-container-highest);
+  color: var(--md-on-surface);
+}
+
+.statusApproved {
+  background-color: var(--md-success-container); /* 假设您有 success 相关的颜色变量 */
+  color: var(--md-on-success-container);
+}
+
+.statusRejected {
+  background-color: var(--md-error-container);
+  color: var(--md-on-error-container);
+}
+
+.commentModeration {
+  display: flex;
+  gap: 0.75rem; /* 操作按钮之间的间距 */
+  flex-wrap: wrap; /* 允许换行 */
+  align-items: center;
+}
+
+/* 基础按钮样式 */
+.moderationButton {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--border-radius-small);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  display: inline-flex; /* 使图标和文字对齐 */
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.moderationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 批准按钮 - 填充样式 */
+.approveButton {
+  composes: moderationButton; /* 继承基础样式 */
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.approveButton:hover:not(:disabled) {
+  background-color: var(--md-primary-container); /* 悬停效果 */
+  color: var(--md-on-primary-container);
+}
+
+/* 拒绝按钮 - 描边样式 */
+.rejectButton {
+  composes: moderationButton; /* 继承基础样式 */
+  background-color: transparent;
+  color: var(--md-primary); /* 使用主色作为描边和文字颜色 */
+  border: 1px solid var(--md-outline);
+}
+
+.rejectButton:hover:not(:disabled) {
+  background-color: var(--md-primary-container); /* 悬停效果 */
+  color: var(--md-on-primary-container);
+  border-color: var(--md-primary-container);
+}
+
+/* 删除按钮 - 文本样式或危险色 */
+.deleteButton {
+  composes: moderationButton; /* 继承基础样式 */
+  background-color: transparent;
+  color: var(--md-error); /* 使用错误色表示危险操作 */
+}
+
+.deleteButton:hover:not(:disabled) {
+  background-color: var(--md-error-container); /* 悬停效果 */
+  color: var(--md-on-error-container);
+}
+
+
+/* 举报计数样式 */
+.reportCount {
+   /* 保持现有样式，或者根据需要调整 */
+   padding: 0.25rem 0.5rem;
+   border-radius: var(--border-radius-small);
+   background-color: var(--md-error-container);
+   color: var(--md-on-error-container);
+   font-size: 0.875rem;
+   font-weight: 500;
+   display: inline-flex; /* 使图标和文字对齐 */
+   align-items: center;
+   gap: 0.2rem;
+}
+
+/* 过滤选择框样式 - 更新以匹配主题切换按钮 */
+.filterSelect {
+  box-sizing: border-box;
+  margin: 0;
+  font-family: 'Roboto', 'Noto Sans SC', sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.0892857143em;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+  color: var(--md-on-primary-container);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  padding: 0.5rem 2rem 0.5rem 0.75rem; /* 右侧留出空间放置下拉箭头 */
+  transition: background-color var(--transition-medium) ease;
+  /* 添加下拉箭头 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23E6E1E5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  min-width: 120px;
+}
+
+.filterSelect:focus {
+  outline: none;
+  background-color: var(--hover-overlay);
+  border-color: var(--md-primary);
+}
+
+.filterSelect:hover {
+  background-color: var(--hover-overlay);
+}
+
+/* 下拉选项样式 */
+.filterSelect option {
+  background-color: var(--md-surface);
+  color: var(--md-on-surface);
+  font-size: 0.875rem;
+  padding: 0.75rem;
+  text-transform: none;
+}
+
+/* 加载和错误状态样式 */
+.loadingContainer, .errorContainer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--md-on-background);
+}
+
+.loadingSpinner {
+  border: 4px solid var(--md-surface-container-highest);
+  border-top: 4px solid var(--md-primary);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.errorIcon {
+  font-size: 3rem;
+  color: var(--md-error);
+  margin-bottom: 1rem;
+}
+
+.retryButton {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  border: none;
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.retryButton:hover {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+/* 评论状态文本颜色 */
+.statusText {
+  font-weight: 600;
+  /* 颜色将通过父元素的背景色和文字色确定 */
+}
+
+/* 过滤容器样式 */
+.filterContainer {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filterLabel {
+  font-weight: 500;
+  color: var(--md-on-background);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .commentItem {
+    padding: 1rem;
+  }
+
+  .commentHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .authorInfo {
+    width: 100%; /* 在小屏幕上占满宽度 */
+    justify-content: space-between; /* 作者信息和日期分散对齐 */
+  }
+
+  .commentActions {
+    width: 100%; /* 在小屏幕上占满宽度 */
+    justify-content: flex-end; /* 操作按钮靠右对齐 */
+  }
+
+  .filterContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .commentStatus,
+  .reportCount {
+     font-size: 0.8rem;
+     padding: 0.1rem 0.3rem;
+     border-radius: var(--border-radius-small);
+     display: inline-flex; /* 使图标和文字对齐 */
+     align-items: center;
+     gap: 0.2rem;
+  }
+
+  .reportCount {
+     background-color: var(--md-error-container);
+     color: var(--md-on-error-container);
+  }
+
+  .pending {
+     background-color: var(--md-surface-container-highest);
+     color: var(--md-on-surface);
+  }
+
+  .approved {
+     background-color: var(--md-success-container); /* 假设您有 success 相关的颜色变量 */
+     color: var(--md-on-success-container);
+  }
+
+  .rejected {
+     background-color: var(--md-error-container);
+     color: var(--md-on-error-container);
+  }
+
+  .unknown {
+     background-color: var(--md-surface-container-highest);
+     color: var(--md-on-surface);
+  }
+}
+
+/* Prompt 信息样式 */
+.promptInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--md-surface-container);
+  border-radius: var(--border-radius-small);
+  border-left: 3px solid var(--md-primary);
+}
+
+.promptLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.promptTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-primary);
+  text-decoration: none;
+  transition: color var(--transition-medium) ease;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.promptTitle:hover {
+  color: var(--md-on-primary-container);
+  text-decoration: underline;
+} 

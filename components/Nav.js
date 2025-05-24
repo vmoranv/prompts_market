@@ -24,8 +24,8 @@ export default function Nav() {
             <>
               {/* 管理员链接 */}
               {session.user.role === 'admin' && (
-                <Link href="/admin/review-prompts" className={styles.navLink}>
-                  审核 Prompts
+                <Link href="/admin" className={styles.navLink}>
+                  审核页
                 </Link>
               )}
               

@@ -27,11 +27,6 @@ const PromptSchema = new mongoose.Schema({
     enum: ['pending', 'published', 'rejected', 'archived'],
     default: 'pending', // 新创建的 Prompt 默认为待审核
   },
-  rejectionReason: {
-    type: String,
-    trim: true,
-    default: null,
-  },
   likesCount: {
     type: Number,
     default: 0,
@@ -42,15 +37,6 @@ const PromptSchema = new mongoose.Schema({
   }],
   publishedAt: { // 发布时间，由管理员操作时设置
     type: Date,
-  },
-  price: {
-    type: Number,
-    default: 0
-  },
-  likes: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'User',
-    default: []
   },
   viewCount: {
     type: Number,

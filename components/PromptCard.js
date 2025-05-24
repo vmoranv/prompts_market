@@ -139,17 +139,8 @@ export default function PromptCard({ prompt }) {
           const errorData = await res.json();
           throw new Error(errorData.error || `删除失败: ${res.status}`);
         }
-        // 删除成功后，可能需要通知父组件刷新列表
-        // 这里简单地移除确认状态
         setConfirmDelete(false);
-        // 如果 PromptCard 在列表中，父组件需要处理从状态中移除该 Prompt
-        // 例如，通过传递一个 onDelete 回调函数
-        // onDelete(prompt._id);
         console.log(`Prompt ${prompt._id} 已成功删除。`);
-        // 考虑在删除成功后给用户一个反馈，或者自动刷新列表
-        // alert('Prompt 已成功删除！'); // 简单的提示
-        // router.reload(); // 强制刷新页面 (不推荐)
-        // 更好的做法是父组件监听删除事件并更新状态
       } catch (err) {
         console.error("删除 Prompt 失败:", err);
         alert(`删除 Prompt 失败: ${err.message}`);
@@ -179,8 +170,6 @@ export default function PromptCard({ prompt }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        // 对于 POST 请求，可能需要发送用户 ID，但后端通常可以从 session 中获取
-        // body: method === 'POST' ? JSON.stringify({ userId }) : null,
       });
 
       if (!res.ok) {
@@ -260,21 +249,6 @@ export default function PromptCard({ prompt }) {
         
         <div className={styles.promptContent}>
           {isClient ? <SafeMarkdown content={truncatedContent} /> : <p>{truncatedContent}</p>}
-        </div>
-        
-        {/* 标签和价格 */}
-        <div className={styles.tagsAndPrice}>
-          {prompt.tags && prompt.tags.length > 0 && (
-            <div className={styles.tags}>
-              {prompt.tags.map((tag, index) => (
-                <span key={index} className={styles.tag}>{tag}</span>
-              ))}
-            </div>
-          )}
-          
-          {prompt.price > 0 && (
-            <div className={styles.price}>¥{prompt.price}</div>
-          )}
         </div>
         
         <div className={styles.cardFooter}>
