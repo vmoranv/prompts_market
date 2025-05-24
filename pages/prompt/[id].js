@@ -269,12 +269,19 @@ export default function PromptDetail() {
           name="description" 
           content={`${prompt.title} - ${prompt.content ? prompt.content.substring(0, 160) : ''}...`} 
         />
+        {/* Open Graph Meta Tags */}
+        <meta property="og:title" content={prompt.title} />
+        <meta property="og:description" content={prompt.description} />
+        {/* TODO: Add og:image and og:url */}
+        {/* <meta property="og:image" content={prompt.imageUrl} /> */}
+        {/* <meta property="og:url" content={`https://yourwebsite.com/prompt/${prompt._id}`} /> */}
+        <meta property="og:type" content="article" />
       </Head>
       
       <div className={styles.container}>
         <div className={styles.header}>
-          <Link href="/" className={styles.backButton}>
-            <MdArrowBack />
+          <Link href="/" className={styles.backButton} aria-label="返回主页">
+            <MdArrowBack size={24} />
             <span>返回</span>
           </Link>
           <h1 className={styles.title}>{prompt.title}</h1>
@@ -282,9 +289,9 @@ export default function PromptDetail() {
         
         <div className={styles.promptCard}>
           <div className={styles.headerRow}>
-            <div className={styles.authorInfo}>
-              {prompt.author?.image ? (
-                <Link href={`/dashboard?userId=${prompt.author._id}`} className={styles.authorLink}>
+            <Link href={`/dashboard?userId=${prompt.author?._id}`} className={styles.authorLink}>
+              <div className={styles.authorInfo}>
+                {prompt.author?.image ? (
                   <Image
                     src={prompt.author.image}
                     alt={prompt.author.name || '作者头像'}
@@ -293,15 +300,15 @@ export default function PromptDetail() {
                     height={40}
                     objectFit="cover"
                   />
-                </Link>
-              ) : (
-                <div className={styles.authorAvatar}>{prompt.author?.name?.[0] || '?'}</div>
-              )}
-              <div>
-                <p className={styles.authorName}>{prompt.author?.name || '未知作者'}</p>
-                <p className={styles.publishDate}>{formatPromptDate(prompt.createdAt)}</p>
+                ) : (
+                  <div className={styles.authorAvatar}>{prompt.author?.name?.[0] || '?'}</div>
+                )}
+                <div className={styles.authorMeta}>
+                  <p className={styles.authorName}>{prompt.author?.name || '未知作者'}</p>
+                  <p className={styles.publishDate}>{formatPromptDate(prompt.createdAt)}</p>
+                </div>
               </div>
-            </div>
+            </Link>
 
             <div className={styles.buttonContainer}>
               {canEdit && (
@@ -406,34 +413,39 @@ export default function PromptDetail() {
             <ul className={styles.commentList}>
               {comments.map(comment => (
                 <li key={comment._id} className={styles.commentItem}>
-                  <div className={styles.commentAuthorInfo}>
-                    {comment.author?.image ? (
-                      <Link href={`/dashboard?userId=${comment.author._id}`} className={styles.authorLink}>
-                        <Image
-                          src={comment.author.image}
-                          alt={comment.author.name || '评论者头像'}
-                          className={styles.commentAvatar}
-                          width={30}
-                          height={30}
-                          objectFit="cover"
-                        />
-                      </Link>
-                    ) : (
-                      <div className={styles.commentAvatar}>{comment.author?.name?.[0] || '?'}</div>
+                  <div className={styles.commentHeader}>
+                    <div className={styles.commentAuthorInfo}>
+                      {comment.author?.image ? (
+                        <Link href={`/dashboard?userId=${comment.author._id}`} className={styles.authorLink}>
+                          <Image
+                            src={comment.author.image}
+                            alt={comment.author.name || '评论者头像'}
+                            className={styles.commentAvatar}
+                            width={30}
+                            height={30}
+                            objectFit="cover"
+                          />
+                        </Link>
+                      ) : (
+                        <div className={styles.commentAvatar}>{comment.author?.name?.[0] || '?'}</div>
+                      )}
+                      <div className={styles.commentAuthorMeta}>
+                        <p className={styles.commentAuthorName}>{comment.author?.name || '未知用户'}</p>
+                        <p className={styles.commentDate}>{formatPromptDate(comment.createdAt)}</p>
+                      </div>
+                    </div>
+                    {comment.status === 'pending' && (
+                       <span className={styles.commentStatusPending}>待审核</span>
                     )}
-                    <span className={styles.commentAuthorName}>{comment.author?.name || '未知用户'}</span>
-                    <span className={styles.commentDate}>{formatPromptDate(comment.createdAt)}</span>
-                    {/* 显示评论状态标记 */}
                     {comment.status === 'approved' && (
                        <span className={styles.commentStatusApproved}>已通过</span>
                     )}
                   </div>
                   <p className={styles.commentContent}>{comment.content}</p>
-                  {/* 举报按钮 */}
-                  {session && ( // 只有登录用户才能看到举报按钮
+                  {session && (
                      <button
                        onClick={() => handleReportComment(comment._id)}
-                       disabled={reportingCommentId === comment._id} // 举报中禁用按钮
+                       disabled={reportingCommentId === comment._id}
                        className={styles.reportButton}
                        title="举报此评论"
                      >

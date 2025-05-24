@@ -690,3 +690,55 @@
     font-size: 0.9rem;
   }
 }
+
+/* 评论作者信息容器 */
+.commentAuthorInfo {
+  display: flex; /* 使用 flex 布局 */
+  align-items: center; /* 垂直居中对齐头像和元信息 */
+  gap: 0.5rem; /* 头像和元信息之间的间距 */
+}
+
+/* 评论作者元信息容器 */
+.commentAuthorMeta {
+  display: flex;
+  flex-direction: column; /* 使子元素（名字和日期）垂直堆叠 */
+}
+
+/* 评论作者名字 */
+.commentAuthorName {
+  font-weight: 500;
+  font-size: 0.9rem; /* 调整字体大小 */
+  color: var(--text-primary);
+  margin: 0; /* 移除默认 margin */
+}
+
+/* 评论日期 */
+.commentDate {
+  font-size: 0.8rem; /* 调整字体大小 */
+  color: var(--text-secondary);
+  margin: 0; /* 移除默认 margin */
+}
+
+/* 评论头像 */
+.commentAvatar {
+  width: 32px; /* 调整头像大小 */
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--outline); /* 添加边框 */
+}
+
+/* 作者链接样式 (用于主提示和评论) */
+.authorLink {
+  text-decoration: none; /* 移除下划线 */
+  color: inherit; /* 继承父元素颜色 */
+  cursor: pointer; /* 显示手形光标 */
+  display: flex; /* 使整个链接区域成为 flex 容器 */
+  align-items: center; /* 垂直居中对齐内容 */
+  gap: 0.75rem; /* 头像和文本之间的间距 */
+}
+
+.authorLink:hover .authorName,
+.authorLink:hover .commentAuthorName {
+  text-decoration: underline; /* 悬停时给名字添加下划线 */
+}
