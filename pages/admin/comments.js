@@ -300,7 +300,13 @@ export default function AdminCommentsPage() {
       </div>
 
       {/* 状态过滤下拉框 */}
-      <select className={styles.filterSelect} value={filterStatus} onChange={handleFilterChange}>
+      <select
+        id="comment-filter-status"
+        name="comment-filter-status"
+        className={styles.filterSelect}
+        value={filterStatus}
+        onChange={handleFilterChange}
+      >
         <option value="all">所有评论</option>
         <option value="pending">待审核</option>
         <option value="approved">已批准</option>

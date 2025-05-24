@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { MdArrowBack, MdContentCopy, MdCheck, MdFavorite, MdVisibility, MdEdit, MdFlag, MdFavoriteBorder } from 'react-icons/md';
+import { MdArrowBack, MdContentCopy, MdCheck, MdFavorite, MdVisibility, MdEdit, MdFlag, MdFavoriteBorder, MdCode, MdTextFormat } from 'react-icons/md';
 import styles from '../../styles/PromptDetail.module.css';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -32,6 +32,9 @@ export default function PromptDetail() {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Markdown 渲染切换状态
+  const [isMarkdownEnabled, setIsMarkdownEnabled] = useState(true);
 
   useEffect(() => {
     setIsClient(true);
@@ -223,6 +226,11 @@ export default function PromptDetail() {
     }
   };
   
+  // 切换 Markdown 渲染模式
+  const toggleMarkdown = () => {
+    setIsMarkdownEnabled(!isMarkdownEnabled);
+  };
+  
   if (loading) return (
     <div className={styles.loadingContainer}>
       <div className={styles.loadingSpinner}></div>
@@ -273,17 +281,19 @@ export default function PromptDetail() {
         </div>
         
         <div className={styles.promptCard}>
-          <div className={styles.authorSection}>
+          <div className={styles.headerRow}>
             <div className={styles.authorInfo}>
               {prompt.author?.image ? (
-                <Image
-                  src={prompt.author.image}
-                  alt={prompt.author.name || '作者头像'}
-                  className={styles.authorAvatar}
-                  width={40}
-                  height={40}
-                  objectFit="cover"
-                />
+                <Link href={`/dashboard?userId=${prompt.author._id}`} className={styles.authorLink}>
+                  <Image
+                    src={prompt.author.image}
+                    alt={prompt.author.name || '作者头像'}
+                    className={styles.authorAvatar}
+                    width={40}
+                    height={40}
+                    objectFit="cover"
+                  />
+                </Link>
               ) : (
                 <div className={styles.authorAvatar}>{prompt.author?.name?.[0] || '?'}</div>
               )}
@@ -292,26 +302,39 @@ export default function PromptDetail() {
                 <p className={styles.publishDate}>{formatPromptDate(prompt.createdAt)}</p>
               </div>
             </div>
-          </div>
 
-          {/* 只有作者或管理员才能看到编辑按钮 - 现在直接放在 promptCard 内 */}
-          {canEdit && (
-            <Link href={`/edit-prompt/${prompt._id || id}`} className={styles.editButton}>
-              <MdEdit style={{ marginRight: '0.5rem' }} />
-              编辑提示
-            </Link>
-          )}
-          <div className={styles.contentSection}>
-            <button 
-              className={`${styles.copyButton} ${copied ? styles.copied : ''}`}
-              onClick={handleCopy}
-              aria-label="复制内容"
+            <div className={styles.buttonContainer}>
+              {canEdit && (
+                <Link href={`/edit-prompt/${prompt._id || id}`} className={`${styles.actionButton} ${styles.editButton}`} aria-label="编辑提示">
+                  <MdEdit size={18} />
+                  <span>编辑</span>
+                </Link>
+              )}
+              <button
+                className={`${styles.actionButton} ${copied ? styles.active : ''}`}
+                onClick={handleCopy}
+                aria-label="复制内容"
               >
                 {copied ? <MdCheck /> : <MdContentCopy />}
                 <span>{copied ? '已复制' : '复制'}</span>
               </button>
+              <button
+                className={`${styles.actionButton} ${isMarkdownEnabled ? styles.active : ''}`}
+                onClick={toggleMarkdown}
+                aria-label={isMarkdownEnabled ? '切换到纯文本' : '切换到 Markdown 渲染'}
+              >
+                {isMarkdownEnabled ? <MdTextFormat /> : <MdCode />}
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.contentSection}>
             <div className={styles.contentWrapper}>
-              <pre className={styles.content}>{prompt.content || '内容加载失败或为空'}</pre>
+              {isMarkdownEnabled ? (
+                <SafeMarkdown content={prompt.content} />
+              ) : (
+                <pre className={styles.plainTextContent}>{prompt.content || '内容加载失败或为空'}</pre>
+              )}
             </div>
           </div>
           
@@ -385,7 +408,8 @@ export default function PromptDetail() {
                 <li key={comment._id} className={styles.commentItem}>
                   <div className={styles.commentAuthorInfo}>
                     {comment.author?.image ? (
-                       <Image
+                      <Link href={`/dashboard?userId=${comment.author._id}`} className={styles.authorLink}>
+                        <Image
                           src={comment.author.image}
                           alt={comment.author.name || '评论者头像'}
                           className={styles.commentAvatar}
@@ -393,6 +417,7 @@ export default function PromptDetail() {
                           height={30}
                           objectFit="cover"
                         />
+                      </Link>
                     ) : (
                       <div className={styles.commentAvatar}>{comment.author?.name?.[0] || '?'}</div>
                     )}
