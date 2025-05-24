@@ -486,4 +486,13 @@
 .promptTitle:hover {
   color: var(--md-on-primary-container);
   text-decoration: underline;
+}
+
+.statusAbnormal {
+  background-color: var(--md-error-container); /* 使用错误相关的颜色变量 */
+  color: var(--md-on-error-container);
+  padding: 0.2em 0.5em;
+  border-radius: var(--border-radius-small);
+  font-weight: bold;
+  margin-left: 0.5rem; /* 与其他 meta 信息保持间距 */
 } 

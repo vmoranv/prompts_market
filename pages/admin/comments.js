@@ -181,7 +181,7 @@ export default function AdminCommentsPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/comments/${commentId}`, {
+      const response = await fetch(`/api/comments/${commentId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -366,12 +366,14 @@ export default function AdminCommentsPage() {
                        )}
                        {/* 应用状态样式类 */}
                        <span className={`${styles.commentStatus} ${getStatusClassName(comment.status)}`}>
-                          <span className={styles.statusText}>
-                             {comment.status === 'pending' && '待审核'}
-                             {comment.status === 'approved' && '已批准'}
-                             {comment.status === 'rejected' && '已拒绝'}
-                             {!['pending', 'approved', 'rejected'].includes(comment.status) && '未知状态'}
-                          </span>
+                          {/* 检查举报次数是否超过阈值 */}
+                          {comment.reportsCount > 10 ? (
+                            <span className={styles.statusAbnormal}>异常评论 ({comment.reportsCount} 举报)</span>
+                          ) : (
+                            comment.status === 'pending' ? '待审核' :
+                            comment.status === 'approved' ? '已批准' :
+                            comment.status === 'rejected' ? '已拒绝' : '未知状态'
+                          )}
                        </span>
                     </div>
                   </div>

@@ -36,6 +36,31 @@ export default function PromptDetail() {
   // Markdown 渲染切换状态
   const [isMarkdownEnabled, setIsMarkdownEnabled] = useState(true);
 
+  // 获取评论 - 移到组件顶层
+  const fetchComments = async () => {
+    if (!id) return; // 确保 id 存在
+    setLoadingComments(true);
+    setCommentError(null);
+    try {
+      const response = await fetch(`/api/prompts/${id}/comments`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '获取评论失败');
+      }
+      const data = await response.json();
+      if (data.success) {
+        setComments(data.data.filter(comment => comment.status === 'approved'));
+      } else {
+        throw new Error(data.message || '获取评论数据失败');
+      }
+    } catch (err) {
+      console.error('加载评论错误:', err);
+      setCommentError(err.message);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -75,30 +100,6 @@ export default function PromptDetail() {
         setError(err.message);
       } finally {
         setLoading(false);
-      }
-    };
-    
-    // 获取评论
-    const fetchComments = async () => {
-      setLoadingComments(true);
-      setCommentError(null);
-      try {
-        const response = await fetch(`/api/prompts/${id}/comments`);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || '获取评论失败');
-        }
-        const data = await response.json();
-        if (data.success) {
-          setComments(data.data.filter(comment => comment.status === 'approved'));
-        } else {
-          throw new Error(data.message || '获取评论数据失败');
-        }
-      } catch (err) {
-        console.error('加载评论错误:', err);
-        setCommentError(err.message);
-      } finally {
-        setLoadingComments(false);
       }
     };
     
@@ -206,21 +207,31 @@ export default function PromptDetail() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || `举报评论失败: ${response.status}`);
-      }
-
-      if (data.success) {
-        alert('评论举报成功！感谢您的反馈。');
-        // 可选：更新本地评论列表中的 reportsCount，或者重新获取评论
-        // 重新获取评论可以确保看到最新的 reportsCount
-        fetchComments();
+        // 检查是否是"已举报"的特定错误
+        if (response.status === 400 && data.error === '您已举报过此评论') {
+          alert('您已举报过此评论，无需重复举报。');
+        } else {
+          // 处理其他类型的错误
+          throw new Error(data.error || `举报评论失败: ${response.status}`);
+        }
       } else {
-         throw new Error(data.error || '举报评论失败');
+        if (data.success) {
+          alert('评论举报成功！感谢您的反馈。');
+          // 可选：更新本地评论列表中的 reportsCount，或者重新获取评论
+          // 重新获取评论可以确保看到最新的 reportsCount
+          fetchComments();
+        } else {
+           // 理论上 response.ok 为 true 时 success 应该为 true，但为了健壮性保留
+           throw new Error(data.error || '举报评论失败');
+        }
       }
 
     } catch (err) {
       console.error("举报评论失败:", err);
-      alert(`举报评论失败: ${err.message}`);
+      // 对于非特定错误，显示通用错误信息
+      if (!['您已举报过此评论'].includes(err.message)) {
+         alert(`举报评论失败: ${err.message}`);
+      }
     } finally {
       setReportingCommentId(null); // 重置正在举报的评论 ID
     }
