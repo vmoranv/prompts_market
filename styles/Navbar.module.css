@@ -292,7 +292,8 @@
     padding: 0.75rem 1rem;
   }
   .navContainer {
-    /* 在小屏幕上，可以让 logo 和 actions 分散对齐，navLinks 隐藏或变为汉堡菜单 */
+    justify-content: space-between; /* 使 logo 和 actions 分散在两端 */
+    align-items: center; /* 垂直居中对齐 */
   }
   .navLinks {
     display: none; /* 或者实现汉堡菜单 */
@@ -308,6 +309,7 @@
     font-size: 2rem;
   }
   .dropdownMenu {
-    /* 可以调整下拉菜单在小屏幕上的位置或宽度 */
+    width: 180px; /* 调整宽度 */
+    right: 0;
   }
 } 

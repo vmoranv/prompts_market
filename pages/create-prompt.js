@@ -34,7 +34,7 @@ export default function CreatePromptPage() {
   
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login?callbackUrl=/create-prompt');
+      router.push('/signin?callbackUrl=/create-prompt');
     }
   }, [status, router]);
   
@@ -57,6 +57,19 @@ export default function CreatePromptPage() {
     setIsSubmitting(true);
     setError(null);
     setSuccessMessage('');
+
+    if (status === 'loading') {
+      setError('会话加载中，请稍候...');
+      setIsSubmitting(false);
+      return;
+    }
+    if (status === 'unauthenticated' || !session?.user?.id) {
+      setError('您需要登录才能创建 Prompt。');
+      setIsSubmitting(false);
+      // 重定向到登录页面
+      router.push('/signin?callbackUrl=/create-prompt');
+      return;
+    }
 
     // 验证标题和内容是否为空
     if (!title.trim() || !content.trim()) {
@@ -95,7 +108,7 @@ export default function CreatePromptPage() {
     }
 
     try {
-      const res = await fetch('/api/prompts', {
+      const response = await fetch('/api/prompts/new', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,13 +117,15 @@ export default function CreatePromptPage() {
           title,
           content,
           tags: processedTags,
+          userId: session?.user.id,
         }),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || '创建 Prompt 失败');
+      if (!response.ok || !data.success) {
+        const errorMessage = data.error || data.message || '创建 Prompt 失败';
+        throw new Error(errorMessage);
       }
 
       setTitle('');
@@ -126,9 +141,9 @@ export default function CreatePromptPage() {
         router.push('/'); 
       }, 2000); 
 
-    } catch (err) {
-      console.error("Create prompt error:", err);
-      setError(err.message || '发生未知错误，请稍后再试。');
+    } catch (error) {
+      console.error('创建 Prompt 失败:', error);
+      setError(`创建 Prompt 失败: ${error.message}`); 
     } finally {
       setIsSubmitting(false);
     }

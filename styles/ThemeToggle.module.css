@@ -1,4 +1,7 @@
 .themeToggleContainer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
   position: relative;
   z-index: 1000;
 }
@@ -33,7 +36,8 @@
 .themeOptions {
   position: absolute;
   top: calc(100% + 5px);
-  right: 0;
+  right: auto;
+  left: 0;
   z-index: 100;
   background-color: var(--card-bg);
   border-radius: 8px;
@@ -76,4 +80,29 @@
 .themeOption.active {
   background-color: var(--selected-state);
   color: var(--primary-contrast);
+}
+
+.dropdownContent {
+  position: absolute;
+  right: 0;
+  left: auto;
+}
+
+.dropdownMenu {
+  position: absolute;
+  right: auto;
+  left: 0;
+  top: 100%;
+  margin-top: 8px;
+  background-color: var(--md-surface-container-high);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--border-radius-medium);
+  box-shadow: var(--shadow-elevation-medium);
+  z-index: 1000;
+  min-width: 150px;
+}
+
+.dropdownMenu.entering,
+.dropdownMenu.entered {
+  transform-origin: top left;
 } 

@@ -21,8 +21,6 @@ export default async function handler(req, res) {
       .populate('author', 'name email image')
       .sort({ createdAt: -1 });
     
-    console.log(`找到 ${pendingPrompts.length} 个待审核提示`); 
-    
     return res.status(200).json({ 
       success: true, 
       prompts: pendingPrompts 

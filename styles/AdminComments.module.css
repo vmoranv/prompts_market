@@ -363,7 +363,6 @@
 /* 评论状态文本颜色 */
 .statusText {
   font-weight: 600;
-  /* 颜色将通过父元素的背景色和文字色确定 */
 }
 
 /* 过滤容器样式 */
@@ -379,24 +378,33 @@
   color: var(--md-on-background);
 }
 
-/* 响应式调整 */
+/* 响应式设计*/
 @media (max-width: 768px) {
   .container {
-    padding: 0 0.5rem;
+    padding: 0 0.75rem;
+    margin: 1.5rem auto;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .title {
     font-size: 1.8rem;
+    text-align: left;
+    order: 2; /* 标题放在第二行 */
+  }
+
+  .backButton {
+    order: 1; /* 返回按钮放在第一行 */
   }
 
   .commentItem {
     padding: 1rem;
-  }
-
-  .commentHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    margin-bottom: 1rem;
   }
 
   .authorInfo {
@@ -436,7 +444,7 @@
   }
 
   .approved {
-     background-color: var(--md-success-container); /* 假设您有 success 相关的颜色变量 */
+     background-color: var(--md-success-container);
      color: var(--md-on-success-container);
   }
 
