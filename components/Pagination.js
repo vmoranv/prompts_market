@@ -13,6 +13,15 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
 
   return (
     <div className={styles.pagination}>
+      {/* 首页按钮 */}
+      <button
+        className={styles.pageButton}
+        onClick={() => onPageChange(1)} // 点击跳转到第一页
+        disabled={currentPage === 1} // 当前页是第一页时禁用
+      >
+        首页
+      </button>
+
       {/* 上一页按钮 */}
       <button
         className={styles.pageButton}
@@ -41,6 +50,15 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
         disabled={currentPage === totalPages}
       >
         下一页
+      </button>
+
+      {/* 尾页按钮 */}
+      <button
+        className={styles.pageButton}
+        onClick={() => onPageChange(totalPages)} // 点击跳转到最后一页
+        disabled={currentPage === totalPages} // 当前页是最后一页时禁用
+      >
+        尾页
       </button>
     </div>
   );

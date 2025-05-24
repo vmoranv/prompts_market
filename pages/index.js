@@ -178,7 +178,16 @@ export default function Home() {
         {/* 分页控件 */}
         {paginationInfo.totalPrompts > 0 && (
           <div className={styles.pagination}>
-            <button 
+            {/* 首页按钮 */}
+            <button
+              onClick={() => handlePageChange(1)} // 点击跳转到第一页
+              disabled={currentPage === 1} // 当前页是第一页时禁用
+              className={styles.pageButton}
+            >
+              首页
+            </button>
+            {/* 上一页按钮 */}
+            <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className={styles.pageButton}
@@ -189,13 +198,22 @@ export default function Home() {
             <span className={styles.pageInfo}>
               第 {currentPage} 页 {paginationInfo.totalPages > 0 ? `/ 共 ${paginationInfo.totalPages} 页` : ''}
             </span>
-            <button 
+            {/* 下一页按钮 */}
+            <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={!paginationInfo.hasMore || currentPage >= paginationInfo.totalPages}
               className={styles.pageButton}
             >
               下一页
               <MdKeyboardArrowRight />
+            </button>
+            {/* 尾页按钮 */}
+            <button
+              onClick={() => handlePageChange(paginationInfo.totalPages)} // 点击跳转到最后一页
+              disabled={currentPage === paginationInfo.totalPages} // 当前页是最后一页时禁用
+              className={styles.pageButton}
+            >
+              尾页
             </button>
           </div>
         )}

@@ -8,6 +8,9 @@ import { MdCheckCircle, MdCancel, MdDelete, MdVisibility, MdFlag, MdArrowBack } 
 import Image from 'next/image';
 import Pagination from '../../components/Pagination'; // 请根据您的实际路径调整
 
+// 导入 MUI 组件
+import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+
 export default function AdminCommentsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -287,31 +290,37 @@ export default function AdminCommentsPage() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>管理评论 - Prompt Sharing</title>
+        <title>审核评论 - 管理员面板</title>
+        <meta name="description" content="Promptopia 管理员面板 - 审核评论" />
       </Head>
 
-      {/* 添加 header 和返回按钮 */}
-      <div className={styles.header}> {/* 使用 header 样式 */}
+      <div className={styles.header}>
         <Link href="/admin" className={styles.backButton}>
           <MdArrowBack />
-          <span>返回管理员页</span>
+          <span>返回管理员面板</span>
         </Link>
-        <h1 className={styles.title}>管理评论 ({totalComments})</h1>
+        <h1 className={styles.title}>审核评论</h1>
+        <div className={styles.headerPlaceholder}></div>
       </div>
 
       {/* 状态过滤下拉框 */}
-      <select
-        id="comment-filter-status"
-        name="comment-filter-status"
-        className={styles.filterSelect}
-        value={filterStatus}
-        onChange={handleFilterChange}
-      >
-        <option value="all">所有评论</option>
-        <option value="pending">待审核</option>
-        <option value="approved">已批准</option>
-        <option value="rejected">已拒绝</option>
-      </select>
+      <FormControl sx={{ minWidth: 120, marginBottom: '1.5rem' }}> {/* 添加一些底部外边距 */}
+        <InputLabel id="comment-filter-status-label">状态</InputLabel>
+        <Select
+          labelId="comment-filter-status-label"
+          id="comment-filter-status"
+          value={filterStatus}
+          label="状态"
+          onChange={handleFilterChange}
+          // 您可以在这里添加更多的 MUI Select props 来定制样式和行为
+          // 例如：size="small", variant="outlined" 等
+        >
+          <MenuItem value="all">所有评论</MenuItem>
+          <MenuItem value="pending">待审核</MenuItem>
+          <MenuItem value="approved">已批准</MenuItem>
+          <MenuItem value="rejected">已拒绝</MenuItem>
+        </Select>
+      </FormControl>
 
 
       {comments.length === 0 ? (

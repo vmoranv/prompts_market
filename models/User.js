@@ -32,4 +32,18 @@ const UserSchema = new mongoose.Schema({
 });
 
 // 防止在热重载时重复编译模型
+// export default mongoose.models.User || mongoose.model('User', UserSchema);
+
+// 更新 UserSchema 以包含 following 和 followers
+UserSchema.add({
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
+});
+
 export default mongoose.models.User || mongoose.model('User', UserSchema);

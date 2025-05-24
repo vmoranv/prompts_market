@@ -323,15 +323,18 @@ export default function AdminReviewPage() {
   return (
     <>
       <Head>
-        <title>审核提示 - 管理员</title>
+        <title>审核提示 - 管理员面板</title>
+        <meta name="description" content="Promptopia 管理员面板 - 审核提示" />
       </Head>
+
       <div className={styles.container}>
         <div className={styles.header}>
           <Link href="/admin" className={styles.backButton}>
             <MdArrowBack />
-            <span>返回管理员页</span>
+            <span>返回管理员面板</span>
           </Link>
           <h1 className={styles.title}>审核提示</h1>
+          <div className={styles.headerPlaceholder}></div>
         </div>
 
         {error && (

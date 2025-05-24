@@ -17,7 +17,8 @@
   align-items: center;
   width: 100%; /* 确保 header 占满容器宽度 */
   margin-bottom: 2rem;
-  justify-content: space-between; /* 在返回按钮和标题之间创建空间 */
+  /* 移除 justify-content: space-between; 改为使用占位元素平衡布局 */
+  /* justify-content: space-between; */
 }
 
 .title {
@@ -57,6 +58,14 @@
   transform: scale(0.95);
 }
 
+/* 添加占位元素的样式，使其宽度与返回按钮大致相同 */
+.headerPlaceholder {
+  /* 宽度需要根据 .backButton 的实际宽度调整，这里先给一个近似值 */
+  /* 考虑 padding, border, gap 等 */
+  width: 40px; /* 示例值，可能需要根据实际渲染调整 */
+  flex-shrink: 0; /* 防止占位元素被压缩 */
+}
+
 /* 媒体查询：在大屏幕上显示返回按钮文本 */
 @media (min-width: 600px) {
   .backButton span {
@@ -65,6 +74,11 @@
   .backButton {
     border-radius: var(--border-radius-medium); /* 在大屏幕上使用矩形按钮 */
     padding: 0.5rem 1rem;
+  }
+  /* 在大屏幕上调整占位元素的宽度 */
+  .headerPlaceholder {
+    /* 示例值，可能需要根据实际渲染调整 */
+    width: 100px; /* 示例值，考虑文本和图标 */
   }
 }
 

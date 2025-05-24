@@ -140,18 +140,24 @@
 }
 
 .signInButton {
-  background-color: var(--md-primary);
-  color: var(--md-on-primary);
+  /* 使用 Material Design On Primary 颜色作为文本颜色，确保高对比度 */
+  color: var(--md-primary);
   padding: 0.6rem 1.25rem;
   border-radius: 50px;
   text-decoration: none;
   font-weight: 500;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-elevation-extra-small);
+  display: inline-flex; /* 使用 flexbox 确保内容居中 */
+  align-items: center;
+  justify-content: center;
 }
 
 .signInButton:hover {
-  background-color: var(--md-primary-container);
-  color: var(--md-on-primary-container);
+  /* 悬停时使用 Primary Container 颜色或 Primary 的变体 */
+  background-color: var(--md-primary-container); /* 示例：使用 Primary Container */
+  /* 悬停时文本颜色使用 On Primary Container */
+  color: var(--md-on-primary-container); /* 示例：使用 On Primary Container */
   box-shadow: var(--shadow-elevation-small);
 }
 

@@ -1,15 +1,15 @@
 import dbConnect from '../../../../lib/dbConnect';
 import Comment from '../../../../models/Comment';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]'; // 确保路径正确
+import { authOptions } from '../../auth/[...nextauth]'; 
 import mongoose from 'mongoose'; // 导入 mongoose 以使用 ObjectId
 
 // 定义举报阈值
-const REPORT_THRESHOLD = 3; // 例如，3 次举报触发状态变更
+const REPORT_THRESHOLD = 3; 
 
 export default async function handler(req, res) {
   const { method } = req;
-  const { id } = req.query; // Comment ID
+  const { id } = req.query;
 
   await dbConnect();
 

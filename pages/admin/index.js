@@ -46,6 +46,7 @@ export default function AdminIndexPage() {
           <span>返回主页</span>
         </Link>
         <h1 className={styles.title}>管理员面板</h1>
+        <div className={styles.headerPlaceholder}></div>
       </div>
 
       <div className={styles.linkContainer}>
