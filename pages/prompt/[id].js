@@ -269,12 +269,8 @@ export default function PromptDetail() {
           name="description" 
           content={`${prompt.title} - ${prompt.content ? prompt.content.substring(0, 160) : ''}...`} 
         />
-        {/* Open Graph Meta Tags */}
         <meta property="og:title" content={prompt.title} />
         <meta property="og:description" content={prompt.description} />
-        {/* TODO: Add og:image and og:url */}
-        {/* <meta property="og:image" content={prompt.imageUrl} /> */}
-        {/* <meta property="og:url" content={`https://yourwebsite.com/prompt/${prompt._id}`} /> */}
         <meta property="og:type" content="article" />
       </Head>
       
