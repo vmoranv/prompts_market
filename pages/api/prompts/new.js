@@ -2,8 +2,17 @@ import Prompt from '../../../models/Prompt';
 import dbConnect from '../../../lib/dbConnect';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
-import User from '../../models/User';
-import Notification from '../../models/Notification';
+import User from '../../../models/User';
+import Notification from '../../../models/Notification';
+import Joi from 'joi';
+
+// 定义请求体验证 Schema
+const promptSchema = Joi.object({
+  title: Joi.string().min(3).max(100).required(),
+  content: Joi.string().min(10).required(),
+  tags: Joi.array().items(Joi.string().max(50)).optional().default([]),
+  isPublic: Joi.boolean().optional().default(true),
+});
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -19,38 +28,41 @@ export default async function handler(req, res) {
   switch (method) {
     case 'POST':
       try {
-        const { prompt, tag } = req.body;
+        // 验证请求体
+        const { error, value } = promptSchema.validate(req.body);
 
-        if (!prompt || !tag) {
-          return res.status(400).json({ success: false, error: 'Prompt 和 Tag 不能为空' });
+        if (error) {
+          // 返回验证错误信息
+          return res.status(400).json({ success: false, error: error.details[0].message });
         }
+
+        const { title, content, tags, isPublic } = value;
 
         // 创建新的 Prompt
         const newPrompt = await Prompt.create({
-          creator: session.user.id,
-          prompt,
-          tag,
+          title,
+          content,
+          tags,
+          isPublic,
+          author: session.user.id,
         });
 
-        // 查找所有关注此 Prompt 作者的用户
-        const authorId = session.user.id;
-        const followers = await User.find({ following: authorId }).select('_id').lean();
+        // 获取作者的用户信息
+        const author = await User.findById(session.user.id);
 
-        // 为每个关注者创建新 Prompt 通知
-        const notifications = followers.map(follower => ({
-          recipient: follower._id, // 关注者收到通知
-          sender: authorId, // Prompt 作者是发送者
-          type: 'new_prompt',
-          relatedEntity: newPrompt._id, // 关联新创建的 Prompt
-          relatedEntityType: 'Prompt',
-        }));
+        // 通知作者的关注者有新 Prompt 发布
+        if (author && author.followers && author.followers.length > 0) {
+          const notifications = author.followers.map(followerId => ({
+            recipient: followerId,
+            sender: session.user.id,
+            type: 'new_prompt',
+            relatedEntity: newPrompt._id,
+            read: false,
+          }));
 
-        // 批量创建通知
-        if (notifications.length > 0) {
+          // 这里是将通知直接插入数据库，后续 S3 将改为发送到队列
           await Notification.insertMany(notifications);
-          console.log(`为 ${notifications.length} 个关注者创建了新 Prompt 通知`);
         }
-
 
         res.status(201).json({ success: true, data: newPrompt });
       } catch (error) {
