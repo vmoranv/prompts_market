@@ -1,5 +1,6 @@
-import { connectToDatabase } from '../../../../lib/mongodb'; // 假设您的数据库连接函数在这里
-import { ObjectId } from 'mongodb'; // 如果您使用 MongoDB ObjectId
+import dbConnect from '../../../../lib/dbConnect'; // 导入 dbConnect
+import User from '../../../../models/User'; // 导入 User 模型
+import mongoose from 'mongoose'; // 导入 mongoose
 
 export default async function handler(req, res) {
   // 确保只处理 GET 请求
@@ -15,18 +16,15 @@ export default async function handler(req, res) {
   }
 
   // 检查 userId 是否是有效的 ObjectId
-  if (!ObjectId.isValid(userId)) {
+  if (!mongoose.Types.ObjectId.isValid(userId)) { // 使用 mongoose.Types.ObjectId
       return res.status(400).json({ success: false, error: 'Invalid User ID format' });
   }
 
   try {
-    const { db } = await connectToDatabase(); // 连接到数据库
+    await dbConnect(); // 使用 dbConnect 连接数据库
 
     // 查找指定用户，并获取其 followers 字段中的用户 ID 列表
-    const user = await db.collection('users').findOne(
-      { _id: new ObjectId(userId) },
-      { projection: { followers: 1 } } // 只获取 followers 字段
-    );
+    const user = await User.findById(userId).select('followers').lean(); // 使用 Mongoose 查找用户并只选择 followers 字段
 
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
@@ -40,9 +38,8 @@ export default async function handler(req, res) {
     }
 
     // 确保 followerUserIds 中的每个 ID 都是有效的 ObjectId，并进行转换
-    const validFollowerObjectIds = followerUserIds
-        .filter(id => ObjectId.isValid(id))
-        .map(id => new ObjectId(id));
+    const validFollowerObjectIds = followerUserIds // Mongoose 返回的 ObjectId 已经是 ObjectId 类型
+        .filter(id => mongoose.Types.ObjectId.isValid(id)); // 过滤掉无效的 ID
 
     // 如果没有有效的 ObjectId，也返回空数组
     if (validFollowerObjectIds.length === 0) {
@@ -50,10 +47,10 @@ export default async function handler(req, res) {
     }
 
     // 根据获取到的用户 ID 列表，查询这些用户的详细信息
-    const followerUsers = await db.collection('users').find(
+    const followerUsers = await User.find( // 使用 Mongoose 查找多个用户
       { _id: { $in: validFollowerObjectIds } },
-      { projection: { name: 1, email: 1, image: 1 } } // 只获取需要显示的用户信息字段
-    ).toArray();
+      'name email image' // 只选择 name, email, image 字段
+    ).lean(); // 使用 lean() 获取 plain JavaScript objects 以提高性能
 
     // 返回成功响应和粉丝用户列表
     res.status(200).json({ success: true, data: followerUsers });
