@@ -66,6 +66,7 @@ export default function PromptCard({ prompt }) {
   // 使用组件内部获取的 userId 检查是否已点赞
   const [isLiked, setIsLiked] = useState(checkIsLiked(prompt.likedBy, userId));
   const [isLoading, setIsLoading] = useState(false); // 用于防止重复点击
+  const [error, setError] = useState(null); // 用于存储错误信息
 
   // 当 prompt 或 session 变化时，更新 isLiked 状态
   useEffect(() => {
@@ -153,23 +154,27 @@ export default function PromptCard({ prompt }) {
 
   // 处理点赞/取消点赞
   const handleLike = async () => {
-    // 只有登录用户才能点赞
-    if (status !== 'authenticated') {
-      alert('请登录后点赞。');
+    if (!session) {
+      // 如果用户未登录，可以提示登录或跳转到登录页
+      alert('请先登录才能点赞！');
       return;
     }
-    if (isLoading) return; // 防止重复点击
 
     setIsLoading(true);
-    const method = isLiked ? 'DELETE' : 'POST'; // 如果已点赞，则取消点赞 (DELETE); 否则点赞 (POST)
-    const endpoint = `/api/prompts/${prompt._id}/like`;
+    setError(null);
 
     try {
-      const res = await fetch(endpoint, {
-        method: method,
+      // 根据当前点赞状态决定使用 POST (点赞/取消点赞)
+      // 后端 /api/prompts/[id]/like 路由的 POST 方法已经处理了点赞和取消点赞的逻辑
+      const method = 'POST'; // 始终使用 POST 方法
+
+      const res = await fetch(`/api/prompts/${prompt._id}/like`, {
+        method: method, // 使用上面确定的方法
         headers: {
           'Content-Type': 'application/json',
         },
+        // 对于 POST 请求，如果需要发送 body，可以在这里添加
+        // body: JSON.stringify({ userId: session.user.id }), // 后端从 token 获取 userId，这里不需要显式发送
       });
 
       if (!res.ok) {
@@ -178,18 +183,19 @@ export default function PromptCard({ prompt }) {
       }
 
       const data = await res.json();
-      if (data.success) {
-        // 更新本地状态
-        setIsLiked(!isLiked);
-        setLikesCount(data.likesCount); // 使用后端返回的最新点赞数
-        console.log(`Prompt ${prompt._id} 点赞状态更新成功。`);
-      } else {
-         throw new Error(data.error || '点赞操作失败');
+
+      // 根据后端返回的数据更新点赞状态和数量
+      setIsLiked(data.data.likedByCurrentUser);
+      setLikesCount(data.data.likesCount);
+
+      // 如果有提供更新 Prompt 列表的函数，调用它
+      if (onLikeSuccess) {
+        onLikeSuccess(prompt._id, data.data.likesCount, data.data.likedByCurrentUser);
       }
 
     } catch (err) {
-      console.error("点赞操作失败:", err);
-      alert(`点赞操作失败: ${err.message}`);
+      console.error('点赞操作错误:', err);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }

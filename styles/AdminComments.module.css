@@ -506,4 +506,83 @@
   border-radius: var(--border-radius-small);
   font-weight: bold;
   margin-left: 0.5rem;
+}
+
+/* 优化 Material UI Select 筛选框样式 - 模仿 ThemeToggle 风格 */
+/* 确保这些规则在 .container 内部生效 */
+.container :global(.MuiFormControl-root) {
+  margin-bottom: 1.5rem; /* 保持组件中的底部外边距 */
+  /* 如果 ThemeToggle.module.css 对 FormControl 有特定样式，可以在此模仿 */
+}
+
+.container :global(.MuiInputLabel-root) {
+  color: var(--md-on-surface-variant); /* 标签颜色，可以根据 ThemeToggle 调整 */
+}
+
+/* 聚焦时的标签颜色 */
+.container :global(.MuiInputLabel-root.Mui-focused) {
+  color: var(--md-primary); /* 聚焦时使用主题主色 */
+}
+
+.container :global(.MuiOutlinedInput-root) {
+  background-color: var(--md-surface-container); /* Select 输入框背景色 */
+  color: var(--md-on-surface); /* Select 输入框文字颜色 */
+  border-radius: var(--border-radius-medium); /* 根据 ThemeToggle 调整圆角 */
+  transition: background-color 0.3s ease, border-color 0.3s ease; /* 平滑过渡 */
+}
+
+.container :global(.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline) {
+  border-color: var(--md-outline); /* 边框颜色 */
+}
+
+.container :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {
+  border-color: var(--md-on-surface-variant); /* 悬停时边框颜色 */
+}
+
+.container :global(.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline) {
+  border-color: var(--md-primary); /* 聚焦时边框颜色 */
+  border-width: 2px; /* 聚焦时边框加粗，可选 */
+}
+
+.container :global(.MuiSelect-select) {
+  /* Select 内部选择的文本样式 */
+  color: var(--md-on-surface);
+  padding-top: 10px; /* 根据需要微调内边距 */
+  padding-bottom: 10px;
+}
+
+.container :global(.MuiSelect-icon) {
+  color: var(--md-on-surface-variant); /* 下拉箭头图标颜色 */
+}
+
+/* 针对下拉菜单的 Paper 元素 (MuiMenu-paper) */
+/* 使用更具体的选择器来覆盖 MUI 的默认样式 */
+/* 将此规则嵌套在 .container 下 */
+.container :global(.MuiPopover-paper.MuiMenu-paper) {
+  background-color: var(--md-surface-container-high) !important; /* 下拉菜单背景色，使用 !important 确保覆盖 */
+  color: var(--md-on-surface) !important; /* 下拉菜单文字颜色 */
+  border: 1px solid var(--md-outline-variant); /* 可选：为下拉菜单添加边框 */
+  box-shadow: var(--elevation-2); /* 使用您的阴影变量，如果定义了的话 */
+  border-radius: var(--border-radius-small); /* 根据 ThemeToggle 调整圆角 */
+}
+
+/* 针对下拉菜单项 */
+.container :global(.MuiMenuItem-root) {
+  color: var(--md-on-surface); /* 菜单项文字颜色 */
+  background-color: transparent; /* 确保菜单项背景透明，以便 Paper 背景生效 */
+  transition: background-color 0.2s ease;
+}
+
+.container :global(.MuiMenuItem-root:hover) {
+  background-color: var(--md-surface-container-highest); /* 悬停背景色 */
+  color: var(--md-on-surface); /* 悬停文字颜色 */
+}
+
+.container :global(.MuiMenuItem-root.Mui-selected) {
+  background-color: var(--md-primary-container) !important; /* 选中背景色 */
+  color: var(--md-on-primary-container) !important; /* 选中文字颜色 */
+}
+
+.container :global(.MuiMenuItem-root.Mui-selected:hover) {
+  background-color: var(--md-primary-container) !important; /* 保持选中项悬停时的背景色 */
 } 

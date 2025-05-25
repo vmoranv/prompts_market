@@ -102,53 +102,63 @@ export default function MailDropdown({ unreadNotificationsCount = 0 }) {
     }
   };
   
-  // 获取通知图标
+  // 生成通知文本的函数
+  const getNotificationText = (notification) => {
+    const senderName = notification.sender?.name || '有人';
+    
+    switch (notification.type) {
+      case 'follow':
+        return `${senderName} 关注了你`;
+        
+      case 'new_prompt':
+        return `${senderName} 发布了新的 Prompt: ${notification.relatedEntity?.title || ''}`;
+        
+      case 'new_comment':
+        return `${senderName} 评论了: ${notification.relatedEntity?.content.substring(0, 20)}${notification.relatedEntity?.content.length > 20 ? '...' : ''}`;
+        
+      case 'prompt_approved':
+        return `你的 Prompt "${notification.relatedEntity?.title || ''}" 已通过审核`;
+        
+      case 'prompt_rejected':
+        return `你的 Prompt "${notification.relatedEntity?.title || ''}" 未通过审核`;
+        
+      default:
+        return '收到一条新通知';
+    }
+  };
+  
+  // 获取通知图标的函数
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'follow':
         return <MdPersonAdd className={styles.notificationTypeIcon} />;
+        
       case 'new_prompt':
         return <MdCode className={styles.notificationTypeIcon} />;
+        
       case 'new_comment':
         return <MdComment className={styles.notificationTypeIcon} />;
+        
+      case 'prompt_approved':
+      case 'prompt_rejected':
+        return <MdCode className={styles.notificationTypeIcon} />;
+        
       default:
         return <MdEmail className={styles.notificationTypeIcon} />;
     }
   };
   
-  // 获取通知预览文本
-  const getNotificationText = (notification) => {
-    switch (notification.type) {
-      case 'follow':
-        return `${notification.sender?.name || '用户'} 关注了你`;
-      case 'new_prompt':
-        return `${notification.sender?.name || '用户'} 发布了新的 Prompt`;
-      case 'new_comment':
-        return `${notification.sender?.name || '用户'} 发表了新评论`;
-      default:
-        return '新通知';
-    }
-  };
-  
-  // 获取通知链接
+  // 获取通知链接的函数
   const getNotificationLink = (notification) => {
-    if (notification.link) {
+    if (notification.type === 'follow') {
+      return `/users/${notification.sender?._id}`;
+    } else if (notification.type === 'prompt_rejected') {
+      // 拒绝通知不提供链接跳转，转到用户仪表盘
+      return '/dashboard';
+    } else if (notification.link) {
       return notification.link;
     }
-
-    switch (notification.type) {
-      case 'follow':
-        return `/dashboard?userId=${notification.sender?._id}`;
-      case 'new_prompt':
-        return `/prompt/${notification.relatedEntity?._id}`;
-      case 'new_comment':
-        if (notification.relatedEntity?.prompt?._id) {
-          return `/prompt/${notification.relatedEntity.prompt._id}`;
-        }
-        return '/mail';
-      default:
-        return '/mail';
-    }
+    return '/';
   };
   
   // 处理通知点击

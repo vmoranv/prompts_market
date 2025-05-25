@@ -419,12 +419,7 @@
   gap: 0.5rem; /* 操作按钮之间的间距 */
 }
 
-/* 如果您之前有定义 .viewPromptLink 样式，可以保留或移除 */
-/* .viewPromptLink {
-  ...
-} */
-
-/* 新增：评论编辑输入框样式 */
+/* 评论编辑输入框样式 */
 .editCommentInput {
   width: 100%;
   padding: 0.75rem;

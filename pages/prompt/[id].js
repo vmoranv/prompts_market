@@ -79,15 +79,15 @@ export default function PromptDetail() {
         }
         
         const data = await response.json();
-        if (data.success && data.data) {
+        if (data.success) {
           setPrompt(data.data);
           // 初始化点赞状态和数量
           if (session?.user) {
-            setIsLiked(data.data.likes.includes(session.user.id));
+            setIsLiked(Array.isArray(data.data.likes) && data.data.likes.includes(session.user.id));
           }
-          setLikesCount(data.data.likes.length);
+          setLikesCount(Array.isArray(data.data.likes) ? data.data.likes.length : 0);
         } else {
-          throw new Error(data.message || '获取 Prompt 数据失败');
+          setError(data.error || '无法加载提示详情');
         }
         
         try {
@@ -240,6 +240,51 @@ export default function PromptDetail() {
   // 切换 Markdown 渲染模式
   const toggleMarkdown = () => {
     setIsMarkdownEnabled(!isMarkdownEnabled);
+  };
+  
+  // 处理点赞/取消点赞
+  const handleLike = async () => {
+    if (!session) {
+      // 如果用户未登录，可以提示登录或跳转到登录页
+      alert('请先登录才能点赞！');
+      router.push('/signin'); // 或者根据需要跳转到登录页
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 根据当前点赞状态决定使用 POST (点赞/取消点赞)
+      // 后端 /api/prompts/[id]/like 路由的 POST 方法已经处理了点赞和取消点赞的逻辑
+      const method = 'POST'; // 始终使用 POST 方法
+
+      const res = await fetch(`/api/prompts/${id}/like`, {
+        method: method, // 使用上面确定的方法
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // 对于 POST 请求，如果需要发送 body，可以在这里添加
+        // body: JSON.stringify({ userId: session.user.id }), // 后端从 token 获取 userId，这里不需要显式发送
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `点赞操作失败: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // 根据后端返回的数据更新点赞状态和数量
+      setIsLiked(data.data.likedByCurrentUser);
+      setLikesCount(data.data.likesCount);
+
+    } catch (err) {
+      console.error('点赞操作错误:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   if (loading) return (

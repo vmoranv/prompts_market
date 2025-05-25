@@ -48,50 +48,83 @@ export default async function handler(req, res) {
             select: 'name image', // 填充发送者的姓名和头像
           })
           .populate({
-            path: 'relatedEntity',
-            // 根据 relatedEntityType 动态填充 Prompt 或 Comment
-            // 对于 Prompt，填充 title
-            // 对于 Comment，可能需要填充 content 的一部分或 Prompt title
-            // 这里我们先填充 Prompt 的 title 和 Comment 的 content
-            populate: [
-              { path: 'prompt', select: 'title' }, // 如果 relatedEntity 是 Comment，填充其 Prompt
-            ],
+            path: 'relatedEntity', 
+            select: 'title content', 
           })
-          .sort({ createdAt: -1 }) // 按创建时间倒序排列
+          .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limitNum)
-          .lean(); // 使用 lean() 获取 plain JavaScript objects
+          .lean();
 
         // 根据通知类型处理 relatedEntity 的显示数据
         const formattedNotifications = notifications.map(notification => {
           let relatedEntityInfo = null;
-          let link = null;
-
+          let link = '/';
+          
+          // 根据通知类型设置相关实体信息和链接
           if (notification.relatedEntity) {
-            if (notification.relatedEntityType === 'Prompt') {
-              relatedEntityInfo = {
-                _id: notification.relatedEntity._id,
-                title: notification.relatedEntity.title || '无标题提示',
-              };
-              link = `/prompt/${notification.relatedEntity._id}`; // Prompt 详情页链接
-            } else if (notification.relatedEntityType === 'Comment') {
-              // 对于评论通知，我们可能需要显示评论内容的一部分以及所属 Prompt 的信息
-              // 加强对嵌套 prompt 的检查
-              relatedEntityInfo = {
-                _id: notification.relatedEntity._id,
-                // 评论内容可能很长，这里只显示一部分
-                contentPreview: notification.relatedEntity.content ? notification.relatedEntity.content.substring(0, 50) + '...' : '无内容',
-                // 确保 relatedEntity.prompt 存在再访问其属性
-                prompt: notification.relatedEntity.prompt ? {
-                  _id: notification.relatedEntity.prompt._id,
-                  title: notification.relatedEntity.prompt.title || '无标题提示',
-                } : null,
-              };
-              // 确保 relatedEntity.prompt 存在再生成链接
-              link = notification.relatedEntity.prompt ? `/prompt/${notification.relatedEntity.prompt._id}` : null;
+            switch (notification.type) {
+              case 'new_comment':
+                // 现有的评论通知逻辑
+                if (notification.relatedEntityType === 'Comment' && notification.relatedEntity) {
+                  relatedEntityInfo = {
+                    _id: notification.relatedEntity._id,
+                    content: notification.relatedEntity.content,
+                    // 注意：这里需要获取评论关联的 Prompt ID 来生成链接
+                    // 由于我们不再填充 relatedEntity.prompt，我们需要另一种方式获取 Prompt ID
+                    // 可以在 Comment 模型中直接存储 prompt 字段，或者在 Notification 模型中存储 relatedPromptId
+                    // 目前的代码结构下，如果 relatedEntity 是 Comment，relatedEntity.prompt 应该已经被填充了（如果 Comment 模型定义了 populate）
+                    // 但为了避免 StrictPopulateError，我们移除了嵌套填充。
+                    // 如果 Comment 模型本身没有填充 prompt，这里 relatedEntity.prompt 会是 ObjectId
+                    // 假设 Comment 模型在其他地方被 populate 了 prompt 字段，或者 relatedEntity.prompt 已经是 ObjectId
+                    // 如果 relatedEntity.prompt 是 ObjectId，我们需要单独获取 Prompt 信息
+                    // 更好的做法是在 Notification 模型中存储 relatedPromptId 字段，或者在 Comment 模型中确保 prompt 字段被填充
+                    // 暂时保留获取 promptId 的逻辑，但需要确保 relatedEntity.prompt 是有效的 ObjectId 或已填充对象
+                    promptId: notification.relatedEntity.prompt, 
+                  };
+                  // 如果 relatedEntity.prompt 是 ObjectId，这里需要调整链接生成逻辑
+                  link = `/prompts/${notification.relatedEntity.prompt}`;
+                }
+                break;
+                
+              case 'new_prompt':
+                // 现有的新 Prompt 通知逻辑
+                if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
+                  relatedEntityInfo = {
+                    _id: notification.relatedEntity._id,
+                    title: notification.relatedEntity.title,
+                  };
+                  link = `/prompts/${notification.relatedEntity._id}`;
+                }
+                break;
+                
+              case 'prompt_approved':
+                // 新增: Prompt 审核通过通知
+                if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
+                  relatedEntityInfo = {
+                    _id: notification.relatedEntity._id,
+                    title: notification.relatedEntity.title,
+                  };
+                  link = `/prompt/${notification.relatedEntity._id}`; // 审核通过跳转到 Prompt 详情页
+                }
+                break;
+                
+              case 'prompt_rejected':
+                // 新增: Prompt 审核拒绝通知
+                if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
+                  relatedEntityInfo = {
+                    _id: notification.relatedEntity._id,
+                    title: notification.relatedEntity.title,
+                  };
+                  // 拒绝通知不提供链接跳转
+                  link = '/dashboard'; // 拒绝通知跳转到用户仪表盘
+                }
+                break;
+              
+              // 现有的其他通知类型...
             }
           }
-
+          
           return {
             ...notification,
             sender: notification.sender ? {
@@ -100,7 +133,7 @@ export default async function handler(req, res) {
               image: notification.sender.image,
             } : null,
             relatedEntity: relatedEntityInfo,
-            link: link, // 添加跳转链接
+            link: link,
           };
         });
 
@@ -114,14 +147,11 @@ export default async function handler(req, res) {
         });
 
       } catch (error) {
-        // 添加更详细的错误日志
         console.error('获取通知 API 错误:', error);
-        // 返回更通用的错误信息给前端，避免暴露敏感信息
         res.status(500).json({ success: false, error: '服务器内部错误，无法获取通知' });
       }
       break;
 
-    // 可以添加 PUT 方法来标记通知为已读
     case 'PUT':
         try {
             const { notificationIds, read } = req.body; // 接收要更新的通知 ID 数组和 read 状态

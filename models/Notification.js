@@ -17,7 +17,7 @@ const NotificationSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['follow', 'new_prompt', 'new_comment'], // 定义可能的通知类型
+    enum: ['follow', 'new_prompt', 'new_comment', 'prompt_approved', 'prompt_rejected'], // 添加两种新通知类型
   },
   // 关联的实体 (例如 Prompt ID 或 Comment ID)
   relatedEntity: {

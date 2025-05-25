@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import PromptCard from './PromptCard';
-import styles from '../styles/PromptsList.module.css'; // 我们将为列表添加一些样式
+import styles from '../styles/PromptsList.module.css';
 import Link from 'next/link';
 import { MdInfo, MdSentimentDissatisfied } from 'react-icons/md';
 

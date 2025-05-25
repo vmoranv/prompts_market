@@ -48,7 +48,6 @@ export default function CreatePromptPage() {
   }, [content]);
 
   useEffect(() => {
-    // 对于标签，我们计算整个输入框的字符数，而不是单个标签的
     setTagsCharCount(countUnicodeCharacters(tags));
   }, [tags]);
   
@@ -117,7 +116,6 @@ export default function CreatePromptPage() {
           title,
           content,
           tags: processedTags,
-          userId: session?.user.id,
         }),
       });
 

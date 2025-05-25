@@ -1,20 +1,24 @@
-import { connectToDatabase } from '../../../../../utils/database';
+import dbConnect from '../../../../../lib/dbConnect';
 import Prompt from '../../../../../models/Prompt';
-import mongoose from 'mongoose';
-import { getServerSession } from 'next-auth';
+import Notification from '../../../../../models/Notification';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../auth/[...nextauth]';
+import mongoose from 'mongoose';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: '方法不允许' });
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ success: false, message: `方法 ${req.method} 不允许` });
   }
 
   const { id } = req.query;
   const { clearCache } = req.body || {};
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session || session.user.role !== 'admin') {
-    return res.status(403).json({ error: '没有权限执行此操作' });
+  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(',') : [];
+  
+  if (!session || !session.user || !adminEmails.includes(session.user.email)) {
+    return res.status(403).json({ error: '未授权，只有管理员才能拒绝提示' });
   }
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -22,7 +26,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    await connectToDatabase();
+    await dbConnect();
     
     const prompt = await Prompt.findByIdAndUpdate(
       id,
@@ -33,7 +37,7 @@ export default async function handler(req, res) {
         }
       },
       { new: true }
-    );
+    ).populate('author', 'name image');
 
     if (!prompt) {
       return res.status(404).json({ error: '提示未找到' });
@@ -47,6 +51,33 @@ export default async function handler(req, res) {
       } catch (cacheError) {
         console.error('清除缓存错误:', cacheError);
       }
+    }
+
+    const newNotification = await Notification.create({
+      recipient: prompt.author._id,
+      sender: session.user.id,
+      type: 'prompt_rejected',
+      relatedEntity: prompt._id,
+      relatedEntityType: 'Prompt',
+    });
+
+    console.log(`为用户 ${prompt.author._id} 创建了提示被拒绝通知`);
+
+    const maxNotifications = 300;
+    const recipientId = prompt.author._id;
+    const totalNotifications = await Notification.countDocuments({ recipient: recipientId });
+
+    if (totalNotifications > maxNotifications) {
+      const numToDelete = totalNotifications - maxNotifications;
+      const notificationsToDelete = await Notification.find({ recipient: recipientId })
+        .sort({ createdAt: 1 })
+        .limit(numToDelete)
+        .select('_id');
+
+      const idsToDelete = notificationsToDelete.map(notif => notif._id);
+      await Notification.deleteMany({ _id: { $in: idsToDelete } });
+
+      console.log(`为用户 ${recipientId} 删除了 ${numToDelete} 条最旧的通知。`);
     }
 
     return res.status(200).json({ 
