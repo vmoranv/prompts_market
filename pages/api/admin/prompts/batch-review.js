@@ -17,15 +17,11 @@ export default async function handler(req, res) {
     try {
       const {
         action, 
-        filter, 
-        rejectionReason, 
+        filter,  
       } = req.body;
 
       if (!['approve', 'reject'].includes(action)) {
         return res.status(400).json({ success: false, message: '无效的操作类型' });
-      }
-      if (action === 'reject' && typeof rejectionReason !== 'string') {
-        return res.status(400).json({ success: false, message: '拒绝操作必须提供原因' });
       }
 
       const query = { status: 'pending' };
@@ -64,12 +60,6 @@ export default async function handler(req, res) {
       const updateData = {
         status: action === 'approve' ? 'published' : 'rejected',
       };
-
-      if (action === 'reject') {
-        updateData.rejectionReason = rejectionReason || null; 
-      } else {
-        updateData.rejectionReason = null;
-      }
 
       const result = await Prompt.updateMany(query, { $set: updateData });
 

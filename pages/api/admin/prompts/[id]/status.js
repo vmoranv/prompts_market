@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   switch (method) {
     case 'PUT':
       try {
-        const { newStatus, rejectionReason } = body;
+        const { newStatus } = body;
 
         if (!['published', 'rejected'].includes(newStatus)) {
           return res.status(400).json({ success: false, message: '无效的状态' });
@@ -38,13 +38,6 @@ export default async function handler(req, res) {
 
         if (prompt.status !== 'pending') {
           return res.status(400).json({ success: false, message: `此 Prompt 当前状态为 ${prompt.status}，无法从此状态更新。` });
-        }
-
-        prompt.status = newStatus;
-        if (newStatus === 'rejected' && rejectionReason) {
-          prompt.rejectionReason = rejectionReason;
-        } else {
-          prompt.rejectionReason = null; 
         }
 
         await prompt.save();
