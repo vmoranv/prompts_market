@@ -108,9 +108,45 @@ export default function MailPage() {
       await markAsRead(notification._id);
     }
     
-    // 如果有链接，跳转到相应页面
+    // 根据通知类型导航到相应的页面
+    const link = getNotificationLink(notification);
+    if (link) {
+      router.push(link);
+    }
+  };
+
+  // 获取通知图标
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'follow':
+        return <MdPersonAdd />;
+      case 'new_prompt':
+        return <MdCode />;
+      case 'new_comment':
+        return <MdComment />;
+      default:
+        return <MdEmail />;
+    }
+  };
+
+  // 获取通知链接
+  const getNotificationLink = (notification) => {
     if (notification.link) {
-      router.push(notification.link);
+      return notification.link;
+    }
+
+    switch (notification.type) {
+      case 'follow':
+        return `/dashboard?userId=${notification.sender?._id}`;
+      case 'new_prompt':
+        return `/prompt/${notification.relatedEntity?._id}`;
+      case 'new_comment':
+        if (notification.relatedEntity?.prompt?._id) {
+          return `/prompt/${notification.relatedEntity.prompt._id}`;
+        }
+        return '/mail';
+      default:
+        return '/mail'; 
     }
   };
 
@@ -162,6 +198,60 @@ export default function MailPage() {
         };
     }
   };
+
+  // 处理标记所有已读
+  const handleMarkAllRead = async () => {
+    const unreadNotificationIds = notifications
+      .filter(notification => !notification.read)
+      .map(notification => notification._id);
+
+    if (unreadNotificationIds.length === 0) return;
+
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          notificationIds: unreadNotificationIds,
+          read: true
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // 更新本地状态，将所有当前显示的未读通知标记为已读
+        setNotifications(prevNotifications =>
+          prevNotifications.map(notification => ({ ...notification, read: true }))
+        );
+        // 如果有提供更新未读通知数量的函数，则调用它
+        if (window.updateUnreadNotificationsCount) {
+          window.updateUnreadNotificationsCount();
+        }
+      } else {
+        throw new Error(data.error || '标记所有已读失败');
+      }
+    } catch (err) {
+      console.error('标记所有通知为已读失败:', err);
+      // 可以选择是否显示错误消息给用户
+    }
+  };
+
+  if (status === 'loading') {
+    return (
+      <div className={styles.statusMessage}>
+        <MdRefresh className="animate-spin" size={40} />
+        加载通知中...
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    // 重定向已经在 useEffect 中处理，这里可以显示一个简单的消息或 null
+    return null;
+  }
 
   return (
     <>
@@ -232,6 +322,7 @@ export default function MailPage() {
                 <ul className={styles.notificationsList}>
                   {notifications.map(notification => {
                     const { icon, text, color } = getNotificationMetadata(notification);
+                    const link = getNotificationLink(notification);
                     return (
                       <li 
                         key={notification._id} 
@@ -268,20 +359,34 @@ export default function MailPage() {
                           {/* 通知详情：根据类型显示不同内容 */}
                           {notification.type === 'follow' ? (
                             <p className={styles.notificationDetail}>
-                              {notification.sender?.name} 开始关注了您，点击查看他的主页
+                              {notification.sender?.name} 开始关注了您，
+                              <Link href={link} className={styles.notificationDetailLink}>
+                                <span>点击查看他的主页</span>
+                              </Link>
                             </p>
                           ) : notification.type === 'new_prompt' && notification.relatedEntity ? (
                             <p className={styles.notificationDetail}>
                               发布了新提示：<strong>{notification.relatedEntity.title}</strong>
+                              <Link href={link} className={styles.notificationDetailLink}>
+                                <span>点击查看提示详情</span>
+                              </Link>
                             </p>
                           ) : notification.type === 'new_comment' && notification.relatedEntity ? (
                             <p className={styles.notificationDetail}>
-                              在提示 <strong>{notification.relatedEntity.prompt?.title}</strong> 下发表评论：
+                              在提示 <strong>{notification.relatedEntity.prompt?.title || '未知提示'}</strong> 下发表评论：
                               <span className={styles.commentPreview}>{notification.relatedEntity.contentPreview}</span>
+                              <Link href={link} className={styles.notificationDetailLink}>
+                                <span>点击查看评论</span>
+                              </Link>
                             </p>
                           ) : (
                             <p className={styles.notificationDetail}>
                               您收到了一条新通知
+                              {link && link !== '/mail' && (
+                                <Link href={link} className={styles.notificationDetailLink}>
+                                  <span>点击查看</span>
+                                </Link>
+                              )}
                             </p>
                           )}
                           

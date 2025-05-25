@@ -401,4 +401,16 @@
     flex-direction: column;
     gap: 0.5rem;
   }
+}
+
+/* 新增：通知详情中的链接样式 */
+.notificationDetailLink {
+  color: var(--md-primary); /* 使用强调色 */
+  text-decoration: none; /* 移除默认下划线 */
+  font-weight: 500; /* 可以加粗 */
+  transition: text-decoration 0.2s ease;
+}
+
+.notificationDetailLink:hover {
+  text-decoration: underline; /* 悬停时显示下划线 */
 } 

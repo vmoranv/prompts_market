@@ -1,7 +1,9 @@
 import dbConnect from '../../lib/dbConnect';
 import Notification from '../../models/Notification';
+import Comment from '../../models/Comment';
+import Prompt from '../../models/Prompt'; 
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from './auth/[...nextauth]'; // 确保路径正确
+import { authOptions } from './auth/[...nextauth]';
 import mongoose from 'mongoose';
 
 export default async function handler(req, res) {
@@ -36,7 +38,7 @@ export default async function handler(req, res) {
           query.read = false;
         }
 
-        // 获取总通知数 (根据过滤条件)
+        // 获取总通知数
         const totalNotifications = await Notification.countDocuments(query);
 
         // 获取当前页的通知，并填充发送者和关联实体信息
@@ -74,17 +76,19 @@ export default async function handler(req, res) {
               link = `/prompt/${notification.relatedEntity._id}`; // Prompt 详情页链接
             } else if (notification.relatedEntityType === 'Comment') {
               // 对于评论通知，我们可能需要显示评论内容的一部分以及所属 Prompt 的信息
+              // 加强对嵌套 prompt 的检查
               relatedEntityInfo = {
                 _id: notification.relatedEntity._id,
                 // 评论内容可能很长，这里只显示一部分
                 contentPreview: notification.relatedEntity.content ? notification.relatedEntity.content.substring(0, 50) + '...' : '无内容',
+                // 确保 relatedEntity.prompt 存在再访问其属性
                 prompt: notification.relatedEntity.prompt ? {
                   _id: notification.relatedEntity.prompt._id,
                   title: notification.relatedEntity.prompt.title || '无标题提示',
                 } : null,
               };
-              // 评论详情页链接，可能需要跳转到 Prompt 详情页并定位到评论
-              link = notification.relatedEntity.prompt ? `/prompt/${notification.relatedEntity.prompt._id}#comment-${notification.relatedEntity._id}` : null;
+              // 确保 relatedEntity.prompt 存在再生成链接
+              link = notification.relatedEntity.prompt ? `/prompt/${notification.relatedEntity.prompt._id}` : null;
             }
           }
 
@@ -108,9 +112,12 @@ export default async function handler(req, res) {
           totalPages: Math.ceil(totalNotifications / limitNum),
           totalNotifications: totalNotifications,
         });
+
       } catch (error) {
-        console.error('获取通知失败:', error);
-        res.status(500).json({ success: false, error: '服务器错误，获取通知失败', details: error.message });
+        // 添加更详细的错误日志
+        console.error('获取通知 API 错误:', error);
+        // 返回更通用的错误信息给前端，避免暴露敏感信息
+        res.status(500).json({ success: false, error: '服务器内部错误，无法获取通知' });
       }
       break;
 

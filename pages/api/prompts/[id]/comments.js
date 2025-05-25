@@ -90,6 +90,27 @@ export default async function handler(req, res) {
         if (notifications.length > 0) {
           await Notification.insertMany(notifications);
           console.log(`为 ${notifications.length} 个关注者创建了新评论通知`);
+
+          const maxNotifications = 300;
+          // 对于每个收到通知的用户，检查并限制通知数量
+          for (const notification of notifications) {
+            const recipientId = notification.recipient;
+            const totalNotifications = await Notification.countDocuments({ recipient: recipientId });
+
+            if (totalNotifications > maxNotifications) {
+              const numToDelete = totalNotifications - maxNotifications;
+              // 查找并删除最旧的通知
+              const notificationsToDelete = await Notification.find({ recipient: recipientId })
+                .sort({ createdAt: 1 }) // 按创建时间升序排列，最旧的在前
+                .limit(numToDelete)
+                .select('_id');
+
+              const idsToDelete = notificationsToDelete.map(notif => notif._id);
+              await Notification.deleteMany({ _id: { $in: idsToDelete } });
+
+              console.log(`为用户 ${recipientId} 删除了 ${numToDelete} 条最旧的通知。`);
+            }
+          }
         }
 
 

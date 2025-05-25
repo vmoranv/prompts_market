@@ -132,16 +132,20 @@ export default function MailDropdown({ unreadNotificationsCount = 0 }) {
   
   // 获取通知链接
   const getNotificationLink = (notification) => {
+    if (notification.link) {
+      return notification.link;
+    }
+
     switch (notification.type) {
       case 'follow':
-        return `/profile/${notification.sender?._id}`;
+        return `/dashboard?userId=${notification.sender?._id}`;
       case 'new_prompt':
         return `/prompt/${notification.relatedEntity?._id}`;
       case 'new_comment':
-        if (notification.relatedEntity?.prompt) {
-          return `/prompt/${notification.relatedEntity.prompt}#comment-${notification.relatedEntity._id}`;
+        if (notification.relatedEntity?.prompt?._id) {
+          return `/prompt/${notification.relatedEntity.prompt._id}`;
         }
-        return `/dashboard?tab=comments`;
+        return '/mail';
       default:
         return '/mail';
     }

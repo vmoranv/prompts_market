@@ -29,6 +29,10 @@
   outline-offset: 2px;
 }
 
+.mailButton svg {
+  color: #E0E0E0;
+}
+
 .iconWrapper {
   position: relative;
   display: inline-flex;
@@ -61,12 +65,13 @@
   max-height: 480px;
   display: flex;
   flex-direction: column;
-  background-color: var(--md-surface-container);
+  background-color: var(--md-background);
   border-radius: 12px;
   box-shadow: var(--shadow-elevation-large);
   z-index: 1001;
   overflow: hidden;
   animation: slideIn 0.2s ease-out;
+  border: 1px solid var(--md-outline-variant);
 }
 
 @keyframes slideIn {
@@ -87,7 +92,7 @@
   align-items: center;
   padding: 16px 16px 8px 16px;
   border-bottom: 1px solid var(--md-outline-variant);
-  background-color: var(--md-surface-container-high);
+  background-color: var(--md-background);
 }
 
 .dropdownTitle {
@@ -207,43 +212,106 @@
   color: var(--md-on-surface-variant);
 }
 
+/* 通知详情（用于显示 Prompt 标题或评论预览） */
+.notificationDetail {
+  margin: 4px 0 0 0;
+  font-size: 0.85rem;
+  color: var(--md-on-surface-variant);
+}
+
+.notificationDetail strong {
+  color: var(--md-on-surface);
+}
+
+.commentPreview {
+  display: block;
+  margin-top: 4px;
+  font-style: italic;
+  color: var(--md-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 通知详情中的链接样式 */
+.notificationDetailLink {
+  color: var(--md-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: text-decoration 0.2s ease;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.notificationDetailLink:hover {
+  text-decoration: underline;
+}
+
 /* 下拉菜单底部 */
 .dropdownFooter {
-  padding: 8px 16px 16px;
+  padding: 8px 16px 16px 16px;
   border-top: 1px solid var(--md-outline-variant);
-  display: flex;
-  justify-content: center;
+  background-color: var(--md-background);
+  text-align: center;
 }
 
 .viewAllButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background-color: var(--md-primary-container);
-  color: var(--md-on-primary-container);
+  gap: 4px;
+  color: var(--md-primary);
   text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+  transition: text-decoration 0.2s ease;
 }
 
 .viewAllButton:hover {
-  background-color: var(--md-primary);
-  color: var(--md-on-primary);
+  text-decoration: underline;
+}
+
+/* 菜单箭头 */
+.dropdownMenu::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid var(--md-outline-variant);
+  z-index: 1002;
+}
+
+.dropdownMenu::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 16px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid var(--md-background);
+  z-index: 1003;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .dropdownMenu {
+    right: 0;
+    left: auto;
     width: 300px;
-    right: -40px;
   }
   
   .dropdownMenu::before {
-    right: 48px;
+    right: 16px;
+  }
+
+  .dropdownMenu::after {
+    right: 16px;
   }
 }
 
