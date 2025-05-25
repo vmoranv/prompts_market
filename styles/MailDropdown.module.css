@@ -87,6 +87,7 @@
   align-items: center;
   padding: 16px 16px 8px 16px;
   border-bottom: 1px solid var(--md-outline-variant);
+  background-color: var(--md-surface-container-high);
 }
 
 .dropdownTitle {
@@ -110,8 +111,7 @@
 }
 
 .markAllReadButton:hover {
-  background-color: var(--md-primary-container);
-  color: var(--md-on-primary-container);
+  background-color: var(--md-surface-container-highest);
 }
 
 /* 通知列表 */
@@ -147,7 +147,7 @@
 }
 
 .notificationItem:hover {
-  background-color: var(--md-surface-container-high);
+  background-color: var(--md-surface-container-highest);
 }
 
 /* 发送者头像 */
