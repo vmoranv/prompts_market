@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import styles from '../styles/Navbar.module.css';
 import { useSession } from 'next-auth/react';
-import { MdAccountCircle, MdLogout, MdSettings, MdDashboard } from 'react-icons/md';
+import { MdAccountCircle, MdLogout, MdSettings, MdDashboard, MdEmail } from 'react-icons/md';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
-const Navbar = () => {
+const Navbar = ({ unreadNotificationsCount }) => {
   const { data: session, status } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -54,6 +54,17 @@ const Navbar = () => {
               创建 Prompt
             </Link>
           )}
+          <Link href="/mail" className={styles.navLink}>
+            <div className={styles.navIconContainer}>
+              <MdEmail />
+              {unreadNotificationsCount > 0 && (
+                <span className={styles.notificationBadge}>
+                  {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                </span>
+              )}
+            </div>
+            <span>站内信</span>
+          </Link>
         </div>
 
         <div className={styles.navActions}>

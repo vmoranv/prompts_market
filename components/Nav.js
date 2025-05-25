@@ -2,10 +2,33 @@ import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { MdAddCircleOutline } from 'react-icons/md';
 import ThemeToggle from './ThemeToggle';
+import MailDropdown from './MailDropdown';
 import styles from '../styles/Nav.module.css';
+import { useEffect } from 'react';
 
-export default function Nav() {
+export default function Nav({ unreadNotificationsCount = 0 }) {
   const { data: session, status } = useSession();
+
+  useEffect(() => {
+    window.updateUnreadNotificationsCount = async () => {
+      try {
+        const res = await fetch('/api/notifications?readStatus=unread&limit=1');
+        const data = await res.json();
+        
+        if (data.success) {
+          if (window.setUnreadNotificationsCount) {
+            window.setUnreadNotificationsCount(data.totalNotifications);
+          }
+        }
+      } catch (error) {
+        console.error('更新未读通知数量失败:', error);
+      }
+    };
+    
+    return () => {
+      delete window.updateUnreadNotificationsCount;
+    };
+  }, []);
 
   return (
     <nav className={styles.nav}>
@@ -28,6 +51,9 @@ export default function Nav() {
                   审核页
                 </Link>
               )}
+              
+              {/* 邮件通知下拉组件 */}
+              <MailDropdown unreadNotificationsCount={unreadNotificationsCount} />
               
               {/* 创建新 Prompt 按钮 */}
               <Link href="/create-prompt" className={styles.iconLink} title="创建新 Prompt">

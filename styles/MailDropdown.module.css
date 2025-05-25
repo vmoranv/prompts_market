@@ -1,0 +1,259 @@
+/* 容器样式 */
+.mailDropdownContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* 邮件按钮样式 */
+.mailButton {
+  background: transparent;
+  color: var(--md-on-surface);
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.mailButton:hover {
+  background-color: var(--md-surface-container-highest);
+}
+
+.mailButton:focus {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+}
+
+.iconWrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+/* 通知徽章样式 */
+.notificationBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--md-error);
+  color: var(--md-on-error);
+  font-size: 0.7rem;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  padding: 0 4px;
+}
+
+/* 下拉菜单样式 */
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--md-surface-container);
+  border-radius: 12px;
+  box-shadow: var(--shadow-elevation-large);
+  z-index: 1001;
+  overflow: hidden;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 下拉菜单头部 */
+.dropdownHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 8px 16px;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.dropdownTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--md-on-surface);
+}
+
+.markAllReadButton {
+  background: transparent;
+  border: none;
+  color: var(--md-primary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.markAllReadButton:hover {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+/* 通知列表 */
+.notificationsList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  max-height: 320px;
+}
+
+/* 加载状态 */
+.loadingState,
+.errorState,
+.emptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px 16px;
+  color: var(--md-on-surface-variant);
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* 通知项目 */
+.notificationItem {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: var(--md-on-surface);
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.notificationItem:hover {
+  background-color: var(--md-surface-container-high);
+}
+
+/* 发送者头像 */
+.senderAvatar {
+  position: relative;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.avatarImage,
+.defaultAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.notificationTypeIcon {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background-color: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--md-surface-container);
+}
+
+/* 通知内容 */
+.notificationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationText {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notificationTime {
+  font-size: 0.8rem;
+  color: var(--md-on-surface-variant);
+}
+
+/* 下拉菜单底部 */
+.dropdownFooter {
+  padding: 8px 16px 16px;
+  border-top: 1px solid var(--md-outline-variant);
+  display: flex;
+  justify-content: center;
+}
+
+.viewAllButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.viewAllButton:hover {
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .dropdownMenu {
+    width: 300px;
+    right: -40px;
+  }
+  
+  .dropdownMenu::before {
+    right: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dropdownMenu {
+    width: 280px;
+    right: -100px;
+  }
+  
+  .dropdownMenu::before {
+    right: 108px;
+  }
+} 

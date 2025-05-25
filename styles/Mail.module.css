@@ -1,0 +1,404 @@
+/* 主容器样式 */
+.container {
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background-color: var(--md-background);
+  color: var(--md-on-background);
+}
+
+.main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--md-on-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.titleIcon {
+  font-size: 2.2rem;
+  color: var(--md-primary);
+}
+
+/* 工具栏样式 */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.tabs {
+  display: flex;
+  gap: 1rem;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: var(--md-on-surface-variant);
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  background-color: var(--md-surface-container-high);
+}
+
+.activeTab {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  font-weight: 500;
+}
+
+.refreshButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--md-secondary-container);
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: var(--md-on-secondary-container);
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refreshButton:hover {
+  background-color: var(--md-secondary-container-dark);
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 通知列表容器 */
+.notificationsContainer {
+  background-color: var(--md-surface-container-low);
+  border-radius: var(--border-radius-large);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-elevation-medium);
+}
+
+.notificationsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* 通知项样式 */
+.notificationItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background-color: var(--md-surface-container);
+  border-radius: var(--border-radius-medium);
+  box-shadow: var(--shadow-elevation-medium);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.notificationItem:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-elevation-large);
+}
+
+.unreadNotification {
+  background-color: var(--md-primary-container-light);
+}
+
+.unreadNotification::before {
+  content: '';
+  position: absolute;
+  top: 1rem;
+  left: 0;
+  width: 4px;
+  height: calc(100% - 2rem);
+  background-color: var(--md-primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.readNotification {
+  opacity: 0.9;
+}
+
+/* 发送者头像样式 */
+.senderAvatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  position: relative;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--md-primary);
+}
+
+.defaultAvatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border: 2px solid var(--md-primary);
+}
+
+/* 通知内容样式 */
+.notificationContent {
+  flex-grow: 1;
+  min-width: 0; /* 确保内容可以正确换行 */
+}
+
+.notificationHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.senderName {
+  font-weight: 600;
+  color: var(--md-on-surface);
+}
+
+.notificationType {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 500;
+}
+
+.notificationTypeIcon {
+  font-size: 1.1rem;
+}
+
+.notificationDetail {
+  margin: 0.5rem 0;
+  color: var(--md-on-surface-variant);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.commentPreview {
+  display: block;
+  margin-top: 0.25rem;
+  font-style: italic;
+  color: var(--md-on-surface-variant-dark);
+}
+
+.notificationTime {
+  font-size: 0.8rem;
+  color: var(--md-on-surface-variant);
+  margin-top: 0.5rem;
+}
+
+/* 通知右侧动作按钮 */
+.notificationAction {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  color: var(--md-on-surface-variant);
+  font-size: 1.2rem;
+}
+
+/* 分页控件样式 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.pageButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--md-primary-container);
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: var(--md-on-primary-container);
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageButton:hover {
+  background-color: var(--md-primary-container-dark);
+}
+
+.pageButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: 0.9rem;
+  color: var(--md-on-surface-variant);
+}
+
+/* 加载状态样式 */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  color: var(--md-on-surface-variant);
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--md-surface-container-highest);
+  border-top: 4px solid var(--md-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+/* 错误状态样式 */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  color: var(--md-error);
+  text-align: center;
+}
+
+.retryButton {
+  margin-top: 1rem;
+  background-color: var(--md-primary-container);
+  border: none;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.9rem;
+  color: var(--md-on-primary-container);
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  background-color: var(--md-primary-container-dark);
+}
+
+/* 空状态样式 */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  color: var(--md-on-surface-variant);
+  text-align: center;
+}
+
+.viewAllButton {
+  margin-top: 1rem;
+  background-color: var(--md-secondary-container);
+  border: none;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.9rem;
+  color: var(--md-on-secondary-container);
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewAllButton:hover {
+  background-color: var(--md-secondary-container-dark);
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .notificationItem {
+    flex-direction: column;
+  }
+
+  .senderAvatar {
+    margin-bottom: 0.5rem;
+  }
+
+  .notificationAction {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.5rem;
+  }
+
+  .main {
+    padding: 1rem 0;
+  }
+
+  .notificationsContainer {
+    padding: 1rem;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+} 

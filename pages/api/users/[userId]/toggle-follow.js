@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]'; // 确保路径正确
 import dbConnect from '../../../../lib/dbConnect';
 import User from '../../../../models/User';
+import Notification from '../../../../models/Notification'; // 导入 Notification 模型
 import mongoose from 'mongoose';
 
 export default async function handler(req, res) {
@@ -64,11 +65,26 @@ export default async function handler(req, res) {
       currentUser.following.pull(targetUser._id);
       targetUser.followers.pull(currentUser._id);
       message = '取消关注成功';
+      // TODO: 考虑是否在取消关注时删除关注通知
+      // await Notification.deleteOne({
+      //   recipient: targetUser._id,
+      //   sender: currentUser._id,
+      //   type: 'follow',
+      // });
     } else {
       console.log('执行关注操作'); // 添加日志
       currentUser.following.push(targetUser._id);
       targetUser.followers.push(currentUser._id);
       message = '关注成功';
+
+      // 创建关注通知
+      await Notification.create({
+        recipient: targetUser._id, // 被关注者收到通知
+        sender: currentUser._id, // 关注者是发送者
+        type: 'follow',
+        // 关注通知没有特定的 relatedEntity
+      });
+      console.log(`为用户 ${targetUser._id} 创建了关注通知`); // 添加日志
     }
 
     console.log('尝试保存用户...'); // 添加日志

@@ -318,4 +318,26 @@
     width: 180px; /* 调整宽度 */
     right: 0;
   }
+}
+
+.navIconContainer {
+  position: relative;
+  display: inline-flex;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--md-error);
+  color: var(--md-on-error);
+  font-size: 0.7rem;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  padding: 0 4px;
 } 
