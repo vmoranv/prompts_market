@@ -31,17 +31,17 @@ export default function Dashboard() {
   const [followersUsers, setFollowersUsers] = useState([]);
   const [loadingFollowers, setLoadingFollowers] = useState(false);
   const [fetchFollowersError, setFetchFollowersError] = useState(null);
+  const [isOwnDashboard, setIsOwnDashboard] = useState(false);
+  const [fetchCommentsError, setFetchCommentsError] = useState(null);
 
   const loggedInUserId = session?.user?.id;
   const dashboardUserId = queryUserId || loggedInUserId;
-  const isOwnDashboard = loggedInUserId && dashboardUserId === loggedInUserId;
 
   useEffect(() => {
     const fetchProfileUser = async () => {
       setLoadingProfile(true);
       setFetchProfileError(null);
       setError(null);
-      setIsCurrentUserFollowingProfile(false);
 
       if (status === 'loading') return;
 
@@ -60,8 +60,17 @@ export default function Dashboard() {
           const data = await res.json();
           if (data.success) {
             setProfileUser(data.data);
-            if (loggedInUserId && data.data.followers && data.data.followers.includes(loggedInUserId)) {
-              setIsCurrentUserFollowingProfile(true);
+            setIsCurrentUserFollowingProfile(data.data.isFollowing || false);
+            setIsOwnDashboard(loggedInUserId === targetIdToFetch);
+
+            if (activeTab === 'prompts') {
+                fetchUserPrompts(targetIdToFetch);
+            } else if (activeTab === 'comments') {
+                fetchUserComments(targetIdToFetch);
+            } else if (activeTab === 'following') {
+                fetchFollowingUsers(targetIdToFetch);
+            } else if (activeTab === 'followers') {
+                fetchFollowersUsers(targetIdToFetch);
             }
           } else {
             throw new Error(data.error || '获取用户信息失败');
@@ -70,6 +79,7 @@ export default function Dashboard() {
           console.error(`获取用户 ${targetIdToFetch} 信息失败:`, err);
           setFetchProfileError(err.message);
           setProfileUser(null);
+          setIsCurrentUserFollowingProfile(false);
         } finally {
           setLoadingProfile(false);
         }
@@ -78,8 +88,24 @@ export default function Dashboard() {
           const res = await fetch(`/api/users/${queryUserId}`);
           if (!res.ok) throw new Error('Failed to fetch user');
           const data = await res.json();
-          if (data.success) setProfileUser(data.data);
-          else throw new Error(data.error || 'Failed to fetch user');
+          if (data.success) {
+            setProfileUser(data.data);
+            setIsCurrentUserFollowingProfile(false);
+            setIsOwnDashboard(false);
+
+            if (activeTab === 'prompts') {
+                fetchUserPrompts(queryUserId);
+            } else if (activeTab === 'comments') {
+                fetchUserComments(queryUserId);
+            } else if (activeTab === 'following') {
+                fetchFollowingUsers(queryUserId);
+            } else if (activeTab === 'followers') {
+                fetchFollowersUsers(queryUserId);
+            }
+
+          } else {
+            throw new Error(data.error || 'Failed to fetch user');
+          }
         } catch (err) {
           console.error(`获取用户 ${queryUserId} 信息失败:`, err);
           setFetchProfileError(err.message);
@@ -94,7 +120,7 @@ export default function Dashboard() {
     };
 
     fetchProfileUser();
-  }, [queryUserId, session, status, router, loggedInUserId]);
+  }, [queryUserId, session, status, router, loggedInUserId, activeTab]);
 
   const fetchUserPrompts = async (userId) => {
     if (!userId) return;
@@ -117,16 +143,23 @@ export default function Dashboard() {
   const fetchUserComments = async (userId) => {
     if (!userId) return;
     setLoadingComments(true);
+    setFetchCommentsError(null);
     try {
-      const res = await fetch(`/api/comments?userId=${userId}`);
+      const res = await fetch(`/api/users/${userId}/comments`);
       if (!res.ok) {
-        throw new Error(`获取评论失败: ${res.status}`);
+        const errorData = await res.json();
+        throw new Error(errorData.error || `无法加载用户评论: ${res.status}`);
       }
       const data = await res.json();
-      setUserComments(data.data || []);
+      if (data.success) {
+        setUserComments(data.data);
+      } else {
+        throw new Error(data.error || '获取用户评论失败');
+      }
     } catch (err) {
-      console.error("获取用户评论失败:", err);
-      setError(err.message);
+      console.error(`获取用户 ${userId} 的评论失败:`, err);
+      setFetchCommentsError(err.message);
+      setUserComments([]);
     } finally {
       setLoadingComments(false);
     }
@@ -250,33 +283,35 @@ export default function Dashboard() {
     setFetchFollowingError(null);
     try {
       const res = await fetch(`/api/users/${userId}/following`);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || `获取关注用户失败: ${res.status}`);
-      }
       const data = await res.json();
-      setFollowingUsers(data.data);
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || '获取关注用户列表失败');
+      }
+      setFollowingUsers(data.data || []);
     } catch (err) {
       console.error("获取关注用户列表失败:", err);
       setFetchFollowingError(err.message);
+      setFollowingUsers([]);
     } finally {
       setLoadingFollowing(false);
     }
   };
 
   const fetchFollowersUsers = async (userId) => {
+    if (!userId) return;
     setLoadingFollowers(true);
     setFetchFollowersError(null);
     try {
       const res = await fetch(`/api/users/${userId}/followers`);
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || '获取粉丝用户失败');
+        throw new Error(data.error || '获取粉丝用户列表失败');
       }
-      setFollowersUsers(data.data);
+      setFollowersUsers(data.data || []);
     } catch (err) {
-      console.error("获取粉丝用户失败:", err);
+      console.error("获取粉丝用户列表失败:", err);
       setFetchFollowersError(err.message);
+      setFollowersUsers([]);
     } finally {
       setLoadingFollowers(false);
     }
@@ -284,7 +319,6 @@ export default function Dashboard() {
 
   const handleToggleFollow = async (targetUserId) => {
     if (!loggedInUserId) {
-      alert('请先登录！');
       router.push('/auth/signin');
       return;
     }
@@ -301,25 +335,36 @@ export default function Dashboard() {
         throw new Error(data.error || '操作失败');
       }
 
-      if (profileUser && profileUser._id === targetUserId) {
-        setProfileUser(prev => ({
+      setIsCurrentUserFollowingProfile(data.data.isNowFollowing);
+
+      const { currentUserFollowingCount, targetUserFollowersCount } = data.data;
+
+      setProfileUser(prev => {
+        if (!prev) return null;
+        const updatedProfile = {
           ...prev,
-          followers: data.data.isNowFollowing
-            ? [...(prev.followers || []), loggedInUserId]
-            : (prev.followers || []).filter(id => id !== loggedInUserId)
-        }));
-        setIsCurrentUserFollowingProfile(data.data.isNowFollowing);
+          followersCount: prev._id === targetUserId ? targetUserFollowersCount : prev.followersCount,
+          followingCount: prev._id === loggedInUserId ? currentUserFollowingCount : prev.followingCount
+        };
+        if (prev._id === targetUserId && prev._id === loggedInUserId) {
+             updatedProfile.followingCount = currentUserFollowingCount;
+        }
+        return updatedProfile;
+      });
+
+      if (isOwnDashboard && activeTab === 'following') {
+         fetchFollowingUsers(loggedInUserId);
       }
 
-      if (isOwnDashboard && activeTab === 'following' && profileUser._id === loggedInUserId) {
-        fetchFollowingUsers(loggedInUserId);
+      if (profileUser?._id === targetUserId && activeTab === 'followers') {
+          fetchFollowersUsers(targetUserId);
       }
-
-      alert(data.message);
+      if (profileUser?._id === targetUserId && activeTab === 'following') {
+           fetchFollowingUsers(targetUserId);
+      }
 
     } catch (err) {
       console.error("关注/取消关注失败:", err);
-      alert(`操作失败: ${err.message}`);
     } finally {
       setIsFollowProcessing(false);
     }
@@ -412,8 +457,8 @@ export default function Dashboard() {
               <h2 className={styles.profileName}>{profileUser.name || '用户'}</h2>
               {profileUser.email && <p className={styles.profileEmail}>{profileUser.email}</p>}
               <div className={styles.followStats}>
-                <span>关注: {profileUser.following?.length || 0}</span>
-                <span>粉丝: {profileUser.followers?.length || 0}</span>
+                <span>关注: {profileUser?.followingCount ?? 0}</span>
+                <span>粉丝: {profileUser?.followersCount ?? 0}</span>
               </div>
             </div>
             {!isOwnDashboard && loggedInUserId && (
@@ -526,7 +571,15 @@ export default function Dashboard() {
             <div className={styles.sectionSeparator}></div>
 
             {loadingComments ? (
-              <div className={styles.loading}>加载中...</div>
+              <div className={styles.loadingContainer}>
+                <div className={styles.loadingSpinner}></div>
+                <p>加载评论中...</p>
+              </div>
+            ) : fetchCommentsError ? (
+              <div className={styles.errorContainer}>
+                <MdSentimentDissatisfied size={48} />
+                <p>加载评论失败: {fetchCommentsError}</p>
+              </div>
             ) : userComments.length > 0 ? (
               <ul className={styles.commentsList}>
                 {userComments.map(comment => (
@@ -545,12 +598,17 @@ export default function Dashboard() {
                         </div>
                       )}
                       {editingCommentId === comment._id ? (
-                        <textarea
-                          className={styles.editCommentInput}
-                          value={editedCommentContent}
-                          onChange={(e) => setEditedCommentContent(e.target.value)}
-                          rows="4"
-                        />
+                        <div className={styles.editForm}>
+                          <textarea
+                            value={editedCommentContent}
+                            onChange={(e) => setEditedCommentContent(e.target.value)}
+                            rows="3"
+                          />
+                          <div className={styles.editFormButtons}>
+                            <button onClick={() => handleSaveComment(comment._id)} className={styles.saveButton}><MdSave /> 保存</button>
+                            <button onClick={handleCancelEdit} className={styles.cancelButton}><MdCancel /> 取消</button>
+                          </div>
+                        </div>
                       ) : (
                         <p>{comment.content}</p>
                       )}
@@ -561,25 +619,7 @@ export default function Dashboard() {
                     <div className={styles.commentActions}>
                        {comment.author._id === loggedInUserId && (
                          <>
-                           {editingCommentId === comment._id ? (
-                             <>
-                               <button
-                                 onClick={() => handleSaveComment(comment._id)}
-                                 className={styles.saveButton}
-                                 title="保存评论"
-                                 disabled={!editedCommentContent.trim()}
-                               >
-                                 保存
-                               </button>
-                               <button
-                                 onClick={handleCancelEdit}
-                                 className={styles.cancelButton}
-                                 title="取消编辑"
-                               >
-                                 取消
-                               </button>
-                             </>
-                           ) : (
+                           {editingCommentId !== comment._id && (
                              <>
                                <button
                                  onClick={() => handleEditComment(comment)}
@@ -606,7 +646,7 @@ export default function Dashboard() {
             ) : (
               <div className={styles.emptyState}>
                 <MdSentimentDissatisfied size={48} />
-                <p>暂无评论</p>
+                <p>{isOwnDashboard ? '您还没有发表任何评论' : (profileUser?.name ? `${profileUser.name} 还没有发表任何评论` : '该用户还没有发表任何评论')}</p>
               </div>
             )}
           </div>
@@ -631,7 +671,7 @@ export default function Dashboard() {
               <ul className={styles.followingList}>
                 {followingUsers.map(user => (
                   <li key={user._id} className={styles.followingItem}>
-                    <div className={styles.userInfo}>
+                    <Link href={`/dashboard?userId=${user._id}`} className={styles.userInfo}>
                       <img
                         src={user.image || '/default-avatar.png'}
                         alt={user.name}
@@ -641,8 +681,8 @@ export default function Dashboard() {
                         <h4>{user.name}</h4>
                         <p>{user.email}</p>
                       </div>
-                    </div>
-                    {isOwnDashboard && loggedInUserId === profileUser?._id && (
+                    </Link>
+                    {isOwnDashboard && (
                       <button
                         onClick={() => handleToggleFollow(user._id)}
                         className={styles.unfollowButton}

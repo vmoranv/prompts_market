@@ -70,18 +70,6 @@ export default function AdminCommentsPage() {
 
   // 处理批准评论
   const handleApprove = async (commentId) => {
-    if (status === 'loading') {
-      alert('会话加载中，请稍候...');
-      return;
-    }
-    if (!session) {
-      alert('请登录后操作。');
-      return;
-    }
-    if (!confirm('确定要批准此评论吗？')) {
-      return;
-    }
-
     // 乐观更新状态
     setComments(comments.map(comment =>
       comment._id === commentId ? { ...comment, status: 'approving' } : comment
@@ -103,8 +91,6 @@ export default function AdminCommentsPage() {
       }
 
       if (data.success) {
-        alert('评论批准成功！');
-        // 重新获取评论以确保数据最新
         fetchComments(currentPage, filterStatus);
       } else {
          throw new Error(data.error || '批准评论失败');
@@ -112,26 +98,12 @@ export default function AdminCommentsPage() {
 
     } catch (err) {
       console.error("批准评论失败:", err);
-      alert(`批准评论失败: ${err.message}`);
-      // 如果失败，回滚乐观更新（或者简单地重新获取数据）
       fetchComments(currentPage, filterStatus);
     }
   };
 
   // 处理拒绝评论
   const handleReject = async (commentId) => {
-    if (status === 'loading') {
-      alert('会话加载中，请稍候...');
-      return;
-    }
-    if (!session) {
-      alert('请登录后操作。');
-      return;
-    }
-    if (!confirm('确定要拒绝此评论吗？')) {
-      return;
-    }
-
     // 乐观更新状态
     setComments(comments.map(comment =>
       comment._id === commentId ? { ...comment, status: 'rejecting' } : comment
@@ -153,8 +125,6 @@ export default function AdminCommentsPage() {
       }
 
       if (data.success) {
-        alert('评论拒绝成功！');
-        // 重新获取评论以确保数据最新
         fetchComments(currentPage, filterStatus);
       } else {
          throw new Error(data.error || '拒绝评论失败');
@@ -162,8 +132,6 @@ export default function AdminCommentsPage() {
 
     } catch (err) {
       console.error("拒绝评论失败:", err);
-      alert(`拒绝评论失败: ${err.message}`);
-      // 如果失败，回滚乐观更新（或者简单地重新获取数据）
       fetchComments(currentPage, filterStatus);
     }
   };
@@ -171,18 +139,6 @@ export default function AdminCommentsPage() {
 
   // 处理删除评论
   const deleteComment = async (commentId) => {
-    if (status === 'loading') {
-      alert('会话加载中，请稍候...');
-      return;
-    }
-    if (!session) {
-      alert('请登录后操作。');
-      return;
-    }
-    if (!confirm('确定要删除此评论吗？')) {
-      return;
-    }
-
     try {
       const response = await fetch(`/api/comments/${commentId}`, {
         method: 'DELETE',
@@ -198,7 +154,6 @@ export default function AdminCommentsPage() {
       }
 
       if (data.success) {
-        alert('评论删除成功！');
         // 从本地状态中移除已删除的评论
         setComments(comments.filter(comment => comment._id !== commentId));
         // 如果当前页没有评论了，并且不是第一页，则跳转到上一页
@@ -214,7 +169,6 @@ export default function AdminCommentsPage() {
 
     } catch (err) {
       console.error("删除评论失败:", err);
-      alert(`删除评论失败: ${err.message}`);
     }
   };
 

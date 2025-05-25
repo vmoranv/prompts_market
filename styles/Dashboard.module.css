@@ -102,7 +102,6 @@
 .promptsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
   align-items: unset;
   justify-items: unset;
 }
@@ -117,6 +116,8 @@
   align-items: center;
   color: var(--md-on-surface);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 1.5rem;
+  margin-right: 1.5rem;
 }
 
 .promptItem:hover {
@@ -382,9 +383,9 @@
 .commentItem {
   background-color: var(--md-surface-container);
   border-radius: var(--border-radius-medium);
+  box-shadow: var(--shadow-elevation-medium);
   padding: 1.2rem;
   margin-bottom: 1rem;
-  box-shadow: var(--shadow-elevation-medium);
   transition: box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -741,4 +742,237 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* Comments Section Styles */
+.commentsSection {
+    margin-top: 20px;
+}
+
+.commentsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.commentItem {
+    background-color: var(--card-background); /* 使用卡片背景色 */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: flex-start; /* 顶部对齐 */
+    gap: 15px; /* 头像和内容之间的间距 */
+    box-shadow: var(--shadow-elevation-medium);
+    transition: transform 0.2s ease-in-out;
+}
+
+.commentItem:hover {
+    transform: translateY(-3px);
+}
+
+.commentUserInfo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0; /* 防止头像区域缩小 */
+}
+
+.commentAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+}
+
+.commentContent {
+    flex-grow: 1; /* 评论内容占据剩余空间 */
+    word-break: break-word; /* 长单词换行 */
+}
+
+.commentContent h4 {
+    margin: 0 0 5px 0;
+    font-size: 1em;
+    color: var(--text-color-primary);
+}
+
+.commentContent p {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--text-color-secondary);
+    line-height: 1.4;
+}
+
+.commentActions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0; /* 防止操作按钮区域缩小 */
+}
+
+.actionButton {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 5px;
+    transition: color 0.2s ease-in-out;
+}
+
+.actionButton:hover {
+    color: var(--primary-color-dark);
+}
+
+.deleteButton {
+    color: var(--error-color);
+}
+
+.deleteButton:hover {
+    color: var(--error-color-dark);
+}
+
+.editForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.editForm textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    resize: vertical; /* 允许垂直调整大小 */
+    font-size: 0.9em;
+    background-color: var(--input-background);
+    color: var(--text-color-primary);
+}
+
+.editFormButtons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.editFormButtons button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.saveButton {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.saveButton:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.cancelButton {
+    background-color: var(--button-secondary-background);
+    color: var(--button-secondary-text);
+}
+
+.cancelButton:hover {
+    background-color: var(--button-secondary-background-dark);
+}
+
+/* Following and Followers Section Styles (Updated) */
+.followingSection,
+.followersSection {
+    margin-top: 20px;
+}
+
+.followingList,
+.followersList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Apply similar styles to commentItem */
+.followingItem,
+.followerItem {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center; /* 居中对齐 */
+    gap: 15px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.followingItem:hover,
+.followerItem:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--darkreader-bg--shadow-elevation-medium);
+}
+
+/* Style for the Link wrapping user info */
+.followingItem .userInfo,
+.followerItem .followerUserInfo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1; /* 允许用户信息区域占据空间 */
+    text-decoration: none; /* 移除 Link 的下划线 */
+    color: inherit; /* 继承父元素的颜色 */
+}
+
+/* Reuse comment avatar style */
+.followingItem .userAvatar,
+.followerItem .userAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+}
+
+/* Style for user names and emails */
+.followingItem h4,
+.followerItem h4 {
+    margin: 0 0 5px 0;
+    font-size: 1em;
+    color: var(--text-color-primary);
+}
+
+.followingItem p,
+.followerItem p {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--text-color-secondary);
+}
+
+/* Style for the unfollow button in following list */
+.unfollowButton {
+    background-color: var(--button-secondary-background);
+    color: var(--button-secondary-text);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.unfollowButton:hover {
+    background-color: var(--button-secondary-background-dark);
+}
+
+.unfollowButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 } 
