@@ -42,8 +42,7 @@ const truncateText = (text, maxLines, maxChars) => {
   return truncatedText + (needsEllipsis ? '...' : '');
 };
 
-// 接受 onDeleteSuccess 回调函数作为 prop
-export default function PromptCard({ prompt, onDeleteSuccess }) {
+const PromptCard = ({ prompt, handleTagClick, onLikeSuccess, onDeleteSuccess }) => {
   if (!prompt) return null; // 添加一个保护，防止 prompt 未定义
 
   const [copied, setCopied] = useState(false); // 状态追踪复制操作
@@ -78,6 +77,21 @@ export default function PromptCard({ prompt, onDeleteSuccess }) {
   
   // 截断 Prompt 内容到前 5 行或 200 个字符
   const truncatedContent = truncateText(prompt.content, 5, 200);
+
+  // 定义状态标签文本和颜色
+  const getStatusInfo = (status) => {
+    switch(status) {
+      case 'pending':
+        return { text: '待审核', className: styles.pendingStatus };
+      case 'rejected':
+        return { text: '已拒绝', className: styles.rejectedStatus };
+      default:
+        return { text: '', className: '' };
+    }
+  };
+
+  // 获取当前提示词状态信息
+  const statusInfo = getStatusInfo(prompt.status);
 
   const handleCopy = () => {
     // 复制完整内容，而不是截断后的内容
@@ -133,8 +147,6 @@ export default function PromptCard({ prompt, onDeleteSuccess }) {
     }
 
     if (confirmDelete) {
-      setIsLoading(true); // 开始加载
-      setError(null); // 清除之前的错误
       try {
         const res = await fetch(`/api/prompts/${prompt._id}`, {
           method: 'DELETE',
@@ -143,19 +155,16 @@ export default function PromptCard({ prompt, onDeleteSuccess }) {
           const errorData = await res.json();
           throw new Error(errorData.error || `删除失败: ${res.status}`);
         }
-        // 删除成功后，调用父组件传递的回调函数
+        // 删除成功后，调用父组件传递的回调函数，移除当前 Prompt 卡片
         if (onDeleteSuccess) {
-            onDeleteSuccess(prompt._id);
+          onDeleteSuccess(prompt._id);
         }
         setConfirmDelete(false);
         console.log(`Prompt ${prompt._id} 已成功删除。`);
       } catch (err) {
         console.error("删除 Prompt 失败:", err);
-        setError(`删除失败: ${err.message}`); // 设置错误信息
         alert(`删除 Prompt 失败: ${err.message}`);
         setConfirmDelete(false); // 删除失败也重置确认状态
-      } finally {
-        setIsLoading(false); // 结束加载
       }
     } else {
       setConfirmDelete(true); // 第一次点击显示确认
@@ -259,9 +268,14 @@ export default function PromptCard({ prompt, onDeleteSuccess }) {
       </div>
       
       <div className={styles.cardContent}>
-        <Link href={`/prompt/${prompt._id}`} className={styles.promptLink}>
-          <h2 className={styles.promptTitle}>{prompt.title}</h2>
-        </Link>
+        <div className={styles.titleContainer}>
+          <h3 className={styles.title}>{prompt.title}</h3>
+          {statusInfo.text && (
+            <span className={statusInfo.className}>
+              {statusInfo.text}
+            </span>
+          )}
+        </div>
         
         <div className={styles.promptContent}>
           {isClient ? <SafeMarkdown content={truncatedContent} /> : <p>{truncatedContent}</p>}
@@ -315,4 +329,6 @@ export default function PromptCard({ prompt, onDeleteSuccess }) {
       )}
     </div>
   );
-} 
+}
+
+export default PromptCard; 

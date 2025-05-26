@@ -16,14 +16,14 @@ export default function Home() {
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [paginationInfo, setPaginationInfo] = useState({
-    totalPrompts: 0,
     totalPages: 1,
     hasMore: false,
     currentPage: 1,
   });
-  
-  // 新增状态：用于触发 PromptsList 数据刷新的 key
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [allPrompts, setAllPrompts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filterTag, setFilterTag] = useState('');
   
   // 判断当前用户是否为管理员
   const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(',') : [];
@@ -84,16 +84,118 @@ export default function Home() {
     return `${prefix}${sortBy}`;
   };
   
-  // 新增函数：处理 Prompt 删除成功
-  const handlePromptDeleted = (deletedPromptId) => {
-    console.log(`Prompt ${deletedPromptId} 已删除，触发列表刷新。`);
-    // 增加 refreshKey 的值，触发 PromptsList 的 useEffect 重新运行
-    setRefreshKey(prevKey => prevKey + 1);
-    // 删除后可能导致当前页的 Prompt 数量不足，或者总页数变化
-    // 简单起见，这里直接刷新列表。更复杂的逻辑可以检查当前页是否变空，然后跳转到上一页。
-    // 目前的 PromptsList 会在数据获取后更新 paginationInfo，这应该足够处理大多数情况。
+  // 获取所有 Prompt 的函数
+  const fetchPrompts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 构建排序字符串用于API调用
+      const sortString = getSortString();
+
+      let apiUrl = `/api/prompts?sort=${sortString}`;
+
+      // 如果用户已登录，获取该用户的所有提示词（包括未审核和被拒绝的）
+      // 否则，只获取已发布的公共提示词
+      if (session?.user?.id) {
+        // 获取当前用户的所有 Prompt，并应用排序
+        apiUrl += `&userId=${session.user.id}&status=all`; // status=all 获取所有状态
+      } else {
+        // 获取所有已发布的 Prompt，并应用排序
+        apiUrl += `&status=published`;
+      }
+
+      const res = await fetch(apiUrl);
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch prompts: ${res.status}`);
+      }
+      const data = await res.json();
+
+      // 直接使用从 API 获取的数据，因为 API 已经处理了过滤和排序
+      setAllPrompts(data.data || []);
+      // 更新分页信息（如果 API 返回了分页信息）
+      if (data.pagination) {
+          setPaginationInfo(data.pagination);
+      }
+
+
+    } catch (err) {
+      console.error('Error fetching prompts:', err);
+      setError(err.message);
+      setAllPrompts([]); // 出错时清空列表
+      setPaginationInfo({ // 出错时重置分页信息
+          totalPages: 1,
+          hasMore: false,
+          currentPage: 1,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // 在 sortBy, sortOrder, filterTag 或 session 变化时重新获取 Prompt
+    // 注意：这里移除了对 currentPage 的依赖，因为分页逻辑现在主要由 PromptsList 组件内部管理
+    fetchPrompts();
+  }, [sortBy, sortOrder, filterTag, session]);
+
+  // 处理标签点击，更新过滤标签
+  const handleTagClick = (tag) => {
+    setFilterTag(tag);
+    setSearch(''); // 清空搜索框
+  };
+
+  // 处理搜索输入
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setIsSearching(true);
   };
   
+  // 过滤 Prompt 的辅助函数
+  const filterPrompts = (searchText) => {
+    const regex = new RegExp(searchText, 'i'); // 'i' for case-insensitive
+    return allPrompts.filter(
+      (item) =>
+        regex.test(item.author?.name) ||
+        regex.test(item.tag) ||
+        regex.test(item.title) ||
+        regex.test(item.content)
+    );
+  };
+
+  // 根据过滤标签过滤 Prompt
+  const filterPromptsByTag = (tag) => {
+    if (!tag) return allPrompts;
+    const regex = new RegExp(`^${tag}$`, 'i'); // 精确匹配标签
+    return allPrompts.filter(item =>
+      item.tag.split(',').some(t => regex.test(t.trim()))
+    );
+  };
+
+  // 根据搜索文本或过滤标签显示 Prompt
+  const displayedPrompts = search
+    ? filterPrompts(search)
+    : filterPromptsByTag(filterTag);
+  
+  // 处理点赞成功后的 Prompt 列表更新
+  const handleLikeSuccess = (promptId, newLikesCount, likedByCurrentUser) => {
+    setAllPrompts(prevPrompts =>
+      prevPrompts.map(prompt =>
+        prompt._id === promptId
+          ? { ...prompt, likesCount: newLikesCount, likedBy: likedByCurrentUser ? [...prompt.likedBy, session.user.id] : prompt.likedBy.filter(id => id !== session.user.id) }
+          : prompt
+      )
+    );
+  };
+
+  // 处理 Prompt 删除成功
+  const handlePromptDeleted = (deletedPromptId) => {
+    // 从 allPrompts 状态中移除被删除的 Prompt
+    setAllPrompts(prevPrompts =>
+      prevPrompts.filter(prompt => prompt._id !== deletedPromptId)
+    );
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -138,8 +240,8 @@ export default function Home() {
                 <input
                   type="text"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="搜索提示词..."
+                  onChange={handleSearchChange}
+                  placeholder="搜索提示词或标签..."
                   className={styles.searchInput}
                 />
               </div>
@@ -181,15 +283,21 @@ export default function Home() {
         </div>
         
         {/* 提示列表组件，传递搜索和分页参数，以及回调 */}
-        <PromptsList 
-          searchQuery={search} 
-          currentPage={currentPage}
-          onPaginationChange={handlePaginationUpdate}
-          isAdmin={isAdmin}
-          sortBy={getSortString()}
-          refreshTrigger={refreshKey}
-          onPromptDeleted={handlePromptDeleted}
-        />
+        {loading ? (
+          <p>加载中...</p>
+        ) : error ? (
+          <p className={styles.error}>加载 Prompt 失败: {error}</p>
+        ) : (
+          <PromptsList 
+            data={displayedPrompts}
+            currentPage={currentPage}
+            onPaginationChange={handlePaginationUpdate}
+            isAdmin={isAdmin}
+            sortBy={getSortString()}
+            onLikeSuccess={handleLikeSuccess}
+            onDeleteSuccess={handlePromptDeleted}
+          />
+        )}
         
         {/* 分页控件 */}
         {paginationInfo.totalPrompts > 0 && (

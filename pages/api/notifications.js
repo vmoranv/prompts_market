@@ -20,113 +20,131 @@ export default async function handler(req, res) {
     return res.status(401).json({ success: false, error: '未授权，请登录后查看通知' });
   }
 
-  const currentUserId = session.user.id;
+  const userId = session.user.id;
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(limit, 10);
+  const skip = (pageNumber - 1) * limitNumber;
 
   switch (method) {
     case 'GET':
       try {
-        const pageNum = parseInt(page, 10) || 1;
-        const limitNum = parseInt(limit, 10) || 10;
-        const skip = (pageNum - 1) * limitNum;
-
-        let query = { recipient: currentUserId }; // 只获取当前用户的通知
+        let query = { recipient: userId }; // 只获取当前用户的通知
 
         // 根据 readStatus 过滤
-        if (readStatus === 'read') {
-          query.read = true;
-        } else if (readStatus === 'unread') {
-          query.read = false;
+        if (readStatus !== 'all') {
+          query.read = readStatus === 'read';
         }
 
-        // 获取总通知数
+        // 获取通知总数（用于分页）
         const totalNotifications = await Notification.countDocuments(query);
 
-        // 获取当前页的通知，并填充发送者和关联实体信息
+        // 获取通知列表，并填充 sender 和 relatedEntity
         const notifications = await Notification.find(query)
-          .populate({
-            path: 'sender',
-            select: 'name image', // 填充发送者的姓名和头像
-          })
-          .populate({
-            path: 'relatedEntity', 
-            select: 'title content', 
-          })
-          .sort({ createdAt: -1 })
+          .sort({ createdAt: -1 }) // 按创建时间倒序排列
           .skip(skip)
-          .limit(limitNum)
-          .lean();
+          .limit(limitNumber)
+          .populate('sender', 'name image') // 填充发送者信息
+          // 条件填充 relatedEntity
+          .populate({
+            path: 'relatedEntity',
+            // 使用 refPath 动态指定填充的模型
+            // 当 relatedEntityType 是 'Comment' 时，填充 Comment 模型
+            // 当 relatedEntityType 是 'Prompt' 时，填充 Prompt 模型
+            model: 'Comment', // 默认或主要填充 Comment
+            // 嵌套填充 Comment 中的 prompt 字段
+            populate: {
+              path: 'prompt',
+              model: 'Prompt', // 填充 Prompt 模型
+              select: 'title', // 只选择 Prompt 的 title 字段
+            },
+            select: 'content prompt title', // 选择 Comment 的 content 和 prompt 字段，以及 Prompt 的 title (如果 relatedEntity 是 Prompt)
+          });
+
 
         // 根据通知类型处理 relatedEntity 的显示数据
         const formattedNotifications = notifications.map(notification => {
           let relatedEntityInfo = null;
           let link = '/';
-          
+          let icon = 'default'; // 添加图标字段
+
           // 根据通知类型设置相关实体信息和链接
           if (notification.relatedEntity) {
             switch (notification.type) {
               case 'new_comment':
-                // 现有的评论通知逻辑
+                // 评论通知逻辑
                 if (notification.relatedEntityType === 'Comment' && notification.relatedEntity) {
                   relatedEntityInfo = {
                     _id: notification.relatedEntity._id,
                     content: notification.relatedEntity.content,
-                    // 注意：这里需要获取评论关联的 Prompt ID 来生成链接
-                    // 由于我们不再填充 relatedEntity.prompt，我们需要另一种方式获取 Prompt ID
-                    // 可以在 Comment 模型中直接存储 prompt 字段，或者在 Notification 模型中存储 relatedPromptId
-                    // 目前的代码结构下，如果 relatedEntity 是 Comment，relatedEntity.prompt 应该已经被填充了（如果 Comment 模型定义了 populate）
-                    // 但为了避免 StrictPopulateError，我们移除了嵌套填充。
-                    // 如果 Comment 模型本身没有填充 prompt，这里 relatedEntity.prompt 会是 ObjectId
-                    // 假设 Comment 模型在其他地方被 populate 了 prompt 字段，或者 relatedEntity.prompt 已经是 ObjectId
-                    // 如果 relatedEntity.prompt 是 ObjectId，我们需要单独获取 Prompt 信息
-                    // 更好的做法是在 Notification 模型中存储 relatedPromptId 字段，或者在 Comment 模型中确保 prompt 字段被填充
-                    // 暂时保留获取 promptId 的逻辑，但需要确保 relatedEntity.prompt 是有效的 ObjectId 或已填充对象
-                    promptId: notification.relatedEntity.prompt, 
+                    // promptId 应该是 Comment 中的 prompt 字段 (ObjectId)
+                    promptId: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt, // 确保获取的是 ObjectId
+                    // title 应该从填充后的 relatedEntity.prompt 中获取
+                    title: notification.relatedEntity.prompt?.title || '未知提示',
                   };
-                  // 如果 relatedEntity.prompt 是 ObjectId，这里需要调整链接生成逻辑
-                  link = `/prompts/${notification.relatedEntity.prompt}`;
+                  // 链接应该使用 Comment 中的 prompt 字段 (ObjectId)
+                  link = `/prompt/${notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt}`;
+                  icon = 'comment'; // 评论图标
                 }
                 break;
-                
+
               case 'new_prompt':
-                // 现有的新 Prompt 通知逻辑
+                // 新 Prompt 通知逻辑
                 if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
                   relatedEntityInfo = {
-                    _id: notification.relatedEntity._id,
-                    title: notification.relatedEntity.title,
+                    _id: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt,
+                    title: notification.relatedEntity.prompt?.title || '未知提示',
                   };
-                  link = `/prompts/${notification.relatedEntity._id}`;
+                  link = `/prompt/${notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt}`;
+                  icon = 'prompt'; // Prompt 图标
                 }
                 break;
-                
+
               case 'prompt_approved':
-                // 新增: Prompt 审核通过通知
+                // Prompt 审核通过通知
                 if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
                   relatedEntityInfo = {
-                    _id: notification.relatedEntity._id,
-                    title: notification.relatedEntity.title,
+                    _id: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt,
+                    title: notification.relatedEntity.prompt?.title || '未知提示',
                   };
-                  link = `/prompt/${notification.relatedEntity._id}`; // 审核通过跳转到 Prompt 详情页
+                  link = `/prompt/${notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt}`; // 审核通过跳转到 Prompt 详情页
+                  icon = 'approved'; // 审核通过图标
                 }
                 break;
-                
+
               case 'prompt_rejected':
-                // 新增: Prompt 审核拒绝通知
+                // Prompt 审核拒绝通知
                 if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
                   relatedEntityInfo = {
-                    _id: notification.relatedEntity._id,
-                    title: notification.relatedEntity.title,
+                    _id: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt,
+                    title: notification.relatedEntity.prompt?.title || '未知提示',
                   };
                   // 拒绝通知不提供链接跳转
                   link = '/dashboard'; // 拒绝通知跳转到用户仪表盘
+                  icon = 'rejected'; // 审核拒绝图标
                 }
                 break;
-              
-              // 现有的其他通知类型...
+
+              case 'follow':
+                // 关注通知
+                if (notification.relatedEntityType === 'User' && notification.relatedEntity) {
+                   relatedEntityInfo = {
+                     _id: notification.relatedEntity._id,
+                     name: notification.relatedEntity.name,
+                   };
+                   link = `/user/${notification.relatedEntity._id}`; // 关注通知跳转到用户主页
+                   icon = 'follow'; // 关注图标
+                }
+                break;
+
+              // 添加其他通知类型...
+              default:
+                 icon = 'info'; // 默认图标
+                 break;
             }
           }
-          
+
           return {
-            ...notification,
+            ...notification.toObject(), // 使用 toObject() 获取纯 JavaScript 对象
             sender: notification.sender ? {
               _id: notification.sender._id,
               name: notification.sender.name || '未知用户',
@@ -134,6 +152,7 @@ export default async function handler(req, res) {
             } : null,
             relatedEntity: relatedEntityInfo,
             link: link,
+            icon: icon, // 添加图标字段到返回数据
           };
         });
 
@@ -141,50 +160,53 @@ export default async function handler(req, res) {
         res.status(200).json({
           success: true,
           data: formattedNotifications,
-          currentPage: pageNum,
-          totalPages: Math.ceil(totalNotifications / limitNum),
+          currentPage: pageNumber,
+          totalPages: Math.ceil(totalNotifications / limitNumber),
           totalNotifications: totalNotifications,
         });
 
       } catch (error) {
-        console.error('获取通知 API 错误:', error);
-        res.status(500).json({ success: false, error: '服务器内部错误，无法获取通知' });
+        console.error('获取通知 API 错误:', error); // 记录详细错误
+        res.status(500).json({ success: false, error: error.message || '服务器内部错误，无法获取通知' }); // 返回更详细的错误信息
       }
       break;
 
-    case 'PUT':
-        try {
-            const { notificationIds, read } = req.body; // 接收要更新的通知 ID 数组和 read 状态
-
-            if (!notificationIds || !Array.isArray(notificationIds) || notificationIds.length === 0) {
-                return res.status(400).json({ success: false, error: '需要提供有效的通知 ID 数组' });
-            }
-
-            // 确保所有 ID 都是有效的 ObjectId
-            const validNotificationIds = notificationIds.filter(id => mongoose.Types.ObjectId.isValid(id));
-
-            if (validNotificationIds.length === 0) {
-                 return res.status(400).json({ success: false, error: '提供的通知 ID 格式无效' });
-            }
-
-            // 更新通知的 read 状态，只更新属于当前用户的通知
-            const updateResult = await Notification.updateMany(
-                { _id: { $in: validNotificationIds }, recipient: currentUserId },
-                { $set: { read: read === true } } // 确保 read 是布尔值
-            );
-
-            res.status(200).json({ success: true, message: `成功更新 ${updateResult.modifiedCount} 条通知`, modifiedCount: updateResult.modifiedCount });
-
-        } catch (error) {
-            console.error('更新通知状态失败:', error);
-            res.status(500).json({ success: false, error: '服务器错误，更新通知状态失败', details: error.message });
+    case 'PUT': // 用于标记通知为已读/未读
+      try {
+        // 检查用户是否登录
+        if (!session || !session.user || !session.user.id) {
+          return res.status(401).json({ success: false, error: '未授权，请登录后操作' });
         }
-        break;
 
+        const { notificationIds, read } = req.body;
+
+        if (!notificationIds || !Array.isArray(notificationIds) || notificationIds.length === 0) {
+          return res.status(400).json({ success: false, error: '请提供要更新的通知 ID 列表' });
+        }
+
+        // 确保用户只能更新自己的通知
+        const updateResult = await Notification.updateMany(
+          { _id: { $in: notificationIds }, recipient: userId },
+          { $set: { read: read } }
+        );
+
+        if (updateResult.matchedCount === 0) {
+             // 如果 matchedCount 为 0，可能是因为提供的 ID 不属于当前用户或 ID 无效
+             // 但我们仍然返回成功，因为没有需要更新的通知符合条件
+             return res.status(200).json({ success: true, message: '没有找到符合条件的通知进行更新' });
+        }
+
+
+        res.status(200).json({ success: true, message: '通知状态更新成功', updatedCount: updateResult.modifiedCount });
+      } catch (error) {
+        console.error('更新通知状态失败:', error);
+        res.status(500).json({ success: false, error: error.message || '服务器错误' });
+      }
+      break;
 
     default:
-      res.setHeader('Allow', ['GET', 'PUT']);
-      res.status(405).json({ success: false, error: `方法 ${method} 不允许` });
+      res.setHeader('Allow', ['GET', 'PUT']); // 允许 GET 和 PUT 方法
+      res.status(405).json({ success: false, error: 'Method not allowed' });
       break;
   }
 } 

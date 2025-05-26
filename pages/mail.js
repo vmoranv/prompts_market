@@ -139,7 +139,7 @@ export default function MailPage() {
         return '收到一条新通知';
     }
   };
-
+  
   // 获取通知图标的函数
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -397,8 +397,8 @@ export default function MailPage() {
                             </p>
                           ) : notification.type === 'new_comment' && notification.relatedEntity ? (
                             <p className={styles.notificationDetail}>
-                              在提示 <strong>{notification.relatedEntity.prompt?.title || '未知提示'}</strong> 下发表评论：
-                              <span className={styles.commentPreview}>{notification.relatedEntity.contentPreview}</span>
+                              在提示 <strong>{notification.relatedEntity?.title || '未知提示'}</strong> 下发表评论：
+                              <span className={styles.commentPreview}>{notification.relatedEntity?.content.substring(0, 30)}${notification.relatedEntity?.content.length > 30 ? '...' : ''}</span>
                               <Link href={link} className={styles.notificationDetailLink}>
                                 <span>点击查看评论</span>
                               </Link>

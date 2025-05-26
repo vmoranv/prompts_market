@@ -118,6 +118,8 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   margin-bottom: 1.5rem;
   margin-right: 1.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .promptItem:hover {
@@ -299,9 +301,13 @@
 }
 
 .promptTitleText {
-  font-size: 1.1rem;
-  font-weight: 500;
-  transition: color 0.2s ease;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 限制显示2行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  word-break: break-word;
 }
 
 .promptTitleLink:hover .promptTitleText {
@@ -970,4 +976,199 @@
 .unfollowButton:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+/* 添加仪表盘 Prompt 列表容器样式 */
+.promptList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 响应式网格 */
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* 添加仪表盘 Prompt 卡片样式 (不同于 PromptCard.module.css) */
+.dashboardPromptCard {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-large);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-elevation-low);
+  border: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.promptCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+/* 添加 Prompt 标题容器样式 */
+.promptTitleContainer {
+  min-width: 0; /* 允许容器缩小 */
+  flex: 1; /* 占据剩余空间 */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+.promptTitleLink {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  word-break: break-word; /* 防止长标题溢出 */
+}
+
+.promptTitleLink:hover {
+  text-decoration: underline;
+}
+
+/* 添加状态标签样式 (与 PromptCard.module.css 中的类似，但独立定义) */
+.pendingStatus, .rejectedStatus, .publishedStatus {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px; /* 更圆润的胶囊形状 */
+  font-size: 0.8rem;
+  font-weight: normal;
+  white-space: nowrap; /* 防止文本换行 */
+}
+
+.pendingStatus {
+  background-color: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+}
+
+.rejectedStatus {
+  background-color: var(--md-error-container);
+  color: var(--md-on-error-container);
+}
+
+.publishedStatus {
+  background-color: var(--md-primary-container); /* 可选：为已发布添加样式 */
+  color: var(--md-on-primary-container);
+}
+
+
+.promptActions {
+  display: flex;
+  gap: 10px;
+}
+
+.promptActions .editButton,
+.promptActions .deleteButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: color 0.2s ease;
+  padding: 0; /* 移除默认 padding */
+  display: flex; /* 使图标居中 */
+  align-items: center;
+  justify-content: center;
+}
+
+.promptActions .editButton:hover {
+  color: var(--md-primary);
+}
+
+.promptActions .deleteButton:hover {
+  color: var(--md-error);
+}
+
+
+.promptContentPreview {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 1rem;
+  flex-grow: 1; /* 允许内容预览占据剩余空间 */
+  overflow: hidden; /* 隐藏溢出内容 */
+  text-overflow: ellipsis; /* 显示省略号 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* 限制显示行数 */
+  -webkit-box-orient: vertical;
+}
+
+.promptTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto; /* 将标签推到底部 */
+}
+
+.promptTags .tag {
+  background-color: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.promptTags .noTags {
+  font-style: italic;
+  color: var(--color-text-tertiary);
+  font-size: 0.9rem;
+}
+
+/* 状态过滤下拉框样式 */
+.filterContainer {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filterContainer label {
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+.statusSelect {
+  padding: 8px 12px;
+  border-radius: var(--border-radius-medium);
+  border: 1px solid var(--md-outline);
+  background-color: var(--md-surface-container);
+  color: var(--md-on-surface);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.statusSelect:focus {
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 2px var(--md-primary-container);
+}
+
+.statusSelect option {
+  background-color: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+}
+
+.promptTitleText {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 限制显示2行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.promptTitleContainer {
+  min-width: 0; /* 允许容器缩小 */
+  flex: 1; /* 占据剩余空间 */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden; /* 防止内容溢出 */
+}
+
+.promptItem {
+  /* 确保已有样式不变，只添加以下属性 */
+  overflow: hidden; /* 防止内容溢出容器 */
+  text-overflow: ellipsis;
 } 

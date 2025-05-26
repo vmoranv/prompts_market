@@ -324,4 +324,30 @@
 .likesCount {
   font-size: 14px;
   color: var(--color-text-secondary);
+}
+
+/* 添加标题容器样式 */
+.titleContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 添加状态标签样式 */
+.pendingStatus, .rejectedStatus {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.pendingStatus {
+  background-color: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+}
+
+.rejectedStatus {
+  background-color: var(--md-error-container);
+  color: var(--md-on-error-container);
 } 
