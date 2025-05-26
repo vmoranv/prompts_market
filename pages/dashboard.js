@@ -6,11 +6,14 @@ import styles from '../styles/Dashboard.module.css';
 import { MdAccountCircle, MdLightbulbOutline, MdDelete, MdEdit, MdArrowBack, MdSentimentDissatisfied, MdComment, MdPersonAdd, MdPersonRemove, MdPeople } from 'react-icons/md';
 import Link from 'next/link';
 import Image from 'next/image';
+import PromptCard from '../components/PromptCard';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { userId: queryUserId } = router.query;
+  const { id: userIdFromUrl } = router.query;
+  const currentUserId = session?.user?.id;
+  const targetUserId = userIdFromUrl || currentUserId;
 
   const [profileUser, setProfileUser] = useState(null);
   const [userPrompts, setUserPrompts] = useState([]);
@@ -34,8 +37,14 @@ export default function Dashboard() {
   const [isOwnDashboard, setIsOwnDashboard] = useState(false);
   const [fetchCommentsError, setFetchCommentsError] = useState(null);
 
+  const [targetUser, setTargetUser] = useState(null);
+  const [loadingTargetUser, setLoadingTargetUser] = useState(true);
+  const [fetchTargetUserError, setFetchTargetUserError] = useState(null);
+
+  const [fetchPromptsError, setFetchPromptsError] = useState(null);
+
   const loggedInUserId = session?.user?.id;
-  const dashboardUserId = queryUserId || loggedInUserId;
+  const dashboardUserId = targetUserId;
 
   useEffect(() => {
     const fetchProfileUser = async () => {
@@ -45,7 +54,7 @@ export default function Dashboard() {
 
       if (status === 'loading') return;
 
-      let targetIdToFetch = queryUserId;
+      let targetIdToFetch = targetUserId;
       if (!targetIdToFetch && status === 'authenticated') {
         targetIdToFetch = loggedInUserId;
       }
@@ -72,6 +81,10 @@ export default function Dashboard() {
             } else if (activeTab === 'followers') {
                 fetchFollowersUsers(targetIdToFetch);
             }
+
+            if (targetUserId) {
+                fetchTargetUserData(targetUserId);
+            }
           } else {
             throw new Error(data.error || '获取用户信息失败');
           }
@@ -83,9 +96,9 @@ export default function Dashboard() {
         } finally {
           setLoadingProfile(false);
         }
-      } else if (status === 'unauthenticated' && queryUserId) {
+      } else if (status === 'unauthenticated' && targetUserId) {
         try {
-          const res = await fetch(`/api/users/${queryUserId}`);
+          const res = await fetch(`/api/users/${targetUserId}`);
           if (!res.ok) throw new Error('Failed to fetch user');
           const data = await res.json();
           if (data.success) {
@@ -94,25 +107,29 @@ export default function Dashboard() {
             setIsOwnDashboard(false);
 
             if (activeTab === 'prompts') {
-                fetchUserPrompts(queryUserId);
+                fetchUserPrompts(targetUserId);
             } else if (activeTab === 'comments') {
-                fetchUserComments(queryUserId);
+                fetchUserComments(targetUserId);
             } else if (activeTab === 'following') {
-                fetchFollowingUsers(queryUserId);
+                fetchFollowingUsers(targetUserId);
             } else if (activeTab === 'followers') {
-                fetchFollowersUsers(queryUserId);
+                fetchFollowersUsers(targetUserId);
+            }
+
+            if (targetUserId) {
+                fetchTargetUserData(targetUserId);
             }
 
           } else {
             throw new Error(data.error || 'Failed to fetch user');
           }
         } catch (err) {
-          console.error(`获取用户 ${queryUserId} 信息失败:`, err);
+          console.error(`获取用户 ${targetUserId} 信息失败:`, err);
           setFetchProfileError(err.message);
         } finally {
           setLoadingProfile(false);
         }
-      } else if (status === 'unauthenticated' && !queryUserId) {
+      } else if (status === 'unauthenticated' && !targetUserId) {
         router.push('/auth/signin?callbackUrl=' + encodeURIComponent(router.asPath));
       } else {
         setLoadingProfile(false);
@@ -120,21 +137,28 @@ export default function Dashboard() {
     };
 
     fetchProfileUser();
-  }, [queryUserId, session, status, router, loggedInUserId, activeTab]);
+  }, [targetUserId, session, status, router, loggedInUserId, activeTab]);
 
   const fetchUserPrompts = async (userId) => {
     if (!userId) return;
     setLoadingPrompts(true);
+    setFetchPromptsError(null);
     try {
-      const res = await fetch(`/api/prompts?userId=${userId}`);
+      const res = await fetch(`/api/users/${userId}/prompts`);
       if (!res.ok) {
-        throw new Error(`获取 Prompts 失败: ${res.status}`);
+        const errorData = await res.json();
+        throw new Error(errorData.error || `无法加载用户 Prompt: ${res.status}`);
       }
       const data = await res.json();
-      setUserPrompts(data.data || []);
+      if (data.success) {
+        setUserPrompts(data.data);
+      } else {
+        throw new Error(data.error || '获取用户 Prompt 失败');
+      }
     } catch (err) {
-      console.error("获取用户 Prompts 失败:", err);
-      setError(err.message);
+      console.error(`获取用户 ${userId} 的 Prompt 失败:`, err);
+      setFetchPromptsError(err.message);
+      setUserPrompts([]);
     } finally {
       setLoadingPrompts(false);
     }
@@ -163,6 +187,34 @@ export default function Dashboard() {
     } finally {
       setLoadingComments(false);
     }
+  };
+
+  const fetchTargetUserData = async (userId) => {
+    if (!userId) return;
+    setLoadingTargetUser(true);
+    setFetchTargetUserError(null);
+    try {
+      const res = await fetch(`/api/users/${userId}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch user');
+      }
+      const data = await res.json();
+      if (data.success) {
+        setTargetUser(data.data);
+      } else {
+        throw new Error(data.error || '获取用户信息失败');
+      }
+    } catch (err) {
+      console.error(`获取用户 ${userId} 的信息失败:`, err);
+      setFetchTargetUserError(err.message);
+      setTargetUser(null);
+    } finally {
+      setLoadingTargetUser(false);
+    }
+  };
+
+  const handlePromptDeleted = (deletedPromptId) => {
+    setUserPrompts(prevPrompts => prevPrompts.filter(prompt => prompt._id !== deletedPromptId));
   };
 
   const handleDeletePrompt = async (promptId) => {
@@ -379,11 +431,11 @@ export default function Dashboard() {
     );
   }
 
-  if (status === 'unauthenticated' && !queryUserId) {
+  if (status === 'unauthenticated' && !targetUserId) {
     return null;
   }
 
-  if (queryUserId && fetchProfileError) {
+  if (targetUserId && fetchProfileError) {
     return (
         <div className={styles.container}>
             <Head>
@@ -403,7 +455,7 @@ export default function Dashboard() {
     );
   }
 
-  if (queryUserId && !profileUser && !loadingProfile) {
+  if (targetUserId && !profileUser && !loadingProfile) {
       return (
           <div className={styles.container}>
               <Head>
@@ -416,7 +468,7 @@ export default function Dashboard() {
                   <div className={styles.emptyState}>
                       <MdSentimentDissatisfied className={styles.emptyIcon} />
                       <h3>用户未找到</h3>
-                      <p>无法找到 ID 为 {queryUserId} 的用户信息。</p>
+                      <p>无法找到 ID 为 {targetUserId} 的用户信息。</p>
                   </div>
               </main>
           </div>
@@ -430,7 +482,7 @@ export default function Dashboard() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>{profileUser?.name || (queryUserId ? '用户' : '我的')}中心 - Prompt 市场</title>
+        <title>{profileUser?.name || (targetUserId ? '用户' : '我的')}中心 - Prompt 市场</title>
         <meta name="description" content={`查看 ${profileUser?.name || '用户'} 的 Prompt 和资料`} />
       </Head>
 
@@ -540,23 +592,15 @@ export default function Dashboard() {
                   {isOwnDashboard ? '我的 Prompt' : `${profileUser?.name || '用户'}的 Prompt`} ({userPrompts.length})
                 </h2>
                 <div className={styles.sectionSeparator}></div>
-                {userPrompts.map(prompt => (
-                  <div key={prompt._id} className={styles.promptItem}>
-                    <Link href={`/prompt/${prompt._id}`} className={styles.promptTitleLink}>
-                      <span className={styles.promptTitleText}>{prompt.title}</span>
-                    </Link>
-                    {canManagePrompts && (
-                      <div className={styles.promptActions}>
-                        <Link href={`/edit-prompt/${prompt._id}`} className={styles.actionButton} title="编辑">
-                          <MdEdit />
-                        </Link>
-                        <button onClick={() => handleDeletePrompt(prompt._id)} className={`${styles.actionButton} ${styles.deleteButton}`} title="删除">
-                          <MdDelete />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                <div className={styles.promptList}>
+                  {userPrompts.map((prompt) => (
+                    <PromptCard
+                      key={prompt._id}
+                      prompt={prompt}
+                      onDeleteSuccess={handlePromptDeleted}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </section>
@@ -750,4 +794,6 @@ export default function Dashboard() {
       </main>
     </div>
   );
-} 
+}
+
+export const dynamic = 'force-dynamic'; 

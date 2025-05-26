@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '../styles/Home.module.css';
 import PromptsList from '../components/PromptsList';
 import Head from 'next/head';
@@ -16,10 +16,14 @@ export default function Home() {
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [paginationInfo, setPaginationInfo] = useState({
+    totalPrompts: 0,
     totalPages: 1,
     hasMore: false,
     currentPage: 1,
   });
+  
+  // 新增状态：用于触发 PromptsList 数据刷新的 key
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // 判断当前用户是否为管理员
   const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(',') : [];
@@ -78,6 +82,16 @@ export default function Home() {
   const getSortString = () => {
     const prefix = sortOrder === 'desc' ? '-' : '';
     return `${prefix}${sortBy}`;
+  };
+  
+  // 新增函数：处理 Prompt 删除成功
+  const handlePromptDeleted = (deletedPromptId) => {
+    console.log(`Prompt ${deletedPromptId} 已删除，触发列表刷新。`);
+    // 增加 refreshKey 的值，触发 PromptsList 的 useEffect 重新运行
+    setRefreshKey(prevKey => prevKey + 1);
+    // 删除后可能导致当前页的 Prompt 数量不足，或者总页数变化
+    // 简单起见，这里直接刷新列表。更复杂的逻辑可以检查当前页是否变空，然后跳转到上一页。
+    // 目前的 PromptsList 会在数据获取后更新 paginationInfo，这应该足够处理大多数情况。
   };
   
   return (
@@ -173,6 +187,8 @@ export default function Home() {
           onPaginationChange={handlePaginationUpdate}
           isAdmin={isAdmin}
           sortBy={getSortString()}
+          refreshTrigger={refreshKey}
+          onPromptDeleted={handlePromptDeleted}
         />
         
         {/* 分页控件 */}

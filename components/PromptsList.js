@@ -5,7 +5,7 @@ import styles from '../styles/PromptsList.module.css';
 import Link from 'next/link';
 import { MdInfo, MdSentimentDissatisfied } from 'react-icons/md';
 
-export default function PromptsList({ searchQuery = '', currentPage = 1, onPaginationUpdate, isAdmin, sortBy }) {
+export default function PromptsList({ searchQuery = '', currentPage = 1, onPaginationUpdate, isAdmin, sortBy, refreshTrigger, onPromptDeleted }) {
   const [prompts, setPrompts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -62,13 +62,15 @@ export default function PromptsList({ searchQuery = '', currentPage = 1, onPagin
       } catch (err) {
         console.error("Failed to fetch prompts:", err);
         setError(err.message);
+        setPrompts([]); // 清空列表
+        setPagination({ totalPrompts: 0, totalPages: 0, currentPage: 1, pageSize: ITEMS_PER_PAGE, hasMore: false }); // 重置分页信息
       } finally {
         setLoading(false);
       }
     };
 
     fetchPrompts();
-  }, [searchQuery, currentPage, onPaginationUpdate, sortBy]); // 添加 sortBy 作为依赖项
+  }, [searchQuery, currentPage, onPaginationUpdate, sortBy, refreshTrigger]); // 添加 sortBy 和 refreshTrigger 作为依赖项
 
   if (loading) {
     return (
@@ -131,7 +133,7 @@ export default function PromptsList({ searchQuery = '', currentPage = 1, onPagin
       
       <div className={styles.promptsGrid}>
         {prompts.map(prompt => (
-          <PromptCard key={prompt._id} prompt={prompt} currentUserId={currentUserId} isAdmin={isAdmin} />
+          <PromptCard key={prompt._id} prompt={prompt} currentUserId={currentUserId} isAdmin={isAdmin} onDeleteSuccess={onPromptDeleted} />
         ))}
       </div>
       

@@ -42,7 +42,8 @@ const truncateText = (text, maxLines, maxChars) => {
   return truncatedText + (needsEllipsis ? '...' : '');
 };
 
-export default function PromptCard({ prompt }) {
+// 接受 onDeleteSuccess 回调函数作为 prop
+export default function PromptCard({ prompt, onDeleteSuccess }) {
   if (!prompt) return null; // 添加一个保护，防止 prompt 未定义
 
   const [copied, setCopied] = useState(false); // 状态追踪复制操作
@@ -132,6 +133,8 @@ export default function PromptCard({ prompt }) {
     }
 
     if (confirmDelete) {
+      setIsLoading(true); // 开始加载
+      setError(null); // 清除之前的错误
       try {
         const res = await fetch(`/api/prompts/${prompt._id}`, {
           method: 'DELETE',
@@ -140,12 +143,19 @@ export default function PromptCard({ prompt }) {
           const errorData = await res.json();
           throw new Error(errorData.error || `删除失败: ${res.status}`);
         }
+        // 删除成功后，调用父组件传递的回调函数
+        if (onDeleteSuccess) {
+            onDeleteSuccess(prompt._id);
+        }
         setConfirmDelete(false);
         console.log(`Prompt ${prompt._id} 已成功删除。`);
       } catch (err) {
         console.error("删除 Prompt 失败:", err);
+        setError(`删除失败: ${err.message}`); // 设置错误信息
         alert(`删除 Prompt 失败: ${err.message}`);
         setConfirmDelete(false); // 删除失败也重置确认状态
+      } finally {
+        setIsLoading(false); // 结束加载
       }
     } else {
       setConfirmDelete(true); // 第一次点击显示确认
