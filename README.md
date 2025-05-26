@@ -1,93 +1,115 @@
-# Prompt 市场
+# 🚀 Prompt 市场
 
-一个使用 Next.js 和 MongoDB 构建的 Prompt 分享平台。
+![Project Status](https://img.shields.io/badge/status-active-success.svg)
+![Next.js Version](https://img.shields.io/badge/next.js-14.2.3-blue.svg)
+![MongoDB Atlas](https://img.shields.io/badge/MongoDB-7.0-green.svg)
 
-## 项目目标
+一个基于现代Web技术构建的Prompt分享平台，采用Next.js框架和MongoDB数据库，支持多平台登录和内容审核机制。
 
-- 用户可以通过 GitHub 或 Google 账户登录。
-- 用户可以创建、分享 Prompt。
-- 管理员可以审核和管理平台上的 Prompt。
-- 用户可以搜索、筛选和点赞 Prompt。
+## 📋 目录
+- [核心功能](#✨-核心功能)
+- [技术架构](#🛠️-技术架构)
+- [快速开始](#🚀-快速开始)
+- [部署指南](#🌐-部署指南)
+- [项目路线图](#🗺️-项目路线图)
+- [贡献指南](#🤝-贡献指南)
 
-## 技术栈
+## ✨ 核心功能
 
-- **前端:** Next.js (React)
-- **后端:** Next.js API Routes
-- **数据库:** MongoDB (使用 Mongoose 作为 ODM)
-- **认证:** NextAuth.js
-- **主题管理:** React Context API (用于切换主题)
-- **样式:** CSS Modules with CSS Variables (支持系统主题)
-- **UI (计划):** (例如 Tailwind CSS, Chakra UI, Material UI - 待定)
+| 功能类别       | 已实现功能                            | 状态    |
+|----------------|-------------------------------------|---------|
+| **用户认证**    | GitHub/Google OAuth 登录            | ✅ 完成 |
+| **内容管理**    | Prompt创建/编辑/删除                 | ✅ 完成 |
+|                | 管理员审核流程                       | ✅ 完成 |
+| **社交互动**    | 评论/点赞/收藏功能                   | ✅ 完成 |
+| **内容发现**    | 高级搜索与过滤                       | ✅ 完成 |
+| **通知系统**    | 实时用户通知                         | ✅ 完成 |
 
-## 环境变量
+## 🛠️ 技术架构
 
-项目运行需要配置以下环境变量。请参考 `.env.sample` 文件。
+```mermaid
+graph TD
+    A[前端] --> B[Next.js 14]
+    A --> C[React 18]
+    A --> D[CSS Modules]
+    
+    E[后端] --> F[Next.js API Routes]
+    E --> G[Mongoose ODM]
+    
+    H[数据库] --> I[MongoDB Atlas]
+    
+    J[基础设施] --> K[Vercel 部署]
+    J --> L[Docker 容器化]
+```
 
-- `MONGODB_URI`: MongoDB 连接字符串。
-- `NEXTAUTH_SECRET`: NextAuth.js 的会话加密密钥。**在生产环境中必须设置一个强密钥。**
-- `NEXTAUTH_URL`: 应用的 URL。本地开发时通常是 `http://localhost:3000`，生产环境则是您的域名。
-- `GITHUB_CLIENT_ID`: GitHub OAuth App Client ID。
-- `GITHUB_CLIENT_SECRET`: GitHub OAuth App Client Secret。
-- `GOOGLE_CLIENT_ID`: Google OAuth App Client ID。
-- `GOOGLE_CLIENT_SECRET`: Google OAuth App Client Secret。
-- `NEXT_PUBLIC_ADMIN_EMAILS`: 管理员邮箱列表，多个邮箱用逗号分隔。**这是前端可访问的环境变量，用于控制管理员功能的显示。**
+## 🚀 快速开始
 
-## 运行项目
+### 前置要求
+- Node.js 18+
+- MongoDB Atlas 账号
+- GitHub/Google OAuth应用
 
-1.  **安装依赖:**
-    ```bash
-    npm install
-    # 或者
-    yarn install
-    ```
+### 本地开发
+```bash
+# 1. 克隆仓库
+git clone https://github.com/<your-username>/prompt-marketplace.git
+cd prompt-marketplace
 
-2.  **配置 `.env.local` 文件。** 参考 `.env.sample`。
+# 2. 安装依赖
+pnpm install  # 推荐使用pnpm
 
-3.  **运行开发服务器:**
-    ```bash
-    npm run dev
-    # 或者
-    yarn dev
-    ```
+# 3. 配置环境
+cp .env.sample .env.local
+# 编辑.env.local文件填写实际配置
 
-## 部署
+# 4. 启动开发服务器
+pnpm dev
+```
 
-将应用部署到生产环境需要额外的步骤和配置。
+## 🌐 部署指南
 
-1.  **配置环境变量:**
-    *   在您的部署平台 (例如 Vercel, Netlify, AWS 等) 上设置上述所有环境变量。**不要将 `.env.local` 文件上传到代码仓库。**
-    *   `NEXTAUTH_SECRET` 必须设置为一个安全、随机的字符串。
-    *   `NEXTAUTH_URL` 必须设置为您的生产环境 URL (例如 `https://your-app-name.com`)。
-    *   `NEXT_PUBLIC_ADMIN_EMAILS` 用于指定哪些用户拥有管理员权限。
+### 环境变量配置
+| 变量名                   | 必需 | 示例值                          | 说明                      |
+|--------------------------|------|---------------------------------|-------------------------|
+| `MONGODB_URI`            | ✅   | `mongodb+srv://<user>:<pass>@cluster.mongodb.net/db` | MongoDB连接字符串       |
+| `NEXTAUTH_SECRET`        | ✅   | `openssl rand -base64 32`       | 至少32位的随机字符串     |
+| `GITHUB_CLIENT_ID`       | ✅   | `Iv1.1234567890abcdef`          | GitHub OAuth客户端ID     |
+| `GITHUB_CLIENT_SECRET`  | ✅   | `9159fd5d8b66d388ad0d2e926caffc55940fe2a8` | GitHub OAuth客户端密钥 |
+| `NEXT_PUBLIC_ADMIN_EMAILS` | ✅   | `1761886648@qq.com` | 管理员邮箱列表 |
 
-2.  **配置 OAuth 提供商的重定向 URI:**
-    *   在您的 GitHub 和 Google OAuth App 设置中，将授权回调 URL (Authorization callback URL) 添加为 `[您的生产环境 URL]/api/auth/callback/[provider]`。
-    *   例如，如果您的生产 URL 是 `https://your-app-name.com`：
-        *   GitHub Redirect URI: `https://your-app-name.com/api/auth/callback/github`
-        *   Google Redirect URI: `https://your-app-name.com/api/auth/callback/google`
 
-3.  **构建和启动应用:**
-    *   大多数现代部署平台 (如 Vercel, Netlify) 会自动处理构建和启动过程。
-    *   如果您手动部署，需要先构建项目：
-        ```bash
-        npm run build
-        # 或者
-        yarn build
-        ```
-    *   然后启动生产服务器：
-        ```bash
-        npm start
-        # 或者
-        yarn start
-        ```
+### 生产环境构建
+```bash
+# 构建优化版本
+pnpm build
 
-4.  **数据库连接:**
-    *   确保您的生产环境可以访问 `MONGODB_URI` 指定的 MongoDB 数据库。对于 MongoDB Atlas，您可能需要在网络访问设置中允许您的部署平台的 IP 地址范围。
+# 启动生产服务器
+pnpm start
+```
 
-## 后续步骤
+> 📌 **提示**：生产环境部署前请确保：
+> - 已配置HTTPS
+> - 启用数据库访问白名单
+> - 设置定期备份策略
 
-- [x] 实现用户登录/注册 UI。
-- [x] 实现 Prompt 创建表单和 API。
-- [x] 实现 Prompt 展示列表和详情页。
-- [x] 实现管理员审核和管理界面。
-- [x] 实现搜索、筛选和点赞功能。
+## 🗺️ 项目路线图
+
+- [x] 基础用户系统
+- [x] Prompt管理功能
+- [x] 内容审核机制
+- [x] 社交互动功能
+- [x] 高级搜索与过滤
+- [x] 实时用户通知
+- [ ] 高级分析仪表盘
+- [ ] 多语言支持
+- [ ] 移动端优化
+
+## 🤝 贡献指南
+
+欢迎通过以下方式参与贡献：
+1. 提交Issue报告问题
+2. Fork仓库并提交PR
+3. 完善项目文档
+4. 添加测试用例
+
+请遵循[Conventional Commits](https://www.conventionalcommits.org/)规范提交代码。
