@@ -347,7 +347,7 @@ export default function Home() {
       </main>
 
       <footer className={styles.footer}>
-        <p>&copy; {new Date().getFullYear()} Prompt 市场. 保留所有权利.</p>
+        <p>&copy; {new Date().getFullYear()} <a href="https://github.com/vmoranv/prompts_market" >Prompt 市场</a>. 保留所有权利.</p>
       </footer>
     </div>
   );
