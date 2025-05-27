@@ -114,13 +114,13 @@ export default function MailDropdown({ unreadNotificationsCount = 0 }) {
         return `${senderName} 发布了新的 Prompt: ${notification.relatedEntity?.title || ''}`;
         
       case 'new_comment':
-        return `${senderName} 评论了: ${notification.relatedEntity?.content.substring(0, 20)}${notification.relatedEntity?.content.length > 20 ? '...' : ''}`;
+        return `${senderName} 评论了: ${notification.relatedEntity?.content.substring(0, 20)}${notification.relatedEntity?.content.length > 20 ? '...' : ''}`; // 限制评论内容长度为20个字符
         
       case 'prompt_approved':
-        return `你的 Prompt "${notification.relatedEntity?.title || ''}" 已通过审核`;
+        return `你的 Prompt "${notification.relatedEntity?.title.substring(0, 5)}${notification.relatedEntity?.title.length > 5 ? '...' : ''}" 已通过审核`; // 限制评论标题长度为10个字符
         
       case 'prompt_rejected':
-        return `你的 Prompt "${notification.relatedEntity?.title || ''}" 未通过审核`;
+        return `你的 Prompt "${notification.relatedEntity?.title.substring(0, 5)}${notification.relatedEntity?.title.length > 5 ? '...' : ''}" 未通过审核`; // 限制评论标题长度为10个字符
         
       default:
         return '收到一条新通知';

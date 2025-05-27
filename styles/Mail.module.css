@@ -35,9 +35,103 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--md-outline-variant);
+  padding: 1rem;
+  background: var(--md-surface-container-low);
+  border-radius: 12px;
+  border: 1px solid var(--md-outline-variant);
 }
+
+.toolbarActions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.refreshButton,
+.clearButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.refreshButton:hover:not(:disabled),
+.clearButton:hover:not(:disabled) {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.refreshButton:disabled,
+.clearButton:disabled {
+  background: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.clearButton {
+  background: var(--md-error);
+  color: var(--md-on-error);
+}
+
+.clearButton:hover:not(:disabled) {
+  background: var(--md-error-container);
+  color: var(--md-on-error-container);
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.cleanupResult {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+  animation: slideIn 0.3s ease-out;
+}
+
+.cleanupResult.success {
+  background: var(--md-tertiary-container);
+  border-color: var(--md-tertiary);
+  color: var(--md-on-tertiary-container);
+}
+
+.cleanupResult.error {
+  background: var(--md-error-container);
+  border-color: var(--md-error);
+  color: var(--md-on-error-container);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 .tabs {
   display: flex;
@@ -68,20 +162,6 @@
   font-weight: 500;
 }
 
-.refreshButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: var(--md-secondary-container);
-  border: none;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  color: var(--md-on-secondary-container);
-  border-radius: var(--border-radius-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
 .refreshButton:hover {
   background-color: var(--md-secondary-container-dark);
 }
@@ -93,11 +173,6 @@
 
 .spinning {
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
 
 /* 通知列表容器 */
@@ -116,9 +191,10 @@
 
 /* 通知项样式 */
 .notificationItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0.5rem 1rem;
   padding: 1rem;
   margin-bottom: 0.75rem;
   background-color: var(--md-surface-container);
@@ -127,6 +203,7 @@
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
+  min-width: 0;
 }
 
 .notificationItem:hover {
@@ -155,6 +232,8 @@
 
 /* 发送者头像样式 */
 .senderAvatar {
+  grid-row: 1 / 3;
+  grid-column: 1;
   flex-shrink: 0;
   width: 40px;
   height: 40px;
@@ -186,15 +265,21 @@
 /* 通知内容样式 */
 .notificationContent {
   flex-grow: 1;
-  min-width: 0; /* 确保内容可以正确换行 */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
+
 .notificationHeader {
+  grid-row: 1;
+  grid-column: 2;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  min-width: 0;
+  margin-bottom: 0;
+  justify-content: flex-start;
 }
 
 .senderName {
@@ -210,7 +295,75 @@
 }
 
 .notificationTypeIcon {
-  font-size: 1.1rem;
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: var(--md-surface);
+  border-radius: 50%;
+  padding: 2px;
+  border: 1px solid var(--md-outline-variant);
+}
+
+.deleteMessageButton svg {
+  width: 16px !important;
+  height: 16px !important;
+  fill: currentColor !important;
+  display: block !important;
+}
+
+.notificationItem:hover .deleteMessageButton {
+  opacity: 1;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.deleteMessageButton:hover:not(:disabled) {
+  background: var(--md-error-container);
+  color: var(--md-on-error-container);
+  transform: scale(1.1);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.deleteMessageButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background: transparent;
+}
+
+.deleteMessageButton:hover {
+  background: var(--md-error-container);
+  color: var(--md-on-error-container);
+  transform: scale(1.1);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.deleteMessageButton:disabled:hover {
+  background: transparent;
+  transform: none;
+  color: var(--md-on-surface-variant);
+  cursor: not-allowed;
+}
+
+.notificationBody {
+  grid-row: 2;
+  grid-column: 2 / 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.notificationTimeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.notificationTime {
+  font-size: 0.8rem;
+  color: var(--md-on-surface-variant);
 }
 
 .notificationDetail {
@@ -220,17 +373,31 @@
   word-break: break-word;
 }
 
+.notificationText {
+  font-size: 0.9rem;
+  color: var(--md-on-surface);
+  line-height: 1.4;
+  margin: 0.25rem 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* 支持通知文本中的强调样式 */
+.notificationText strong {
+  font-weight: 600;
+  color: var(--md-primary);
+}
+
+.notificationText em {
+  font-style: italic;
+  color: var(--md-on-surface-variant);
+}
+
 .commentPreview {
   display: block;
   margin-top: 0.25rem;
   font-style: italic;
   color: var(--md-on-surface-variant-dark);
-}
-
-.notificationTime {
-  font-size: 0.8rem;
-  color: var(--md-on-surface-variant);
-  margin-top: 0.5rem;
 }
 
 /* 通知右侧动作按钮 */
@@ -372,17 +539,35 @@
   }
 
   .notificationItem {
-    flex-direction: column;
+    grid-template-columns: 36px 1fr auto;
+    gap: 0.25rem 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .deleteMessageButton {
+    opacity: 1;
+    width: 28px;
+    height: 28px;
   }
 
   .senderAvatar {
-    margin-bottom: 0.5rem;
+    width: 36px; /* 在移动端稍微缩小头像 */
+    height: 36px;
   }
 
-  .notificationAction {
-    display: none;
+  .notificationHeader {
+    gap: 0.25rem; /* 在移动端减少间距 */
+  }
+
+  .senderName {
+    font-size: 0.9rem; /* 在移动端稍微缩小字体 */
+  }
+
+  .notificationTime {
+    font-size: 0.75rem; /* 在移动端稍微缩小时间字体 */
   }
 }
+
 
 @media (max-width: 480px) {
   .container {

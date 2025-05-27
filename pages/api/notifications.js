@@ -25,6 +25,54 @@ export default async function handler(req, res) {
   const limitNumber = parseInt(limit, 10);
   const skip = (pageNumber - 1) * limitNumber;
 
+  // 在现有的 DELETE 方法处理中修改
+  if (req.method === 'DELETE') {
+    try {
+      const session = await getServerSession(req, res, authOptions);
+      if (!session) {
+        return res.status(401).json({ success: false, error: '未授权访问' });
+      }
+
+      await dbConnect();
+
+      const { notificationId } = req.body; // 新增：支持单个消息删除
+
+      let result;
+      if (notificationId) {
+        // 删除单个通知
+        result = await Notification.deleteOne({ 
+          _id: notificationId,
+          recipient: session.user.id 
+        });
+        
+        if (result.deletedCount === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            error: '消息不存在或无权删除' 
+          });
+        }
+      } else {
+        // 删除当前用户的所有通知（原有功能）
+        result = await Notification.deleteMany({ 
+          recipient: session.user.id 
+        });
+      }
+
+      res.status(200).json({ 
+        success: true, 
+        deletedCount: result.deletedCount,
+        message: notificationId ? '消息已删除' : '所有消息已清理完成'
+      });
+    } catch (error) {
+      console.error('清理消息失败:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: '清理消息失败' 
+      });
+    }
+    return;
+  }
+
   switch (method) {
     case 'GET':
       try {
@@ -40,26 +88,40 @@ export default async function handler(req, res) {
 
         // 获取通知列表，并填充 sender 和 relatedEntity
         const notifications = await Notification.find(query)
-          .sort({ createdAt: -1 }) // 按创建时间倒序排列
+          .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limitNumber)
-          .populate('sender', 'name image') // 填充发送者信息
-          // 条件填充 relatedEntity
-          .populate({
-            path: 'relatedEntity',
-            // 使用 refPath 动态指定填充的模型
-            // 当 relatedEntityType 是 'Comment' 时，填充 Comment 模型
-            // 当 relatedEntityType 是 'Prompt' 时，填充 Prompt 模型
-            model: 'Comment', // 默认或主要填充 Comment
-            // 嵌套填充 Comment 中的 prompt 字段
-            populate: {
-              path: 'prompt',
-              model: 'Prompt', // 填充 Prompt 模型
-              select: 'title', // 只选择 Prompt 的 title 字段
-            },
-            select: 'content prompt title', // 选择 Comment 的 content 和 prompt 字段，以及 Prompt 的 title (如果 relatedEntity 是 Prompt)
-          });
+          .populate('sender', 'name image');
 
+        // 手动填充 relatedEntity
+        for (let notification of notifications) {
+          if (notification.relatedEntity && notification.relatedEntityType) {
+            try {
+              if (notification.relatedEntityType === 'Comment') {
+                await notification.populate({
+                  path: 'relatedEntity',
+                  model: 'Comment',
+                  populate: {
+                    path: 'prompt',
+                    model: 'Prompt',
+                    select: 'title',
+                  },
+                  select: 'content prompt',
+                });
+              } else if (notification.relatedEntityType === 'Prompt') {
+                await notification.populate({
+                  path: 'relatedEntity',
+                  model: 'Prompt',
+                  select: 'title',
+                });
+              }
+            } catch (populateError) {
+              // ✅ Populate 失败时，将 relatedEntity 设为 null
+              console.warn(`通知 ${notification._id} 的关联实体已被删除:`, populateError.message);
+              notification.relatedEntity = null;
+            }
+          }
+        }
 
         // 根据通知类型处理 relatedEntity 的显示数据
         const formattedNotifications = notifications.map(notification => {
@@ -76,51 +138,49 @@ export default async function handler(req, res) {
                   relatedEntityInfo = {
                     _id: notification.relatedEntity._id,
                     content: notification.relatedEntity.content,
-                    // promptId 应该是 Comment 中的 prompt 字段 (ObjectId)
-                    promptId: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt, // 确保获取的是 ObjectId
-                    // title 应该从填充后的 relatedEntity.prompt 中获取
-                    title: notification.relatedEntity.prompt?.title || '未知提示',
+                    // 确保包含 prompt 信息
+                    prompt: {
+                      _id: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt,
+                      title: notification.relatedEntity.prompt?.title || '未知提示'
+                    }
                   };
-                  // 链接应该使用 Comment 中的 prompt 字段 (ObjectId)
+                  // 链接应该使用 Comment 中的 prompt 字段
                   link = `/prompt/${notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt}`;
-                  icon = 'comment'; // 评论图标
+                  icon = 'comment';
                 }
                 break;
 
+
               case 'new_prompt':
-                // 新 Prompt 通知逻辑
                 if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
                   relatedEntityInfo = {
-                    _id: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt,
-                    title: notification.relatedEntity.prompt?.title || '未知提示',
+                    _id: notification.relatedEntity._id, // ✅ 修正
+                    title: notification.relatedEntity.title || '未知提示', // ✅ 修正
                   };
-                  link = `/prompt/${notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt}`;
-                  icon = 'prompt'; // Prompt 图标
+                  link = `/prompt/${notification.relatedEntity._id}`; // ✅ 修正
+                  icon = 'prompt';
                 }
                 break;
 
               case 'prompt_approved':
-                // Prompt 审核通过通知
                 if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
                   relatedEntityInfo = {
-                    _id: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt,
-                    title: notification.relatedEntity.prompt?.title || '未知提示',
+                    _id: notification.relatedEntity._id, // ✅ 直接访问
+                    title: notification.relatedEntity.title || '未知提示', // ✅ 直接访问
                   };
-                  link = `/prompt/${notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt}`; // 审核通过跳转到 Prompt 详情页
-                  icon = 'approved'; // 审核通过图标
+                  link = `/prompt/${notification.relatedEntity._id}`; // ✅ 直接访问
+                  icon = 'approved';
                 }
                 break;
 
               case 'prompt_rejected':
-                // Prompt 审核拒绝通知
                 if (notification.relatedEntityType === 'Prompt' && notification.relatedEntity) {
                   relatedEntityInfo = {
-                    _id: notification.relatedEntity.prompt?._id || notification.relatedEntity.prompt,
-                    title: notification.relatedEntity.prompt?.title || '未知提示',
+                    _id: notification.relatedEntity._id, // ✅ 直接访问
+                    title: notification.relatedEntity.title || '未知提示', // ✅ 直接访问
                   };
-                  // 拒绝通知不提供链接跳转
-                  link = '/dashboard'; // 拒绝通知跳转到用户仪表盘
-                  icon = 'rejected'; // 审核拒绝图标
+                  link = '/dashboard';
+                  icon = 'rejected';
                 }
                 break;
 
@@ -141,6 +201,15 @@ export default async function handler(req, res) {
                  icon = 'info'; // 默认图标
                  break;
             }
+          } else if (notification.type.includes('prompt')) {
+            // ✅ 如果是 Prompt 相关通知但 relatedEntity 为 null，标记为已删除
+            relatedEntityInfo = {
+              _id: null,
+              title: '该提示已被删除',
+              deleted: true
+            };
+            link = '/dashboard';
+            icon = 'deleted';
           }
 
           return {

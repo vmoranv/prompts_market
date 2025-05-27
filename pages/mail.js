@@ -5,10 +5,23 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
-  MdEmail, MdMarkEmailRead, MdMarkEmailUnread, MdRefresh, 
-  MdPersonAdd, MdCode, MdComment, MdSentimentDissatisfied, 
-  MdArrowForward, MdArrowBack
+  MdEmail, 
+  MdMarkEmailUnread, 
+  MdMarkEmailRead, 
+  MdRefresh, 
+  MdDeleteSweep,
+  MdDelete,
+  MdHourglass,
+  MdSentimentDissatisfied,
+  MdPersonAdd,
+  MdCode,
+  MdComment,
+  MdArrowForward,
+  MdArrowBack,
+  MdCheckCircleOutline,
+  MdCancel 
 } from 'react-icons/md';
+
 import styles from '../styles/Mail.module.css';
 
 export default function MailPage() {
@@ -21,6 +34,28 @@ export default function MailPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalNotifications, setTotalNotifications] = useState(0);
+  const [isCleaningMessages, setIsCleaningMessages] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState(null);
+  const [deletingMessageId, setDeletingMessageId] = useState(null);
+  const formatNotificationTime = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInHours = (now - date) / (1000 * 60 * 60);
+  
+  if (diffInHours < 1) {
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    return `${diffInMinutes}分钟前`;
+  } else if (diffInHours < 24) {
+    return `${Math.floor(diffInHours)}小时前`;
+  } else {
+    return date.toLocaleDateString('zh-CN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+  };
 
   // 重定向未登录用户
   useEffect(() => {
@@ -57,6 +92,84 @@ export default function MailPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 添加删除单个消息的处理函数
+  const handleDeleteSingleMessage = async (notificationId) => {
+    if (!confirm('确定要删除这条消息吗？')) return;
+    
+    setDeletingMessageId(notificationId);
+    
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationId }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        // 从本地状态中移除已删除的通知
+        setNotifications(prev => prev.filter(n => n._id !== notificationId));
+        setTotalNotifications(prev => Math.max(0, prev - 1));
+        
+        // 更新未读通知数量
+        if (window.updateUnreadNotificationsCount) {
+          window.updateUnreadNotificationsCount();
+        }
+      } else {
+        throw new Error(data.error || '删除失败');
+      }
+    } catch (error) {
+      console.error('删除消息失败:', error);
+      alert(`删除失败: ${error.message}`);
+    } finally {
+      setDeletingMessageId(null);
+    }
+  };
+  
+  // 添加清理所有消息的处理函数
+  const handleClearAllMessages = async () => {
+    if (!confirm('确定要清理所有消息吗？此操作不可撤销。')) return;
+    
+    setIsCleaningMessages(true);
+    setCleanupResult(null);
+    
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setNotifications([]);
+        setTotalNotifications(0);
+        setCleanupResult({
+          type: 'success',
+          message: `清理完成！共清理了 ${data.deletedCount} 条消息`
+        });
+        // 更新未读通知数量
+        if (window.updateUnreadNotificationsCount) {
+          window.updateUnreadNotificationsCount();
+        }
+      } else {
+        throw new Error(data.error || '清理失败');
+      }
+    } catch (error) {
+      setCleanupResult({
+        type: 'error',
+        message: `清理失败: ${error.message}`
+      });
+    } finally {
+      setIsCleaningMessages(false);
     }
   };
 
@@ -127,7 +240,13 @@ export default function MailPage() {
         return `${senderName} 发布了新的 Prompt: ${notification.relatedEntity?.title || ''}`;
         
       case 'new_comment':
-        return `${senderName} 评论了: ${notification.relatedEntity?.content.substring(0, 30)}${notification.relatedEntity?.content.length > 30 ? '...' : ''}`;
+        // 修改评论通知格式
+        const promptTitle = notification.relatedEntity?.prompt?.title || '某个Prompt';
+        const commentContent = notification.relatedEntity?.content || '';
+        const truncatedContent = commentContent.substring(0, 30);
+        const hasMore = commentContent.length > 30;
+        
+        return `${senderName} 在 ${promptTitle} 下评论了:`;
         
       case 'prompt_approved':
         return `你的 Prompt "${notification.relatedEntity?.title || ''}" 已通过审核`;
@@ -139,32 +258,32 @@ export default function MailPage() {
         return '收到一条新通知';
     }
   };
+
   
   // 获取通知图标的函数
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'follow':
         return <MdPersonAdd className={styles.notificationTypeIcon} />;
-        
-      case 'new_prompt':
-        return <MdCode className={styles.notificationTypeIcon} />;
-        
       case 'new_comment':
         return <MdComment className={styles.notificationTypeIcon} />;
-        
-      case 'prompt_approved':
-      case 'prompt_rejected':
+      case 'new_prompt':
         return <MdCode className={styles.notificationTypeIcon} />;
-        
+      case 'prompt_approved':
+        return <MdCheckCircleOutline className={styles.notificationTypeIcon} />;
+      case 'prompt_rejected':
+        return <MdCancel className={styles.notificationTypeIcon} />;
       default:
         return <MdEmail className={styles.notificationTypeIcon} />;
     }
   };
 
+
   // 获取通知链接的函数
   const getNotificationLink = (notification) => {
     if (notification.type === 'follow') {
-      return `/users/${notification.sender?._id}`;
+      // 修正关注通知的跳转路由
+      return `/dashboard?userId=${notification.sender?._id}`;
     } else if (notification.type === 'prompt_rejected') {
       // 拒绝通知不提供链接跳转
       return '/dashboard';
@@ -173,6 +292,7 @@ export default function MailPage() {
     }
     return '/';
   };
+
 
   // 处理标签切换
   const handleTabChange = (tab) => {
@@ -314,14 +434,31 @@ export default function MailPage() {
                 <MdMarkEmailRead /> 已读
               </button>
             </div>
-            <button 
-              className={styles.refreshButton}
-              onClick={refreshNotifications}
-              disabled={loading}
-            >
-              <MdRefresh className={loading ? styles.spinning : ''} /> 刷新
-            </button>
+            <div className={styles.toolbarActions}>
+              <button 
+                className={styles.refreshButton}
+                onClick={refreshNotifications}
+                disabled={loading}
+              >
+                <MdRefresh className={loading ? styles.spinning : ''} /> 刷新
+              </button>
+              <button 
+                className={styles.clearButton}
+                onClick={handleClearAllMessages}
+                disabled={isCleaningMessages || notifications.length === 0}
+              >
+                <MdDeleteSweep className={isCleaningMessages ? styles.spinning : ''} /> 
+                {isCleaningMessages ? '清理中...' : '清理所有'}
+              </button>
+            </div>
           </div>
+
+          {/* 在通知列表前添加清理结果显示 */}
+          {cleanupResult && (
+            <div className={`${styles.cleanupResult} ${styles[cleanupResult.type]}`}>
+              <p>{cleanupResult.message}</p>
+            </div>
+          )}
 
           {/* 通知列表 */}
           <div className={styles.notificationsContainer}>
@@ -344,113 +481,112 @@ export default function MailPage() {
             ) : notifications.length > 0 ? (
               <>
                 <ul className={styles.notificationsList}>
-                  {notifications.map(notification => {
-                    const { icon, text, color } = getNotificationMetadata(notification);
-                    const link = getNotificationLink(notification);
-                    return (
-                      <li 
-                        key={notification._id} 
-                        className={`${styles.notificationItem} ${notification.read ? styles.readNotification : styles.unreadNotification}`}
-                        onClick={() => handleNotificationClick(notification)}
-                      >
-                        {/* 左侧：发送者头像 */}
-                        <div className={styles.senderAvatar}>
-                          {notification.sender?.image ? (
-                            <Image 
-                              src={notification.sender.image}
-                              alt={notification.sender.name}
-                              width={40}
-                              height={40}
-                              className={styles.avatar}
-                            />
-                          ) : (
-                            <div className={styles.defaultAvatar}>
-                              {notification.sender?.name?.charAt(0) || '?'}
+                {notifications.map(notification => (
+                  <div 
+                    key={notification._id} 
+                    className={`${styles.notificationItem} ${
+                      notification.isRead ? styles.readNotification : styles.unreadNotification
+                    }`}
+                  >
+                    {/* 头像 - 占据两行 */}
+                    <div className={styles.senderAvatar}>
+                      {notification.sender?.image ? (
+                        <Image 
+                          src={notification.sender.image} 
+                          alt={notification.sender.name || '用户头像'} 
+                          width={40} 
+                          height={40}
+                          className={styles.avatar}
+                        />
+                      ) : (
+                        <div className={styles.defaultAvatar}>
+                          {notification.sender?.name?.[0]?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                    
+                    {/* 第一行：昵称 */}
+                    <div className={styles.notificationHeader}>
+                      <span className={styles.senderName}>
+                        {notification.sender?.name || '未知用户'}
+                      </span>
+                    </div>
+                    
+                    {/* 删除按钮 - 第一行右侧 */}
+                    <button
+                      className={styles.deleteMessageButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSingleMessage(notification._id);
+                      }}
+                      disabled={deletingMessageId === notification._id}
+                      title="删除这条消息"
+                      style={{ 
+                        opacity: 1,
+                        background: 'rgba(255,0,0,0.3)',
+                        zIndex: 10
+                      }}
+                    >
+                      {deletingMessageId === notification._id ? (
+                        // 使用条件渲染确保组件存在
+                        typeof MdHourglass !== 'undefined' ? (
+                          <MdHourglass size={16} style={{ color: 'white' }} className={styles.spinning} />
+                        ) : (
+                          <span style={{ color: 'white' }}>⏳</span>
+                        )
+                      ) : (
+                        typeof MdDeleteSweep !== 'undefined' ? (
+                          <MdDeleteSweep size={16} style={{ color: 'white' }} />
+                        ) : (
+                          <span style={{ color: 'white' }}>🗑️</span>
+                        )
+                      )}
+                    </button>
+
+
+
+
+                    
+                    {/* 第二行：时间和通知内容 */}
+                    <div 
+                      className={styles.notificationBody}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      {/* 时间行 */}
+                      <div className={styles.notificationTimeRow}>
+                        <span className={styles.notificationTime}>
+                          {formatNotificationTime(notification.createdAt)}
+                        </span>
+                      </div>
+                      
+                      {/* 通知文本 */}
+                      <p className={styles.notificationText}>
+                        {getNotificationText(notification)}
+                      </p>
+                      
+                      {/* 通知详情 */}
+                      {notification.relatedEntity && (
+                        <div className={styles.notificationDetail}>
+                          {notification.type === 'new_comment' && (
+                            <div className={styles.commentPreview}>
+                              "{notification.relatedEntity.content?.substring(0, 50)}
+                              {notification.relatedEntity.content?.length > 50 ? '...' : ''}"
+                            </div>
+                          )}
+                          {(notification.type === 'new_prompt' || 
+                            notification.type === 'prompt_approved' || 
+                            notification.type === 'prompt_rejected') && (
+                            <div className={styles.promptTitle}>
+                              {notification.relatedEntity.title}
                             </div>
                           )}
                         </div>
-                        
-                        {/* 中间：通知内容 */}
-                        <div className={styles.notificationContent}>
-                          {/* 通知头部：发送者名称 + 动作 */}
-                          <div className={styles.notificationHeader}>
-                            <span className={styles.senderName}>{notification.sender?.name}</span>
-                            <span className={styles.notificationType} style={{ color }}>
-                              {icon} {text}
-                            </span>
-                          </div>
-                          
-                          {/* 通知详情：根据类型显示不同内容 */}
-                          {notification.type === 'follow' ? (
-                            <p className={styles.notificationDetail}>
-                              {notification.sender?.name} 开始关注了您，
-                              <Link href={link} className={styles.notificationDetailLink}>
-                                <span>点击查看他的主页</span>
-                              </Link>
-                            </p>
-                          ) : notification.type === 'new_prompt' && notification.relatedEntity ? (
-                            <p className={styles.notificationDetail}>
-                              发布了新提示：<strong>{notification.relatedEntity.title}</strong>
-                              <Link href={link} className={styles.notificationDetailLink}>
-                                <span>点击查看提示详情</span>
-                              </Link>
-                            </p>
-                          ) : notification.type === 'new_comment' && notification.relatedEntity ? (
-                            <p className={styles.notificationDetail}>
-                              在提示 <strong>{notification.relatedEntity?.title || '未知提示'}</strong> 下发表评论：
-                              <span className={styles.commentPreview}>{notification.relatedEntity?.content.substring(0, 30)}${notification.relatedEntity?.content.length > 30 ? '...' : ''}</span>
-                              <Link href={link} className={styles.notificationDetailLink}>
-                                <span>点击查看评论</span>
-                              </Link>
-                            </p>
-                          ) : notification.type === 'prompt_approved' && notification.relatedEntity ? (
-                            <p className={styles.notificationDetail}>
-                              您的 Prompt <strong>"{notification.relatedEntity.title || '未知提示'}"</strong> 已通过审核。
-                              {link && (
-                                <Link href={link} className={styles.notificationDetailLink}>
-                                  <span>点击查看</span>
-                                </Link>
-                              )}
-                            </p>
-                          ) : notification.type === 'prompt_rejected' && notification.relatedEntity ? (
-                            <p className={styles.notificationDetail}>
-                              您的 Prompt <strong>"{notification.relatedEntity.title || '未知提示'}"</strong> 未通过审核。
-                              {link && (
-                                <Link href={link} className={styles.notificationDetailLink}>
-                                  <span>点击查看详情</span>
-                                </Link>
-                              )}
-                            </p>
-                          ) : (
-                            <p className={styles.notificationDetail}>
-                              您收到了一条新通知
-                              {link && link !== '/mail' && (
-                                <Link href={link} className={styles.notificationDetailLink}>
-                                  <span>点击查看</span>
-                                </Link>
-                              )}
-                            </p>
-                          )}
-                          
-                          {/* 通知时间 */}
-                          <div className={styles.notificationTime}>
-                            {new Date(notification.createdAt).toLocaleString('zh-CN', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        </div>
-                        
-                        {/* 右侧：箭头图标 */}
-                        <div className={styles.notificationAction}>
-                          <MdArrowForward />
-                        </div>
-                      </li>
-                    );
-                  })}
+                      )}
+                    </div>
+                  </div>
+                ))}
+
                 </ul>
                 
                 {/* 分页控件 */}

@@ -60,37 +60,45 @@ export default async function handler(req, res) {
       }
       break;
 
-    case 'DELETE':
-      try {
-        if (!session) {
-          return res.status(401).json({ success: false, error: '需要登录才能删除 Prompt' });
-        }
+      case 'DELETE':
+        try {
+          if (!session) {
+            return res.status(401).json({ success: false, error: '需要登录才能删除 Prompt' });
+          }
 
-        const prompt = await Prompt.findById(id);
-
-        if (!prompt) {
+          const prompt = await Prompt.findById(id);
+          if (!prompt) {
             return res.status(404).json({ success: false, error: 'Prompt not found' });
-        }
+          }
 
-        // 检查是否是作者本人或管理员
-        const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : [];
-        const isAdmin = session.user.email && adminEmails.includes(session.user.email);
-        const isAuthor = prompt.author.toString() === session.user.id;
+          // 权限检查
+          const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : [];
+          const isAdmin = session.user.email && adminEmails.includes(session.user.email);
+          const isAuthor = prompt.author.toString() === session.user.id;
 
-        if (!isAuthor && !isAdmin) {
+          if (!isAuthor && !isAdmin) {
             return res.status(403).json({ success: false, error: '您没有权限删除此 Prompt' });
-        }
+          }
 
-        const deletedPrompt = await Prompt.deleteOne({ _id: id });
+          // ✅ 删除 Prompt 前先删除相关通知
+          await Notification.deleteMany({
+            relatedEntity: id,
+            relatedEntityType: 'Prompt'
+          });
 
-        if (deletedPrompt.deletedCount === 0) {
-          return res.status(404).json({ success: false, error: 'Prompt not found or already deleted' });
+          // 删除 Prompt
+          const deletedPrompt = await Prompt.deleteOne({ _id: id });
+          if (deletedPrompt.deletedCount === 0) {
+            return res.status(404).json({ success: false, error: 'Prompt not found or already deleted' });
+          }
+
+          console.log(`已删除 Prompt ${id} 及其相关通知`);
+          res.status(200).json({ success: true, data: {} });
+        } catch (error) {
+          res.status(400).json({ success: false, error: error.message });
         }
-        res.status(200).json({ success: true, data: {} });
-      } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-      }
-      break;
+        break;
+
 
     default:
       res.status(400).json({ success: false, error: 'Method not allowed' });
