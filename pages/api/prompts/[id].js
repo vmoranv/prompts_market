@@ -1,5 +1,6 @@
 import dbConnect from '../../../lib/dbConnect';
 import Prompt from '../../../models/Prompt';
+import Notification from '../../../models/Notification'; // ✅ 新增导入
 import { getSession } from 'next-auth/react';
 
 export default async function handler(req, res) {
@@ -60,48 +61,65 @@ export default async function handler(req, res) {
       }
       break;
 
-      case 'DELETE':
-        try {
-          if (!session) {
-            return res.status(401).json({ success: false, error: '需要登录才能删除 Prompt' });
-          }
-
-          const prompt = await Prompt.findById(id);
-          if (!prompt) {
-            return res.status(404).json({ success: false, error: 'Prompt not found' });
-          }
-
-          // 权限检查
-          const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : [];
-          const isAdmin = session.user.email && adminEmails.includes(session.user.email);
-          const isAuthor = prompt.author.toString() === session.user.id;
-
-          if (!isAuthor && !isAdmin) {
-            return res.status(403).json({ success: false, error: '您没有权限删除此 Prompt' });
-          }
-
-          // ✅ 删除 Prompt 前先删除相关通知
-          await Notification.deleteMany({
-            relatedEntity: id,
-            relatedEntityType: 'Prompt'
+    case 'DELETE':
+      try {
+        if (!session) {
+          return res.status(401).json({ 
+            success: false, 
+            error: '需要登录才能删除 Prompt' 
           });
-
-          // 删除 Prompt
-          const deletedPrompt = await Prompt.deleteOne({ _id: id });
-          if (deletedPrompt.deletedCount === 0) {
-            return res.status(404).json({ success: false, error: 'Prompt not found or already deleted' });
-          }
-
-          console.log(`已删除 Prompt ${id} 及其相关通知`);
-          res.status(200).json({ success: true, data: {} });
-        } catch (error) {
-          res.status(400).json({ success: false, error: error.message });
         }
-        break;
 
+        const prompt = await Prompt.findById(id);
+        if (!prompt) {
+          return res.status(404).json({ 
+            success: false, 
+            error: 'Prompt not found' 
+          });
+        }
+
+        // 权限检查
+        const adminEmails = process.env.ADMIN_EMAILS ? 
+          process.env.ADMIN_EMAILS.split(',') : [];
+        const isAdmin = session.user.email && 
+          adminEmails.includes(session.user.email);
+        const isAuthor = prompt.author.toString() === session.user.id;
+
+        if (!isAuthor && !isAdmin) {
+          return res.status(403).json({ 
+            success: false, 
+            error: '您没有权限删除此 Prompt' 
+          });
+        }
+
+        // ✅ 删除 Prompt 前先删除相关通知
+        await Notification.deleteMany({
+          relatedEntity: id,
+          relatedEntityType: 'Prompt'
+        });
+
+        // 删除 Prompt
+        const deletedPrompt = await Prompt.deleteOne({ _id: id });
+        if (deletedPrompt.deletedCount === 0) {
+          return res.status(404).json({ 
+            success: false, 
+            error: 'Prompt not found or already deleted' 
+          });
+        }
+
+        console.log(`已删除 Prompt ${id} 及其相关通知`);
+        res.status(200).json({ success: true, data: {} });
+      } catch (error) {
+        console.error('删除 Prompt 失败:', error);
+        res.status(500).json({ 
+          success: false, 
+          error: error.message || '删除操作失败'
+        });
+      }
+      break;
 
     default:
-      res.status(400).json({ success: false, error: 'Method not allowed' });
+      res.status(405).json({ success: false, error: 'Method not allowed' });
       break;
   }
-} 
+}

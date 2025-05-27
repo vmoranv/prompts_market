@@ -37,6 +37,16 @@ export default function Dashboard() {
 
   const loggedInUserId = session?.user?.id;
   const dashboardUserId = queryUserId || loggedInUserId;
+  // 验证 userId 是否为有效的 MongoDB ObjectId
+  const isValidObjectId = (id) => {
+    // MongoDB ObjectId 是24位十六进制字符串
+    return /^[0-9a-fA-F]{24}$/.test(id);
+  };
+
+  // 验证用户权限
+  const hasPermissionToView = (currentUserId, targetUserId, isAdmin) => {
+    return currentUserId === targetUserId || isAdmin;
+  };
 
   useEffect(() => {
     const fetchProfileUser = async () => {
@@ -124,29 +134,42 @@ export default function Dashboard() {
   }, [queryUserId, session, status, router, loggedInUserId, activeTab]);
 
   const fetchUserPrompts = async (userId) => {
-    if (!userId) return;
+    // 1. 验证 userId 格式
+    if (!userId || !isValidObjectId(userId)) {
+      setError('无效的用户ID格式');
+      setLoadingPrompts(false);
+      return;
+    }
+
+    // 2. 检查权限
+    if (!hasPermissionToView(session?.user?.id, userId, isAdmin)) {
+      setError('没有权限查看此用户的提示词');
+      setLoadingPrompts(false);
+      return;
+    }
+
     setLoadingPrompts(true);
     setError(null);
+    
     try {
-      const res = await fetch(`/api/users/${userId}/prompts`);
+      // 3. 使用验证过的 userId 进行请求
+      const res = await fetch(`/api/users/${encodeURIComponent(userId)}/prompts`);
+      
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || `无法加载用户 Prompt: ${res.status}`);
       }
+      
       const data = await res.json();
-      if (data.success) {
-        setUserPrompts(data.data || []);
-      } else {
-        throw new Error(data.error || '获取用户 Prompt 失败');
-      }
-    } catch (err) {
-      console.error(`获取用户 ${userId} Prompt 失败:`, err);
-      setError(err.message);
-      setUserPrompts([]);
+      setUserPrompts(data.data || []);
+    } catch (error) {
+      console.error('获取用户 Prompt 失败:', error);
+      setError(error.message || '获取用户 Prompt 失败');
     } finally {
       setLoadingPrompts(false);
     }
   };
+
 
   const fetchUserComments = async (userId) => {
     if (!userId) return;
