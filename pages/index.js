@@ -92,7 +92,7 @@ export default function Home() {
       // 构建排序字符串用于API调用
       const sortString = getSortString();
 
-      let apiUrl = `/api/prompts?sort=${sortString}`;
+      let apiUrl = `/api/prompts?sort=${sortString}&page=${currentPage}`;
 
       // 如果用户已登录，获取该用户的所有提示词（包括未审核和被拒绝的）
       // 否则，只获取已发布的公共提示词
@@ -134,10 +134,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // 在 sortBy, sortOrder, filterTag 或 session 变化时重新获取 Prompt
-    // 注意：这里移除了对 currentPage 的依赖，因为分页逻辑现在主要由 PromptsList 组件内部管理
+    // 添加currentPage作为依赖项，确保页面变化时重新获取数据
     fetchPrompts();
-  }, [sortBy, sortOrder, filterTag, session]);
+  }, [sortBy, sortOrder, filterTag, session, currentPage]); // 添加currentPage作为依赖项
 
   // 处理标签点击，更新过滤标签
   const handleTagClick = (tag) => {
@@ -300,7 +299,7 @@ export default function Home() {
         )}
         
         {/* 分页控件 */}
-        {paginationInfo.totalPrompts > 0 && (
+        {(paginationInfo.totalPages > 1 || paginationInfo.totalPrompts > 0) && (
           <div className={styles.pagination}>
             {/* 首页按钮 */}
             <button
