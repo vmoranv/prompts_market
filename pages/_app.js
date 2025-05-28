@@ -4,6 +4,11 @@ import { ThemeProvider } from "../contexts/ThemeContext";
 import Nav from '../components/Nav';
 import '../styles/globals.css';
 
+// 仅在开发环境中导入 Stagewise
+const StagewiseToolbar = process.env.NODE_ENV === 'development' 
+  ? require('@stagewise/toolbar-next').StagewiseToolbar 
+  : null;
+
 // 创建一个内部组件来包含需要访问 session 的逻辑和组件
 function AppContent({ Component, pageProps }) {
   const { data: session, status } = useSession();
@@ -79,7 +84,6 @@ function AppContent({ Component, pageProps }) {
   );
 }
 
-
 export default function MyApp({ Component, pageProps }) {
   const [mounted, setMounted] = useState(false);
 
@@ -101,10 +105,19 @@ export default function MyApp({ Component, pageProps }) {
     );
   }
 
+  // Stagewise 配置对象
+  const stagewiseConfig = {
+    plugins: []
+  };
+
   return (
     // SessionProvider 应该包裹所有需要访问 session 的组件
     <SessionProvider session={pageProps.session}>
       <ThemeProvider>
+        {/* 在开发环境中渲染 Stagewise 工具栏 */}
+        {process.env.NODE_ENV === 'development' && StagewiseToolbar && (
+          <StagewiseToolbar config={stagewiseConfig} />
+        )}
         {/* 在 SessionProvider 内部渲染 AppContent */}
         <AppContent Component={Component} pageProps={pageProps} />
       </ThemeProvider>

@@ -742,3 +742,29 @@
 .authorLink:hover .commentAuthorName {
   text-decoration: underline; /* 悬停时给名字添加下划线 */
 }
+
+/* 添加试用按钮样式 */
+.tryButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.tryButton:hover {
+  background-color: var(--primary-dark);
+}
+
+.tryButton svg {
+  margin-right: 5px;
+  font-size: 18px;
+}

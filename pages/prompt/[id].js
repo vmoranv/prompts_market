@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { MdArrowBack, MdContentCopy, MdCheck, MdFavorite, MdVisibility, MdEdit, MdFlag, MdFavoriteBorder, MdCode, MdTextFormat } from 'react-icons/md';
+import { MdArrowBack, MdContentCopy, MdCheck, MdFavorite, MdVisibility, MdEdit, MdFlag, MdFavoriteBorder, MdCode, MdTextFormat, MdPlayArrow } from 'react-icons/md';
 import styles from '../../styles/PromptDetail.module.css';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -419,6 +419,11 @@ export default function PromptDetail() {
             </div>
           </div>
           
+          <div className={styles.promptActions}>
+            <Link href={`/try-prompt/${id}`} className={styles.tryButton}>
+              <MdPlayArrow /> 试用此Prompt
+            </Link>
+          </div>
         </div>
 
         {/* 评论模块 */}
