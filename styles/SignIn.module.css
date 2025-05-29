@@ -1,137 +1,252 @@
+/* Material Design M3 登录界面样式 */
+
 .container {
-  padding: 0 2rem;
-  width: 100%;
   min-height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: var(--background);
+  font-family: 'Roboto', 'Noto Sans SC', sans-serif;
 }
 
 .main {
-  padding: 4rem 0;
-  flex: 1;
+  width: 100%;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
 }
 
 .card {
-  padding: 2rem;
-  max-width: 400px;
   width: 100%;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-extra-large);
+  box-shadow: var(--shadow-elevation-medium);
+  padding: 2rem;
+  border: 1px solid var(--card-border);
   text-align: center;
+  transition: box-shadow var(--transition-medium) ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-elevation-high);
 }
 
 .title {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
   margin-bottom: 2rem;
-  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.error {
+  background-color: var(--md-error-container);
+  color: var(--md-on-error-container);
+  padding: 1rem;
+  border-radius: var(--border-radius-medium);
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  border: 1px solid var(--md-error);
 }
 
 .buttonContainer {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 6px;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius-large);
   border: none;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
+  font-family: 'Roboto', 'Noto Sans SC', sans-serif;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-medium) ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 56px;
+  text-transform: none;
+  letter-spacing: 0.01em;
 }
 
 .button:disabled {
-  opacity: 0.6;
+  opacity: 0.38;
   cursor: not-allowed;
+  pointer-events: none;
+}
+
+.button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--md-primary);
 }
 
 .providerIcon {
   flex-shrink: 0;
-  margin-right: 8px;
+  width: 24px;
+  height: 24px;
+  margin-right: 0;
 }
 
 .githubButton {
-  background-color: #24292e;
-  color: white;
+  background-color: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  border: 1px solid var(--md-outline);
 }
 
 .githubButton:hover:not(:disabled) {
-  background-color: #000;
+  background-color: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  box-shadow: var(--shadow-elevation-low);
+  transform: translateY(-1px);
 }
 
-/* .googleButton {
-  background-color: white;
-  color: #757575;
-  border: 1px solid #ddd;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  transition: background-color 0.3s;
+.githubButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
-.googleButton:hover {
-  background-color: #f5f5f5;
-} */
-
-/* 暂时注释QQ按钮样式
-.qqButton {
-  background-color: #12B7F5;
-  color: white;
+/* 深色模式下的 GitHub 按钮优化 */
+[data-theme="dark"] .githubButton {
+  background-color: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  border: 1px solid var(--md-outline);
 }
 
-.qqButton:hover {
-  background-color: #0a9fd9;
-}
-*/
-
-.error {
-  color: #e74c3c;
-  margin-bottom: 1rem;
-  padding: 10px;
-  background-color: rgba(231, 76, 60, 0.1);
-  border-radius: 4px;
+[data-theme="dark"] .githubButton:hover:not(:disabled) {
+  background-color: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
 }
 
-.footer {
-  font-size: 0.875rem;
-  color: #666;
+/* 页脚样式 - 针对内联样式的 p 标签 */
+.card p {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
   margin-top: 1.5rem;
 }
 
-.link {
-  color: #3498db;
+.card p a {
+  color: var(--accent-color);
   text-decoration: none;
-  margin: 0 0.25rem;
+  font-weight: 500;
+  transition: color var(--transition-fast) ease;
 }
 
-.link:hover {
+.card p a:hover {
+  color: var(--accent-hover);
   text-decoration: underline;
 }
 
-@media (max-width: 600px) {
+/* 加载状态动画 */
+.button:disabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
   .card {
     padding: 1.5rem;
+    border-radius: var(--border-radius-large);
   }
   
   .title {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
   }
   
   .button {
-    font-size: 14px;
-    padding: 10px 14px;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9375rem;
+    min-height: 48px;
   }
-} 
+  
+  .buttonContainer {
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* 焦点可见性增强 */
+@media (prefers-reduced-motion: no-preference) {
+  .button {
+    transition: all var(--transition-medium) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .card {
+    border: 2px solid var(--md-outline);
+  }
+  
+  .button {
+    border: 2px solid currentColor;
+  }
+  
+  .error {
+    border: 2px solid var(--md-error);
+  }
+}
+
+/* 为未来的其他登录提供商预留样式 */
+.googleButton {
+  background-color: var(--md-surface);
+  color: var(--md-on-surface);
+  border: 1px solid var(--md-outline);
+}
+
+.googleButton:hover:not(:disabled) {
+  background-color: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  box-shadow: var(--shadow-elevation-low);
+  transform: translateY(-1px);
+}
+
+.qqButton {
+  background-color: var(--md-tertiary);
+  color: var(--md-on-tertiary);
+}
+
+.qqButton:hover:not(:disabled) {
+  background-color: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
+  box-shadow: var(--shadow-elevation-low);
+  transform: translateY(-1px);
+}
