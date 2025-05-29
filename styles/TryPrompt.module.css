@@ -49,7 +49,7 @@
   position: fixed;
   top: var(--nav-height, 4rem);
   right: 0;
-  width: 300px;
+  width: 340px;
   height: calc(100vh - var(--nav-height, 4rem));
   background-color: var(--md-surface-container-high);
   color: var(--md-on-surface);
@@ -159,33 +159,39 @@
 
 .settingButtons {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-top: 2rem;
-  justify-content: flex-end;
+  justify-content: space-between;
+  flex-wrap: nowrap;
 }
 
 .saveButton,
 .refreshButton {
-  padding: 0.75rem 1.5rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 1rem;
   border: none;
   border-radius: 20px;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .saveButton {
-  background-color: var(--md-primary);
-  color: var(--md-on-primary);
+  background-color: transparent;
+  color: var(--md-primary);
+  border: 1px solid var(--md-outline);
 }
 
 .saveButton:hover:not(:disabled) {
-  background-color: var(--md-primary-container);
-  color: var(--md-on-primary-container);
+  background-color: var(--md-surface-variant);
+  color: var(--md-primary);
 }
 
 .refreshButton {

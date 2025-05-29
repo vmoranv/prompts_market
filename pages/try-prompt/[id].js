@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import styles from '../../styles/TryPrompt.module.css';
-import { MdArrowBack, MdPlayArrow, MdContentCopy, MdCheck, MdSettings, MdRefresh, MdSend, MdClose, MdChat } from 'react-icons/md';
+import { MdArrowBack, MdPlayArrow, MdContentCopy, MdCheck, MdSettings, MdRefresh, MdSend, MdClose, MdChat, MdSave } from 'react-icons/md';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -665,6 +665,7 @@ export default function TryPrompt() {
               onClick={saveSettings}
               disabled={isModelLoading || (!useDefaultKey && !apiKey)}
             >
+              <MdSave size={20} />
               保存设置
             </button>
           </div>
