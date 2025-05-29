@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import styles from '../../styles/TryPrompt.module.css';
 import { MdArrowBack, MdPlayArrow, MdContentCopy, MdCheck, MdSettings, MdRefresh, MdSend, MdClose, MdChat } from 'react-icons/md';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+
 
 export default function TryPrompt() {
   const router = useRouter();
@@ -562,23 +567,41 @@ export default function TryPrompt() {
                     </span>
                   </div>
                   <div className={`${styles.messageContent} ${isGenerating && index === messages.length - 1 ? styles.typing : ''}`}>
-                    {msg.content || (isGenerating && index === messages.length - 1 && (
-                      <span className={styles.typingIndicator}>思考中...</span>
-                    ))}
+                    {msg.content ? (
+                      msg.role === 'assistant' ? (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            code({node, inline, className, children, ...props}) {
+                              const match = /language-(\w+)/.exec(className || '');
+                              return !inline && match ? (
+                                <SyntaxHighlighter
+                                  style={tomorrow}
+                                  language={match[1]}
+                                  PreTag="div"
+                                  {...props}
+                                >
+                                  {String(children).replace(/\n$/, '')}
+                                </SyntaxHighlighter>
+                              ) : (
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              );
+                            }
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      ) : (
+                        msg.content
+                      )
+                    ) : (
+                      isGenerating && index === messages.length - 1 && (
+                        <span className={styles.typingIndicator}>思考中...</span>
+                      )
+                    )}
                   </div>
-                  {msg.role === 'assistant' && msg.content && (
-                    <button 
-                      className={styles.copyButton} 
-                      onClick={() => {
-                        navigator.clipboard.writeText(msg.content);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                      }}
-                      title="复制内容"
-                    >
-                      {copied ? <MdCheck size={18} /> : <MdContentCopy size={18} />}
-                    </button>
-                  )}
                 </div>
               ))
             )}
