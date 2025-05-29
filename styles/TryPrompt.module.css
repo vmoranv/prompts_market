@@ -1,380 +1,367 @@
+/* Material Design 3 风格的聊天界面样式 */
 .container {
-  max-width: 1200px;
+  max-width: 1024px;
   margin: 0 auto;
-  padding: 20px;
-  color: var(--text-primary);
+  padding: 1rem;
+  height: calc(100vh - var(--nav-height, 4rem));
+  display: flex;
+  flex-direction: column;
+  background-color: var(--md-background);
+  color: var(--md-on-background);
 }
 
 .header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-.title {
-  font-size: 24px;
-  font-weight: 500;
-  margin: 0;
-  flex-grow: 1;
-  text-align: center;
-}
-
-.backLink {
+.backButton {
   display: flex;
   align-items: center;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.backLink:hover {
   color: var(--primary-color);
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
-.backLink svg {
-  margin-right: 5px;
+.backButton svg {
+  margin-right: 0.5rem;
 }
 
 .settingsButton {
-  display: flex;
-  align-items: center;
   background: none;
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 0.5rem;
+  border-radius: 50%;
   transition: background-color 0.2s;
 }
 
 .settingsButton:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.settingsButton svg {
-  margin-right: 5px;
-}
-
+/* 设置面板 */
 .settingsPanel {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.formGroup {
-  margin-bottom: 15px;
-}
-
-.formGroup label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.input, .select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background-color: var(--input-bg);
-  color: var(--text-primary);
-  font-size: 16px;
-}
-
-.input:focus, .select:focus {
-  border-color: var(--primary-color);
-  outline: none;
-}
-
-.settingsActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-}
-
-.promptSection, .inputSection, .resultSection {
-  background-color: var(--card-bg);
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--border-color);
-}
-
-.promptContent {
-  white-space: pre-wrap;
-  padding: 15px;
-  background-color: var(--input-bg);
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  height: 150px;
+  position: fixed;
+  top: var(--nav-height, 4rem);
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background-color: var(--md-surface);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  padding: 1.5rem;
   overflow-y: auto;
-  font-family: monospace;
-  font-size: 14px;
 }
 
-.textArea {
-  width: 100%;
-  padding: 15px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background-color: var(--input-bg);
-  color: var(--text-primary);
-  font-family: monospace;
-  font-size: 14px;
-  resize: vertical;
-  min-height: 150px;
+.settingsVisible {
+  transform: translateX(0);
 }
 
-.textArea:focus {
-  border-color: var(--primary-color);
-  outline: none;
-}
-
-.generateButton {
+.settingsHeader {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 15px;
-  transition: background-color 0.2s;
-}
-
-.generateButton:hover {
-  background-color: var(--primary-dark);
-}
-
-.generateButton:disabled {
-  background-color: var(--disabled-color);
-  cursor: not-allowed;
-}
-
-.generateButton svg {
-  margin-right: 8px;
-  font-size: 20px;
-}
-
-.resultHeader {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 15px;
-}
-
-.copyButton {
-  display: flex;
   align-items: center;
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  border-radius: 4px;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin-bottom: 1.5rem;
 }
 
-.copyButton:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
-}
-
-.copyButton svg {
-  margin-right: 5px;
-}
-
-.resultContent {
-  padding: 15px;
-  background-color: var(--input-bg);
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-  min-height: 150px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.resultContent pre {
-  white-space: pre-wrap;
-  font-family: monospace;
-  font-size: 14px;
+.settingsHeader h3 {
   margin: 0;
-}
-
-.loadingContainer, .errorContainer {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 70vh;
-  text-align: center;
-}
-
-.loadingSpinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-left: 4px solid var(--primary-color);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-.smallSpinner {
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-left: 3px solid white;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
-  margin-right: 10px;
-}
-
-.loadingText {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 150px;
-  color: var(--text-secondary);
-}
-
-.errorMessage {
-  color: var(--error-color);
-  margin-bottom: 20px;
-}
-
-.primaryButton {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
+  font-size: 1.25rem;
   font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.primaryButton:hover {
-  background-color: var(--primary-dark);
-}
-
-.secondaryButton {
-  background-color: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 8px 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.secondaryButton:hover {
-  background-color: var(--hover-color);
   color: var(--text-primary);
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* 添加响应式布局 */
-@media (min-width: 768px) {
-  .content {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .resultSection {
-    grid-column: 1 / 3;
-  }
-}
-
-@media (max-width: 767px) {
-  .header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
-  }
-  
-  .title {
-    text-align: left;
-  }
-  
-  .settingsButton {
-    align-self: flex-end;
-  }
-}
-
-.labelWithAction {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.refreshButton {
+.closeButton {
   background: none;
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 4px;
+  padding: 0.5rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
 }
 
-.refreshButton:hover {
-  background-color: var(--hover-color);
-  color: var(--primary-color);
+.closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.refreshButton:disabled {
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--md-outline);
+  border-radius: 4px;
+  background-color: var(--md-surface);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.saveButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.saveButton:hover {
+  background-color: var(--primary-dark);
+}
+
+/* 聊天容器 */
+.chatContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 修改系统提示词样式，支持折叠功能 */
+.systemPrompt {
+  background-color: var(--md-surface-container);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.systemPromptHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  background-color: var(--md-surface-container-high);
+}
+
+.systemPromptHeader h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.collapseIcon {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+.systemPromptContent {
+  padding: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.messagesContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+}
+
+.emptyState svg {
+  margin-bottom: 1rem;
   opacity: 0.5;
+}
+
+.message {
+  position: relative;
+  max-width: 85%;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.userMessage {
+  align-self: flex-end;
+  background-color: var(--primary-color);
+  color: white;
+  margin-left: auto;
+}
+
+.aiMessage {
+  align-self: flex-start;
+  background-color: var(--md-surface-container);
+  color: var(--text-primary);
+  margin-right: auto;
+}
+
+.messageHeader {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.roleBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.messageContent {
+  font-size: 1rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow: hidden;
+  animation: typing 0.1s steps(1, end);
+}
+
+@keyframes typing {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+.typingIndicator {
+  display: inline-block;
+  position: relative;
+}
+
+.typingIndicator::after {
+  content: '';
+  position: absolute;
+  right: -0.75rem;
+  bottom: 0.25rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: currentColor;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.copyButton {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: var(--text-secondary);
+}
+
+.aiMessage:hover .copyButton {
+  opacity: 1;
+}
+
+.inputContainer {
+  margin-top: 1rem;
+  display: flex;
+  align-items: flex-end;
+  border: 1px solid var(--md-outline);
+  border-radius: 8px;
+  background-color: var(--md-surface);
+  padding: 0.75rem;
+}
+
+.messageInput {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 1rem;
+  line-height: 1.5;
+  max-height: 150px;
+  color: var(--text-primary);
+}
+
+.sendButton {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sendButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sendButton:disabled {
+  color: var(--text-disabled);
   cursor: not-allowed;
 }
 
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-.modelLoading {
-  padding: 10px;
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.noModels {
-  padding: 10px;
-  color: var(--text-secondary);
-  font-style: italic;
-  border: 1px dashed var(--border-color);
+.errorMessage {
+  background-color: var(--error-container);
+  color: var(--on-error-container);
+  padding: 0.75rem 1rem;
   border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9375rem;
 }
 
-.buttonGroup {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 20px;
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .settingsPanel {
+    width: 100%;
+  }
+  
+  .message {
+    max-width: 90%;
+  }
 } 

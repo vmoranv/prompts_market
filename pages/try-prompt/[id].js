@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import styles from '../../styles/TryPrompt.module.css';
-import { MdArrowBack, MdPlayArrow, MdContentCopy, MdCheck, MdSettings, MdRefresh } from 'react-icons/md';
+import { MdArrowBack, MdPlayArrow, MdContentCopy, MdCheck, MdSettings, MdRefresh, MdSend, MdClose, MdChat } from 'react-icons/md';
 
 export default function TryPrompt() {
   const router = useRouter();
@@ -25,6 +25,13 @@ export default function TryPrompt() {
   const [model, setModel] = useState('');
   const [modelOptions, setModelOptions] = useState([]);
   const [isModelLoading, setIsModelLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationResult, setGenerationResult] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [isPromptCollapsed, setIsPromptCollapsed] = useState(true); // 默认折叠
+  
+  const messagesEndRef = useRef(null);
+  const messageInputRef = useRef(null);
   
   // 供应商选项
   const providerOptions = [
@@ -158,78 +165,157 @@ export default function TryPrompt() {
       }
   }, [prompt, apiKey, provider]); // 依赖项包括 prompt, apiKey, provider
 
-  // 处理生成结果
-  const handleGenerate = async () => {
-    if (!prompt || !userInput) return;
-    
-    try {
-      setLoading(true);
-      setResult('');
-      setError(null);
-      
-      // 这里应该调用实际的AI API，例如OpenAI API
-      // 以下是模拟的实现
-      const fullPrompt = `${prompt.content}\n\n${userInput}`;
-      
-      if (!apiKey) {
-        // 使用本地模拟功能
-        setTimeout(() => {
-          setResult(`这是基于以下提示的模拟生成结果：\n\n${fullPrompt}\n\n由于未提供API密钥，此为模拟输出。要获取真实AI响应，请在设置中添加您的API密钥。`);
-          setLoading(false);
-        }, 1500);
-        return;
-      }
-      
-      if (!model) {
-        setError('请选择一个模型');
-        setLoading(false);
-        return;
-      }
-      
-      // 使用实际API
-      try {
-        const response = await fetch('/api/generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: fullPrompt,
-            apiKey,
-            provider,
-            model
-          }),
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || '生成失败');
-        }
-        
-        const data = await response.json();
-        setResult(data.result);
-      } catch (error) {
-        setError(`生成失败: ${error.message}`);
-        setResult('');
-      }
-      
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 自动滚动到最新消息
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
   
-  // 复制结果
-  const handleCopy = () => {
-    if (!result) return;
-    
-    navigator.clipboard.writeText(result)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(err => {
-        console.error('复制失败:', err);
+  // 处理消息发送
+  const handleSendMessage = async () => {
+    if (!userInput.trim() || isGenerating) return;
+
+    // 添加用户消息到对话历史
+    const newUserMessage = { role: 'user', content: userInput };
+    // 准备发送到API的完整消息历史（包括提示词作为系统消息）
+    const fullMessages = prompt ?
+      [{ role: 'system', content: prompt.content }, ...messages, newUserMessage] :
+      [...messages, newUserMessage];
+
+    // 先清空输入框并设置生成状态
+    setUserInput('');
+    setIsGenerating(true);
+    setError(null);
+
+    // 添加一个空的AI消息作为占位符，用于接收流式内容
+    setMessages(prev => [...prev, newUserMessage, { role: 'assistant', content: '' }]);
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // 发送完整的消息历史
+          messages: fullMessages,
+          apiKey,
+          provider,
+          model,
+          // 这里的 prompt 字段其实可以移除，因为 messages 包含了所有历史
+          // 但为了兼容之前的逻辑，暂时保留，后端会优先使用 messages
+          prompt: userInput // 发送当前用户输入作为 prompt，尽管 messages 更完整
+        }),
       });
+
+      // 检查初始响应是否成功
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '生成请求失败');
+      }
+
+      // 检查响应是否为事件流
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/event-stream')) {
+        // 处理流式响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+              setIsGenerating(false);
+              break;
+            }
+
+            // 解码新的数据块
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
+
+            // 按行分割数据
+            const lines = buffer.split('\n');
+            // 保留最后一行，可能是不完整的
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) continue;
+
+              // 处理 SSE 格式的数据行
+              if (trimmedLine.startsWith('data: ')) {
+                const dataContent = trimmedLine.substring(6);
+                
+                if (dataContent === '[DONE]') {
+                  setIsGenerating(false);
+                  return;
+                }
+
+                try {
+                  // 解析后端发送的数据
+                  const data = JSON.parse(dataContent);
+                  const content = data.content;
+                  
+                  if (content) {
+                    // 立即更新UI，实现真正的流式效果
+                    setMessages(prevMessages => {
+                      const lastMessageIndex = prevMessages.length - 1;
+                      if (lastMessageIndex >= 0 && prevMessages[lastMessageIndex].role === 'assistant') {
+                        const updatedMessages = [...prevMessages];
+                        updatedMessages[lastMessageIndex] = {
+                          ...updatedMessages[lastMessageIndex],
+                          content: (updatedMessages[lastMessageIndex].content || '') + content,
+                        };
+                        return updatedMessages;
+                      }
+                      return prevMessages;
+                    });
+                    
+                    // 添加微小延迟，让用户能看到打字效果
+                    await new Promise(resolve => setTimeout(resolve, 20));
+                  }
+                } catch (parseError) {
+                  console.error('解析流数据失败:', parseError, '原始数据:', dataContent);
+                  // 继续处理下一行，不中断整个流程
+                }
+              }
+            }
+          }
+        } catch (streamError) {
+          console.error('流处理错误:', streamError);
+          setError(`流处理失败: ${streamError.message}`);
+          setIsGenerating(false);
+        }
+      } else {
+        // 处理非流式响应 (OpenAI 或其他)
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.error || '生成失败');
+        }
+        // 对于非流式响应，直接更新最后一个AI消息的内容
+        setMessages(prevMessages => {
+           const lastMessageIndex = prevMessages.length - 1;
+           if (lastMessageIndex >= 0 && prevMessages[lastMessageIndex].role === 'assistant') {
+             const updatedMessages = [...prevMessages];
+             updatedMessages[lastMessageIndex] = {
+               ...updatedMessages[lastMessageIndex],
+               content: data.result,
+             };
+             return updatedMessages;
+           }
+           return prevMessages; // 如果最后一个不是AI消息，则不更新
+        });
+        setIsGenerating(false);
+      }
+
+    } catch (err) {
+      console.error('生成过程中发生错误:', err);
+      setError(`生成失败: ${err.message}`);
+      setIsGenerating(false);
+      // 如果发生错误，移除最后一个空的AI消息占位符
+      setMessages(prevMessages => prevMessages.slice(0, -1));
+    }
   };
   
   // 保存设置
@@ -242,32 +328,6 @@ export default function TryPrompt() {
       }));
     }
     setShowSettings(false);
-  };
-  
-  // 处理供应商变更
-  const handleProviderChange = (e) => {
-    const newProvider = e.target.value;
-    setProvider(newProvider);
-    // 清空模型列表和选择
-    setModelOptions([]);
-    setModel('');
-    // 如果有API密钥，尝试获取新供应商的模型列表
-    if (apiKey) {
-      fetchModels(newProvider, apiKey);
-    }
-  };
-  
-  // 处理API密钥变更
-  const handleApiKeyChange = (e) => {
-    const newApiKey = e.target.value;
-    setApiKey(newApiKey);
-  };
-  
-  // 刷新模型列表
-  const refreshModels = () => {
-    if (apiKey && provider) {
-      fetchModels(provider, apiKey);
-    }
   };
   
   // 加载状态
@@ -307,176 +367,197 @@ export default function TryPrompt() {
   }
   
   return (
-    <div className={styles.container}>
+    <>
       <Head>
         <title>试用 - {prompt.title}</title>
         <meta name="description" content={`试用 ${prompt.title} 提示词`} />
       </Head>
       
-      <div className={styles.header}>
-        <Link href={`/prompt/${id}`} className={styles.backLink}>
-          <MdArrowBack /> 返回详情页
-        </Link>
-        <h1 className={styles.title}>{prompt.title}</h1>
-        <button 
-          className={styles.settingsButton}
-          onClick={() => setShowSettings(!showSettings)}>
-          <MdSettings /> 设置
-        </button>
-      </div>
-      
-      {error && (
-        <div className={styles.errorMessage}>
-          {error}
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <Link href={`/prompt/${id}`} className={styles.backButton}>
+            <MdArrowBack size={24} />
+            <span>返回详情</span>
+          </Link>
+          <button 
+            className={styles.settingsButton} 
+            onClick={() => setShowSettings(!showSettings)}
+            title="API设置"
+          >
+            <MdSettings size={24} />
+          </button>
         </div>
-      )}
-      
-      {showSettings && (
-        <div className={styles.settingsPanel}>
-          <h2>API 设置</h2>
+        
+        {/* 折叠式API设置面板 */}
+        <div className={`${styles.settingsPanel} ${showSettings ? styles.settingsVisible : ''}`}>
+          <div className={styles.settingsHeader}>
+            <h3>API设置</h3>
+            <button onClick={() => setShowSettings(false)} className={styles.closeButton}>
+              <MdClose size={20} />
+            </button>
+          </div>
+          
+          {/* API设置表单 */}
           <div className={styles.settingsForm}>
             <div className={styles.formGroup}>
-              <label htmlFor="provider">AI 供应商</label>
+              <label htmlFor="provider">AI供应商</label>
               <select
                 id="provider"
-                className={styles.select}
                 value={provider}
-                onChange={handleProviderChange}
+                onChange={(e) => {
+                  setProvider(e.target.value);
+                  setModel(''); // 切换供应商时重置模型
+                  if (e.target.value && apiKey) {
+                    fetchModels(e.target.value, apiKey);
+                  }
+                }}
               >
-                {providerOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                <option value="">选择供应商</option>
+                <option value="openai">OpenAI</option>
+                <option value="zhipu">智谱AI</option>
               </select>
             </div>
             
             <div className={styles.formGroup}>
-              <label htmlFor="apiKey">API 密钥</label>
+              <label htmlFor="apiKey">API密钥</label>
               <input
                 type="password"
                 id="apiKey"
-                className={styles.input}
                 value={apiKey}
-                onChange={handleApiKeyChange}
-                placeholder={`输入${provider === 'openai' ? 'OpenAI' : '智谱AI'} API 密钥`}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="输入您的API密钥"
               />
-              <p className={styles.helperText}>
-                {provider === 'openai' 
-                  ? 'OpenAI API 密钥格式通常以 sk- 开头' 
-                  : '智谱AI API 密钥在您的账户设置中获取'}
-              </p>
             </div>
             
             <div className={styles.formGroup}>
-              <div className={styles.labelWithAction}>
-                <label htmlFor="model">AI 模型</label>
-                <button 
-                  className={styles.refreshButton} 
-                  onClick={refreshModels}
-                  disabled={isModelLoading || !apiKey}
-                  title="刷新模型列表">
-                  <MdRefresh className={isModelLoading ? styles.spinning : ''} />
-                </button>
-              </div>
-              
-              {isModelLoading ? (
-                <div className={styles.modelLoading}>加载模型中...</div>
-              ) : modelOptions.length > 0 ? (
-                <select
-                  id="model"
-                  className={styles.select}
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                >
-                  {modelOptions.map(option => (
+              <label htmlFor="model">AI模型</label>
+              <select
+                id="model"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                disabled={isModelLoading || modelOptions.length === 0}
+              >
+                {isModelLoading ? (
+                  <option value="">加载模型中...</option>
+                ) : modelOptions.length > 0 ? (
+                  modelOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
-                  ))}
-                </select>
-              ) : (
-                <div className={styles.noModels}>
-                  {apiKey 
-                    ? '未找到可用模型，请检查您的API密钥是否有效' 
-                    : '请输入API密钥以加载可用模型'}
+                  ))
+                ) : (
+                  <option value="">请先选择供应商并输入API密钥</option>
+                )}
+              </select>
+            </div>
+            
+            <button
+              className={styles.saveButton}
+              onClick={saveSettings}
+            >
+              保存设置
+            </button>
+          </div>
+        </div>
+        
+        {/* 对话主界面 */}
+        <div className={styles.chatContainer}>
+          {/* 系统提示词展示 - 可折叠 */}
+          {prompt && (
+            <div className={styles.systemPrompt}>
+              <div 
+                className={styles.systemPromptHeader} 
+                onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
+              >
+                <h3>系统提示词</h3>
+                <span className={styles.collapseIcon}>
+                  {isPromptCollapsed ? '+' : '-'}
+                </span>
+              </div>
+              {!isPromptCollapsed && (
+                <div className={styles.systemPromptContent}>
+                  {prompt.content}
                 </div>
               )}
             </div>
-            
-            <div className={styles.buttonGroup}>
-              <button 
-                className={styles.secondaryButton} 
-                onClick={() => setShowSettings(false)}>
-                取消
-              </button>
-              <button 
-                className={styles.primaryButton} 
-                onClick={saveSettings}>
-                保存
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      <div className={styles.content}>
-        <div className={styles.promptSection}>
-          <h2>Prompt 内容</h2>
-          <div className={styles.promptContent}>
-            {prompt.content}
-          </div>
-        </div>
-        
-        <div className={styles.inputSection}>
-          <h2>您的输入</h2>
-          <textarea
-            className={styles.textArea}
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            placeholder="输入您想要处理的内容..."
-            rows={8}
-          />
-          <button
-            className={styles.generateButton}
-            onClick={handleGenerate}
-            disabled={loading || !userInput}
-          >
-            {loading ? (
-              <>
-                <div className={styles.smallSpinner}></div>
-                生成中...
-              </>
+          )}
+          
+          {/* 消息列表 */}
+          <div className={styles.messagesContainer}>
+            {messages.length === 0 ? (
+              <div className={styles.emptyState}>
+                <MdChat size={48} />
+                <p>开始你的对话吧！</p>
+              </div>
             ) : (
-              <>
-                <MdPlayArrow /> 生成结果
-              </>
+              messages.map((msg, index) => (
+                <div 
+                  key={index} 
+                  className={`${styles.message} ${msg.role === 'user' ? styles.userMessage : styles.aiMessage}`}
+                >
+                  <div className={styles.messageHeader}>
+                    <span className={styles.roleBadge}>
+                      {msg.role === 'user' ? '你' : 'AI'}
+                    </span>
+                  </div>
+                  <div className={`${styles.messageContent} ${isGenerating && index === messages.length - 1 ? styles.typing : ''}`}>
+                    {msg.content || (isGenerating && index === messages.length - 1 && (
+                      <span className={styles.typingIndicator}>思考中...</span>
+                    ))}
+                  </div>
+                  {msg.role === 'assistant' && msg.content && (
+                    <button 
+                      className={styles.copyButton} 
+                      onClick={() => {
+                        navigator.clipboard.writeText(msg.content);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      title="复制内容"
+                    >
+                      {copied ? <MdCheck size={18} /> : <MdContentCopy size={18} />}
+                    </button>
+                  )}
+                </div>
+              ))
             )}
-          </button>
-        </div>
-        
-        {(result || loading) && (
-          <div className={styles.resultSection}>
-            <div className={styles.resultHeader}>
-              <h2>生成结果</h2>
-              {result && (
-                <button 
-                  className={styles.copyButton} 
-                  onClick={handleCopy}>
-                  {copied ? <><MdCheck /> 已复制</> : <><MdContentCopy /> 复制</>}
-                </button>
-              )}
-            </div>
-            <div className={styles.resultContent}>
-              {loading ? (
-                <div className={styles.loadingText}>生成中，请稍候...</div>
-              ) : (
-                <pre>{result}</pre>
-              )}
-            </div>
+            <div ref={messagesEndRef} />
           </div>
-        )}
+          
+          {/* 错误提示 */}
+          {error && (
+            <div className={styles.errorMessage}>
+              {error}
+            </div>
+          )}
+          
+          {/* 输入区域 */}
+          <div className={styles.inputContainer}>
+            <textarea
+              ref={messageInputRef}
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder="输入你的消息..."
+              disabled={isGenerating}
+              className={styles.messageInput}
+              rows={1}
+            />
+            <button
+              className={styles.sendButton}
+              onClick={handleSendMessage}
+              disabled={!userInput.trim() || isGenerating}
+            >
+              <MdSend size={20} />
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 } 
