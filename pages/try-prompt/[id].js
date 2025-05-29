@@ -380,6 +380,80 @@ export default function TryPrompt() {
       setMessages(prevMessages => prevMessages.slice(0, -1));
     }
   };
+  // 自定义代码块组件
+  const CodeBlock = ({ inline, className, children, ...props }) => {
+  const [copied, setCopied] = useState(false);
+  const match = /language-(\w+)/.exec(className || '');
+  const language = match ? match[1] : '';
+  
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('复制失败:', err);
+    }
+  };
+
+  if (!inline && match) {
+    return (
+      <div style={{ position: 'relative', marginBottom: '1rem' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: '#2d3748',
+          color: '#e2e8f0',
+          padding: '0.5rem 1rem',
+          fontSize: '0.875rem',
+          borderTopLeftRadius: '6px',
+          borderTopRightRadius: '6px'
+        }}>
+          <span>{language}</span>
+          <button
+            onClick={handleCopy}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#e2e8f0',
+              cursor: 'pointer',
+              padding: '0.25rem 0.5rem',
+              borderRadius: '4px',
+              fontSize: '0.75rem',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+          >
+            {copied ? '已复制' : '复制'}
+          </button>
+        </div>
+        <SyntaxHighlighter
+          style={tomorrow}
+          language={language}
+          PreTag="div"
+          customStyle={{
+            margin: 0,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            borderBottomLeftRadius: '6px',
+            borderBottomRightRadius: '6px'
+          }}
+          {...props}
+        >
+          {String(children).replace(/\n$/, '')}
+        </SyntaxHighlighter>
+      </div>
+    );
+  }
+
+  return (
+    <code className={className} {...props}>
+      {children}
+    </code>
+  );
+};
   
   // 保存设置
   const saveSettings = () => {
@@ -572,23 +646,7 @@ export default function TryPrompt() {
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
-                            code({node, inline, className, children, ...props}) {
-                              const match = /language-(\w+)/.exec(className || '');
-                              return !inline && match ? (
-                                <SyntaxHighlighter
-                                  style={tomorrow}
-                                  language={match[1]}
-                                  PreTag="div"
-                                  {...props}
-                                >
-                                  {String(children).replace(/\n$/, '')}
-                                </SyntaxHighlighter>
-                              ) : (
-                                <code className={className} {...props}>
-                                  {children}
-                                </code>
-                              );
-                            }
+                            code: CodeBlock
                           }}
                         >
                           {msg.content}
