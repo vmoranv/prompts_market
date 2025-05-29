@@ -3,25 +3,38 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: '方法不允许' });
   }
 
-  const { provider, apiKey } = req.body;
+  const { provider, apiKey, useDefaultKey } = req.body;
 
   if (!provider) {
     return res.status(400).json({ success: false, error: '供应商不能为空' });
   }
 
-  if (!apiKey) {
+  // 使用默认API密钥或检查提供的API密钥
+  if (!useDefaultKey && !apiKey) {
     return res.status(400).json({ success: false, error: 'API密钥不能为空' });
   }
 
   try {
     let models = [];
+    let effectiveApiKey = useDefaultKey 
+      ? (provider === 'openai' 
+          ? process.env.OPENAI_DEFAULT_API_KEY 
+          : process.env.ZHIPU_DEFAULT_API_KEY)
+      : apiKey;
+      
+    if (!effectiveApiKey) {
+      return res.status(500).json({ 
+        success: false, 
+        error: `未配置 ${provider} 的默认API密钥` 
+      });
+    }
 
     if (provider === 'openai') {
       // 获取OpenAI模型列表
       const response = await fetch('https://api.openai.com/v1/models', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${effectiveApiKey}`
         }
       });
 
@@ -57,8 +70,6 @@ export default async function handler(req, res) {
       models = [
         { value: 'glm-4-flash-250414', label: 'GLM-4-Flash (250414)' }
       ];
-      // 不再调用智谱AI的 /v4/models 接口
-      // 也不再需要处理API返回的错误或数据格式
     }
 
     return res.status(200).json({ 

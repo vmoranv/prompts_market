@@ -26,7 +26,7 @@ export default function TryPrompt() {
   const [error, setError] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKey] = useState('');
-  const [provider, setProvider] = useState('openai');
+  const [provider, setProvider] = useState('zhipu');
   const [model, setModel] = useState('');
   const [modelOptions, setModelOptions] = useState([]);
   const [isModelLoading, setIsModelLoading] = useState(false);
@@ -43,11 +43,39 @@ export default function TryPrompt() {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const messagesContainerRef = useRef(null);
   
+  // 添加状态来跟踪上次发送消息的时间
+  const [lastMessageTime, setLastMessageTime] = useState(0);
+  const [useDefaultKey, setUseDefaultKey] = useState(true);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  
   // 供应商选项
   const providerOptions = [
     { value: 'openai', label: 'OpenAI' },
     { value: 'zhipu', label: '智谱AI' },
   ];
+
+  // 在组件开始处添加登录检查
+  useEffect(() => {
+    if (status === 'loading') return; // 还在加载中
+    
+    if (status === 'unauthenticated') {
+      // 未登录，重定向到登录页面
+      router.push('/auth/signin?callbackUrl=' + encodeURIComponent(router.asPath));
+      return;
+    }
+  }, [status, router]);
+
+  // 如果未登录或正在加载，显示加载状态
+  if (status === 'loading' || status === 'unauthenticated') {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingSpinner}></div>
+        <p className={styles.loadingText}>
+          {status === 'loading' ? '加载中...' : '正在跳转到登录页面...'}
+        </p>
+      </div>
+    );
+  }
 
   // 初始化本地存储的设置
   useEffect(() => {
@@ -56,12 +84,19 @@ export default function TryPrompt() {
       if (savedSettings) {
         try {
           const parsed = JSON.parse(savedSettings);
-          setApiKey(parsed.apiKey || '');
-          setProvider(parsed.provider || 'openai');
+          // 只有当不使用默认密钥时才设置自定义API密钥
+          setUseDefaultKey(parsed.useDefaultKey !== undefined ? parsed.useDefaultKey : true);
           
-          // 如果有已保存的供应商和API密钥，尝试加载模型
-          if (parsed.apiKey && parsed.provider) {
-            fetchModels(parsed.provider, parsed.apiKey);
+          if (!parsed.useDefaultKey) {
+            setApiKey(parsed.apiKey || '');
+          }
+          
+          // 设置供应商，默认为智谱AI
+          setProvider(parsed.provider || 'zhipu');
+          
+          // 如果使用默认密钥或者有已保存的供应商和API密钥，尝试加载模型
+          if (parsed.useDefaultKey || (parsed.apiKey && parsed.provider)) {
+            fetchModels(parsed.provider, parsed.apiKey, parsed.useDefaultKey);
           }
           
           // 如果有已保存的模型且该模型在可用列表中，设置模型
@@ -71,6 +106,9 @@ export default function TryPrompt() {
         } catch (e) {
           console.error('解析保存的设置时出错:', e);
         }
+      } else {
+        // 如果没有保存的设置，使用默认值并尝试获取模型
+        fetchModels('zhipu', null, true);
       }
     }
   }, []);
@@ -108,55 +146,47 @@ export default function TryPrompt() {
   }, [id]);
   
   // 获取可用模型
-  const fetchModels = async (currentProvider, currentApiKey) => {
-    if (!currentProvider || !currentApiKey) {
-      setModelOptions([]);
-      setModel(''); // 清空当前选中的模型
-      return;
-    }
-
-    setIsModelLoading(true);
-    setError(null); // 清除之前的错误信息
-
+  const fetchModels = async (providerValue, keyValue, useDefault = false) => {
+    if ((!keyValue && !useDefault) || isModelLoading) return;
+    
     try {
+      setIsModelLoading(true);
+      setError(null);
+      
       const response = await fetch('/api/models', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ provider: currentProvider, apiKey: currentApiKey }),
+        body: JSON.stringify({
+          provider: providerValue,
+          apiKey: keyValue,
+          useDefaultKey: useDefault
+        }),
       });
-
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '获取模型失败');
+      }
+      
       const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || '获取模型列表失败');
-      }
-
-      setModelOptions(data.models);
-
-      // 如果成功获取到模型列表，并且是智谱AI，设置默认模型为 glm-4-flash-250414
-      if (currentProvider === 'zhipu' && data.models.length > 0) {
-          // 查找硬编码的 glm-4-flash-250414 模型并设置为默认
-          const defaultZhipuModel = data.models.find(m => m.value === 'glm-4-flash-250414');
-          if (defaultZhipuModel) {
-              setModel(defaultZhipuModel.value);
-          } else {
-              // 如果硬编码的模型不在列表中（不应该发生），则默认选中第一个
-              setModel(data.models[0].value);
-          }
-      } else if (data.models.length > 0) {
-          // 对于其他供应商，默认选中第一个模型
-          setModel(data.models[0].value);
+      
+      if (data.success && data.models) {
+        setModelOptions(data.models);
+        
+        // 如果当前没有选择模型或者模型不在新列表中，选择第一个模型
+        if (!model || !data.models.find(m => m.value === model)) {
+          setModel(data.models[0]?.value || '');
+        }
       } else {
-          setModel(''); // 没有可用模型
+        throw new Error(data.error || '获取模型失败');
       }
-
     } catch (err) {
-      console.error('获取模型列表失败:', err);
-      setError(`获取模型列表失败: ${err.message}`);
-      setModelOptions([]);
-      setModel(''); // 清空当前选中的模型
+      console.error('获取模型列表时出错:', err);
+      setError(`获取模型失败: ${err.message}`);
+      setModelOptions([{ value: 'default', label: '默认模型' }]);
+      setModel('default');
     } finally {
       setIsModelLoading(false);
     }
@@ -164,16 +194,31 @@ export default function TryPrompt() {
   
   // Effect 钩子：在 provider 或 apiKey 变化时获取模型列表
   useEffect(() => {
-    fetchModels(provider, apiKey);
-  }, [provider, apiKey]);
+    fetchModels(provider, apiKey, useDefaultKey);
+  }, [provider, apiKey, useDefaultKey]);
 
-  // Effect 钩子：在 prompt 加载完成后，如果 apiKey 和 provider 已设置，再次尝试获取模型列表
-  // 这解决了在 prompt 加载之前 apiKey 和 provider 可能为空的问题
+  // Effect 钩子：在 prompt 加载完成后，获取模型列表
   useEffect(() => {
-      if (prompt && apiKey && provider) {
-          fetchModels(provider, apiKey);
+    if (prompt) {
+      // 如果使用默认密钥或者有设置自定义API密钥，获取模型列表
+      if (useDefaultKey || (provider && apiKey)) {
+        fetchModels(provider, apiKey, useDefaultKey);
       }
-  }, [prompt, apiKey, provider]); // 依赖项包括 prompt, apiKey, provider
+    }
+  }, [prompt, apiKey, provider, useDefaultKey]); // 依赖项增加 useDefaultKey
+
+  // 改进的自动滚动逻辑：当用户在底部时使用自动滚动，不在底部时使用平滑滚动
+  useEffect(() => {
+    if (messages.length > 0) {
+      if (isAtBottom) {
+        // 用户在底部，立即滚动
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      } else if (isGenerating) {
+        // 用户不在底部但正在生成内容，使用平滑滚动不打扰用户
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [messages, isAtBottom, isGenerating]);
 
   // 监听滚动事件
   useEffect(() => {
@@ -181,9 +226,9 @@ export default function TryPrompt() {
     if (!container) return;
     
     const handleScroll = () => {
-      // 计算是否滚动到底部附近
+      // 计算是否滚动到底部附近，增加容差到50px
       const isBottom = 
-        container.scrollHeight - container.scrollTop - container.clientHeight < 10; 
+        container.scrollHeight - container.scrollTop - container.clientHeight < 50;
       setIsAtBottom(isBottom);
     };
     
@@ -192,35 +237,7 @@ export default function TryPrompt() {
     
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, []); // 依赖项为空数组，只在组件挂载和卸载时运行
-
-  // 改进的自动滚动逻辑：确保DOM更新后再检测和滚动
-  useEffect(() => {
-    if (messages.length === 0) return;
-    
-    // 使用 setTimeout 确保 DOM 更新完成
-    setTimeout(() => {
-      // 获取当前最后一条消息
-      const lastMessage = messages[messages.length - 1];
-      
-      // 判断是否为新消息（用户消息或新的AI消息）
-      const isNewMessage = lastMessage.role === 'user' || 
-        (lastMessage.role === 'assistant' && !lastMessage.content);
-      
-      // 实时检查用户是否在底部
-      const container = messagesContainerRef.current;
-      const isCurrentlyAtBottom = container ? 
-        container.scrollHeight - container.scrollTop - container.clientHeight < 10 : true;
-      
-      // 简化的滚动条件：
-      // 1. 是新消息（总是滚动）
-      // 2. 用户在底部（跟随滚动）
-      if (isNewMessage || isCurrentlyAtBottom) {
-        const scrollBehavior = isCurrentlyAtBottom ? 'auto' : 'smooth';
-        messagesEndRef.current?.scrollIntoView({ behavior: scrollBehavior });
-      }
-    }, 0); // 使用 0 延迟确保在下一个事件循环中执行
-  }, [messages]);
+  }, []);
 
   // Effect 钩子：根据输入内容调整 textarea 高度
   useEffect(() => {
@@ -233,10 +250,39 @@ export default function TryPrompt() {
     }
   }, [userInput]); // 依赖项是 userInput，当输入内容变化时触发
 
-  // 处理消息发送
+  // 在 useEffect 中添加倒计时逻辑
+  useEffect(() => {
+    let timer;
+    if (cooldownRemaining > 0) {
+      timer = setTimeout(() => {
+        setCooldownRemaining(prev => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    
+    return () => clearTimeout(timer);
+  }, [cooldownRemaining]);
+
+  // 修改 handleSendMessage 函数
   const handleSendMessage = async () => {
     if (!userInput.trim() || isGenerating) return;
-
+    
+    const now = Date.now();
+    const timeElapsed = (now - lastMessageTime) / 1000;
+    
+    // 如果使用默认密钥且距离上次发送不足60秒，则显示冷却时间
+    if (useDefaultKey && timeElapsed < 60) {
+      const remainingTime = Math.ceil(60 - timeElapsed);
+      setCooldownRemaining(remainingTime);
+      setError(`使用默认API密钥时，请等待 ${remainingTime} 秒后再发送消息`);
+      return;
+    }
+    
+    // 清除错误信息
+    setError(null);
+    
+    // 记录发送时间
+    setLastMessageTime(now);
+    
     // 添加用户消息到对话历史
     const newUserMessage = { role: 'user', content: userInput };
     // 准备发送到API的完整消息历史（包括提示词作为系统消息）
@@ -247,7 +293,6 @@ export default function TryPrompt() {
     // 先清空输入框并设置生成状态
     setUserInput('');
     setIsGenerating(true);
-    setError(null);
 
     // 添加一个空的AI消息作为占位符，用于接收流式内容
     setMessages(prev => [...prev, newUserMessage, { role: 'assistant', content: '' }]);
@@ -259,14 +304,11 @@ export default function TryPrompt() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          // 发送完整的消息历史
           messages: fullMessages,
-          apiKey,
           provider,
           model,
-          // 这里的 prompt 字段其实可以移除，因为 messages 包含了所有历史
-          // 但为了兼容之前的逻辑，暂时保留，后端会优先使用 messages
-          prompt: userInput // 发送当前用户输入作为 prompt，尽管 messages 更完整
+          apiKey: useDefaultKey ? null : apiKey, // 如果使用默认密钥，则不发送API密钥
+          useDefaultKey, // 告诉后端使用默认密钥
         }),
       });
 
@@ -455,16 +497,20 @@ export default function TryPrompt() {
   );
 };
   
-  // 保存设置
+  // 保存设置到本地存储
   const saveSettings = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('aiSettings', JSON.stringify({
-        apiKey,
-        provider,
-        model
-      }));
-    }
+    const settings = {
+      apiKey,
+      provider,
+      model,
+      useDefaultKey
+    };
+    
+    localStorage.setItem('aiSettings', JSON.stringify(settings));
     setShowSettings(false);
+    
+    // 获取最新的模型列表
+    fetchModels(provider, apiKey, useDefaultKey);
   };
   
   // 加载状态
@@ -518,79 +564,106 @@ export default function TryPrompt() {
           </Link>
           <button 
             className={styles.settingsButton} 
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => setShowSettings(true)}
             title="API设置"
           >
             <MdSettings size={24} />
           </button>
         </div>
         
-        {/* 折叠式API设置面板 */}
-        <div className={`${styles.settingsPanel} ${showSettings ? styles.settingsVisible : ''}`}>
+        {/* 设置面板 */}
+        <div className={`${styles.settingsPanel} ${showSettings ? styles.settingsPanelVisible : ''}`}>
           <div className={styles.settingsHeader}>
-            <h3>API设置</h3>
-            <button onClick={() => setShowSettings(false)} className={styles.closeButton}>
-              <MdClose size={20} />
+            <h3>设置</h3>
+            <button className={styles.closeButton} onClick={() => setShowSettings(false)}>
+              <MdClose size={24} />
             </button>
           </div>
           
-          {/* API设置表单 */}
-          <div className={styles.settingsForm}>
-            <div className={styles.formGroup}>
-              <label htmlFor="provider">AI供应商</label>
-              <select
-                id="provider"
-                value={provider}
-                onChange={(e) => {
-                  setProvider(e.target.value);
-                  setModel(''); // 切换供应商时重置模型
-                  if (e.target.value && apiKey) {
-                    fetchModels(e.target.value, apiKey);
-                  }
-                }}
-              >
-                <option value="">选择供应商</option>
-                <option value="openai">OpenAI</option>
-                <option value="zhipu">智谱AI</option>
-              </select>
+          {/* 默认API密钥选项 */}
+          <div className={styles.settingItem}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={useDefaultKey}
+                onChange={(e) => setUseDefaultKey(e.target.checked)}
+              />
+              使用系统提供的默认API密钥
+            </label>
+            <p className={styles.settingDescription}>
+              每位用户限制每分钟发送一次消息
+            </p>
+          </div>
+          
+          {/* 供应商选择 */}
+          <div className={styles.settingItem}>
+            <label>选择供应商</label>
+            <div className={styles.radioGroup}>
+              {providerOptions.map(option => (
+                <label key={option.value} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="provider"
+                    value={option.value}
+                    checked={provider === option.value}
+                    onChange={(e) => {
+                      setProvider(e.target.value);
+                      setModel(''); // 清空模型选择，因为不同供应商的模型不同
+                    }}
+                  />
+                  {option.label}
+                </label>
+              ))}
             </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="apiKey">API密钥</label>
+          </div>
+          
+          {/* 自定义API密钥设置，当不使用默认密钥时显示 */}
+          {!useDefaultKey && (
+            <div className={styles.settingItem}>
+              <label>API密钥</label>
               <input
                 type="password"
-                id="apiKey"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="输入您的API密钥"
+                placeholder={`输入${
+                  provider === 'openai' ? 'OpenAI' : provider === 'zhipu' ? '智谱AI' : ''
+                } API密钥`}
+                className={styles.settingInput}
               />
             </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="model">AI模型</label>
-              <select
-                id="model"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                disabled={isModelLoading || modelOptions.length === 0}
-              >
-                {isModelLoading ? (
-                  <option value="">加载模型中...</option>
-                ) : modelOptions.length > 0 ? (
-                  modelOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))
-                ) : (
-                  <option value="">请先选择供应商并输入API密钥</option>
-                )}
-              </select>
-            </div>
-            
-            <button
+          )}
+          
+          {/* 模型选择 */}
+          <div className={styles.settingItem}>
+            <label>选择模型</label>
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className={styles.settingSelect}
+              disabled={isModelLoading}
+            >
+              {modelOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {isModelLoading && <span className={styles.loadingText}>加载中...</span>}
+          </div>
+          
+          <div className={styles.settingButtons}>
+            <button 
+              className={styles.refreshButton}
+              onClick={() => fetchModels(provider, apiKey, useDefaultKey)}
+              disabled={isModelLoading}
+            >
+              <MdRefresh size={20} />
+              刷新模型
+            </button>
+            <button 
               className={styles.saveButton}
               onClick={saveSettings}
+              disabled={isModelLoading || (!useDefaultKey && !apiKey)}
             >
               保存设置
             </button>
@@ -675,6 +748,16 @@ export default function TryPrompt() {
           
           {/* 输入区域 */}
           <div className={styles.inputContainer}>
+            {cooldownRemaining > 0 && (
+              <div className={styles.cooldownMessage}>
+                <span>冷却时间: {cooldownRemaining}秒</span>
+                <progress 
+                  value={60 - cooldownRemaining} 
+                  max="60" 
+                  className={styles.cooldownProgress}
+                />
+              </div>
+            )}
             <textarea
               ref={messageInputRef}
               value={userInput}

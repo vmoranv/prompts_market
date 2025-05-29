@@ -1,18 +1,133 @@
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./auth/[...nextauth]";
+
+// 创建一个内存缓存来跟踪用户请求
+const userRequestCache = new Map();
+// 在文件顶部添加清理机制
+const CACHE_CLEANUP_INTERVAL = 5 * 60 * 1000; // 5分钟
+const CACHE_EXPIRE_TIME = 60 * 60 * 1000; // 1小时
+
+// 定期清理过期的缓存条目
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, timestamp] of userRequestCache.entries()) {
+    // 只清理超过过期时间且不在活跃期的条目
+    if (now - timestamp > CACHE_EXPIRE_TIME) {
+      userRequestCache.delete(key);
+      console.log(`清理过期缓存条目: ${key}`);
+    }
+  }
+  
+  // 防止缓存无限增长，如果条目过多也进行清理
+  if (userRequestCache.size > 10000) {
+    console.warn('缓存条目过多，进行强制清理');
+    const entries = Array.from(userRequestCache.entries());
+    entries.sort((a, b) => a[1] - b[1]); // 按时间排序
+    // 保留最新的5000个条目
+    for (let i = 0; i < entries.length - 5000; i++) {
+      userRequestCache.delete(entries[i][0]);
+    }
+  }
+}, CACHE_CLEANUP_INTERVAL);
+
+
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: '方法不允许' });
   }
 
-  const { prompt, apiKey, provider, model, messages } = req.body;
-
-  if (!prompt) {
-    return res.status(400).json({ success: false, error: '提示内容不能为空' });
+  // 获取用户会话
+  const session = await getServerSession(req, res, authOptions);
+  
+  // 检查用户是否已登录
+  if (!session || !session.user) {
+    return res.status(401).json({
+      success: false,
+      error: '请先登录后再使用此功能'
+    });
   }
 
-  if (!apiKey) {
-    return res.status(400).json({ success: false, error: 'API密钥不能为空' });
+  // 获取用户标识符和IP地址
+  const userId = session.user.email || session.user.id;
+  const userIP = req.headers['x-forwarded-for'] || 
+                req.headers['x-real-ip'] || 
+                req.connection.remoteAddress || 
+                req.socket.remoteAddress ||
+                (req.connection.socket ? req.connection.socket.remoteAddress : null);
+  
+  // 创建复合标识符（用户ID + IP）
+  const userIdentifier = `${userId}_${userIP}`;
+  
+  // 获取请求中的参数
+  const { messages, provider, model, apiKey, useDefaultKey } = req.body;
+  
+  // 增强的速率限制检查
+  if (useDefaultKey) {
+    const now = Date.now();
+    const lastRequest = userRequestCache.get(userIdentifier) || 0;
+    const timeElapsed = (now - lastRequest) / 1000;
+    
+    // 对于默认密钥用户，限制更严格（60秒一次）
+    if (timeElapsed < 60) {
+      return res.status(429).json({
+        success: false,
+        error: `请求过于频繁，请在 ${Math.ceil(60 - timeElapsed)} 秒后再试`,
+        remainingTime: Math.ceil(60 - timeElapsed)
+      });
+    }
+    
+    // 更新最后请求时间
+    userRequestCache.set(userIdentifier, now);
+    
+    // 可选：添加日志记录用于监控
+    console.log(`用户 ${userId} (IP: ${userIP}) 使用默认密钥发起请求`);
+  } else {
+    // 即使使用自定义密钥，也要有基本的速率限制防止滥用
+    const now = Date.now();
+    const lastRequest = userRequestCache.get(userIdentifier) || 0;
+    const timeElapsed = (now - lastRequest) / 1000;
+    
+    // 自定义密钥用户限制较宽松（10秒一次）
+    if (timeElapsed < 10) {
+      return res.status(429).json({
+        success: false,
+        error: `请求过于频繁，请在 ${Math.ceil(10 - timeElapsed)} 秒后再试`,
+        remainingTime: Math.ceil(10 - timeElapsed)
+      });
+    }
+    
+    userRequestCache.set(userIdentifier, now);
   }
-
+  
+  // 决定使用哪个API密钥
+  let effectiveApiKey;
+  if (useDefaultKey) {
+    // 使用环境变量中的默认密钥
+    if (provider === 'openai') {
+      effectiveApiKey = process.env.OPENAI_DEFAULT_API_KEY;
+    } else if (provider === 'zhipu') {
+      effectiveApiKey = process.env.ZHIPU_DEFAULT_API_KEY;
+    }
+    
+    if (!effectiveApiKey) {
+      return res.status(500).json({
+        success: false,
+        error: `未配置 ${provider} 的默认API密钥`,
+      });
+    }
+  } else {
+    // 使用用户提供的密钥
+    effectiveApiKey = apiKey;
+    
+    if (!effectiveApiKey) {
+      return res.status(400).json({
+        success: false,
+        error: 'API密钥不能为空',
+      });
+    }
+  }
+  
   if (!provider) {
     return res.status(400).json({ success: false, error: '请选择AI供应商' });
   }
@@ -32,7 +147,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${effectiveApiKey}`
         },
         body: JSON.stringify({
           model: model,
@@ -123,7 +238,7 @@ export default async function handler(req, res) {
         headers: {
           'Content-Type': 'application/json',
           // 根据智谱AI文档示例，API密钥直接放在Authorization头
-          'Authorization': apiKey
+          'Authorization': effectiveApiKey
         },
         body: JSON.stringify({
           model: model,
