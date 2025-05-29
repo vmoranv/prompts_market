@@ -571,106 +571,6 @@ export default function TryPrompt() {
           </button>
         </div>
         
-        {/* 设置面板 */}
-        <div className={`${styles.settingsPanel} ${showSettings ? styles.settingsPanelVisible : ''}`}>
-          <div className={styles.settingsHeader}>
-            <h3>设置</h3>
-            <button className={styles.closeButton} onClick={() => setShowSettings(false)}>
-              <MdClose size={24} />
-            </button>
-          </div>
-          
-          {/* 默认API密钥选项 */}
-          <div className={styles.settingItem}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={useDefaultKey}
-                onChange={(e) => setUseDefaultKey(e.target.checked)}
-              />
-              使用系统提供的默认API密钥
-            </label>
-            <p className={styles.settingDescription}>
-              每位用户限制每分钟发送一次消息
-            </p>
-          </div>
-          
-          {/* 供应商选择 */}
-          <div className={styles.settingItem}>
-            <label>选择供应商</label>
-            <div className={styles.radioGroup}>
-              {providerOptions.map(option => (
-                <label key={option.value} className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="provider"
-                    value={option.value}
-                    checked={provider === option.value}
-                    onChange={(e) => {
-                      setProvider(e.target.value);
-                      setModel(''); // 清空模型选择，因为不同供应商的模型不同
-                    }}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </div>
-          
-          {/* 自定义API密钥设置，当不使用默认密钥时显示 */}
-          {!useDefaultKey && (
-            <div className={styles.settingItem}>
-              <label>API密钥</label>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder={`输入${
-                  provider === 'openai' ? 'OpenAI' : provider === 'zhipu' ? '智谱AI' : ''
-                } API密钥`}
-                className={styles.settingInput}
-              />
-            </div>
-          )}
-          
-          {/* 模型选择 */}
-          <div className={styles.settingItem}>
-            <label>选择模型</label>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className={styles.settingSelect}
-              disabled={isModelLoading}
-            >
-              {modelOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {isModelLoading && <span className={styles.loadingText}>加载中...</span>}
-          </div>
-          
-          <div className={styles.settingButtons}>
-            <button 
-              className={styles.refreshButton}
-              onClick={() => fetchModels(provider, apiKey, useDefaultKey)}
-              disabled={isModelLoading}
-            >
-              <MdRefresh size={20} />
-              刷新模型
-            </button>
-            <button 
-              className={styles.saveButton}
-              onClick={saveSettings}
-              disabled={isModelLoading || (!useDefaultKey && !apiKey)}
-            >
-              <MdSave size={20} />
-              保存设置
-            </button>
-          </div>
-        </div>
-        
         {/* 对话主界面 */}
         <div className={styles.chatContainer}>
           {/* 系统提示词展示 - 可折叠 */}
@@ -782,6 +682,106 @@ export default function TryPrompt() {
               <MdSend size={20} />
             </button>
           </div>
+        </div>
+      </div>
+      
+      {/* 设置面板 - 移动到最后渲染 */}
+      <div className={`${styles.settingsPanel} ${showSettings ? styles.settingsPanelVisible : ''}`}>
+        <div className={styles.settingsHeader}>
+          <h3>设置</h3>
+          <button className={styles.closeButton} onClick={() => setShowSettings(false)}>
+            <MdClose size={24} />
+          </button>
+        </div>
+        
+        {/* 默认API密钥选项 */}
+        <div className={styles.settingItem}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={useDefaultKey}
+              onChange={(e) => setUseDefaultKey(e.target.checked)}
+            />
+            使用系统提供的默认API密钥
+          </label>
+          <p className={styles.settingDescription}>
+            每位用户限制每分钟发送一次消息
+          </p>
+        </div>
+        
+        {/* 供应商选择 */}
+        <div className={styles.settingItem}>
+          <label>选择供应商</label>
+          <div className={styles.radioGroup}>
+            {providerOptions.map(option => (
+              <label key={option.value} className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="provider"
+                  value={option.value}
+                  checked={provider === option.value}
+                  onChange={(e) => {
+                    setProvider(e.target.value);
+                    setModel(''); // 清空模型选择，因为不同供应商的模型不同
+                  }}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        </div>
+        
+        {/* 自定义API密钥设置，当不使用默认密钥时显示 */}
+        {!useDefaultKey && (
+          <div className={styles.settingItem}>
+            <label>API密钥</label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={`输入${
+                provider === 'openai' ? 'OpenAI' : provider === 'zhipu' ? '智谱AI' : ''
+              } API密钥`}
+              className={styles.settingInput}
+            />
+          </div>
+        )}
+        
+        {/* 模型选择 */}
+        <div className={styles.settingItem}>
+          <label>选择模型</label>
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className={styles.settingSelect}
+            disabled={isModelLoading}
+          >
+            {modelOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {isModelLoading && <span className={styles.loadingText}>加载中...</span>}
+        </div>
+        
+        <div className={styles.settingButtons}>
+          <button 
+            className={styles.refreshButton}
+            onClick={() => fetchModels(provider, apiKey, useDefaultKey)}
+            disabled={isModelLoading}
+          >
+            <MdRefresh size={20} />
+            刷新模型
+          </button>
+          <button 
+            className={styles.saveButton}
+            onClick={saveSettings}
+            disabled={isModelLoading || (!useDefaultKey && !apiKey)}
+          >
+            <MdSave size={20} />
+            保存设置
+          </button>
         </div>
       </div>
     </>

@@ -51,12 +51,12 @@
   right: 0;
   width: 340px;
   height: calc(100vh - var(--nav-height, 4rem));
-  background-color: var(--md-surface-container-high);
+  background-color: var(--card-bg, var(--md-surface));
   color: var(--md-on-surface);
   box-shadow: -4px 0 8px rgba(0, 0, 0, 0.3);
   transform: translateX(100%);
   transition: transform 0.3s ease-in-out;
-  z-index: 1000;
+  z-index: 99999;
   padding: 1.5rem;
   overflow-y: auto;
   box-sizing: border-box;
@@ -222,6 +222,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 1;
 }
 
 /* 修改系统提示词样式，支持折叠功能 */
@@ -377,16 +378,17 @@
   opacity: 1;
 }
 
+/* 调整输入容器样式 */
 .inputContainer {
-  margin-top: 1rem;
   display: flex;
-  align-items: flex-end;
+  align-items: center; /* 垂直居中 */
   border: 1px solid var(--md-outline);
   border-radius: 8px;
   background-color: var(--md-surface);
   padding: 0.75rem;
 }
 
+/* 调整输入框样式 */
 .messageInput {
   flex: 1;
   resize: none;
@@ -397,6 +399,8 @@
   line-height: 1.5;
   max-height: 150px;
   color: var(--text-primary);
+  margin: 0; /* 移除默认外边距 */
+  padding: 0.5rem 0; /* 调整内边距 */
 }
 
 .sendButton {
