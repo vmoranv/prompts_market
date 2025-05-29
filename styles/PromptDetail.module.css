@@ -206,61 +206,6 @@
   overflow-x: auto;
 }
 
-/* 复制按钮和 Markdown 切换按钮共用样式 */
-.actionButton {
-  background-color: rgba(128, 128, 128, 0.3);
-  color: var(--text-primary);
-  border: 1px solid rgba(128, 128, 128, 0.5);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  text-decoration: none; /* 移除 Link 组件的下划线 */
-  justify-content: center; /* 居中文本和图标 */
-  height: 2.5rem; /* 统一按钮高度 */
-}
-
-.actionButton:hover:not(:disabled) {
-  background-color: rgba(128, 128, 128, 0.5);
-  border-color: rgba(128, 128, 128, 0.7);
-}
-
-.actionButton:active:not(:disabled) {
-  background-color: rgba(128, 128, 128, 0.7);
-}
-
-.actionButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.actionButton.active {
-  background-color: var(--md-primary);
-  color: var(--md-on-primary);
-  border-color: var(--md-primary);
-}
-
-/* 编辑按钮的特定样式，继承 actionButton 的基础样式 */
-.editButton {
-  /* 可以根据需要覆盖 actionButton 的样式，例如改变颜色 */
-  color: var(--md-primary); /* 例如，使用主题的主色 */
-  border-color: var(--md-primary);
-}
-
-.editButton:hover {
-  background-color: rgba(var(--md-primary-rgb), 0.1); /* 使用主色的半透明背景 */
-  border-color: var(--md-primary);
-  color: var(--md-primary);
-}
-
-.editButton:active {
-  background-color: rgba(var(--md-primary-rgb), 0.2);
-}
-
 /* 标签区域 */
 .tagsSection {
   margin-top: 2rem; /* 增加与上方内容区域的间距 */
@@ -738,28 +683,70 @@
   text-decoration: underline; /* 悬停时给名字添加下划线 */
 }
 
-/* 添加试用按钮样式 */
+/* 统一所有按钮的基础样式 */
+.actionButton,
+.copyButton,
+.editButton,
 .tryButton {
+  background-color: rgba(128, 128, 128, 0.3);
+  color: var(--text-primary);
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  font-size: 14px;
+  gap: 0.5rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  cursor: pointer;
+  transition: all 0.2s ease;
   text-decoration: none;
-  transition: background-color 0.2s;
+  justify-content: center;
+  height: 2.5rem;
+  min-width: fit-content;
 }
 
-.tryButton:hover {
-  background-color: var(--primary-dark);
+/* 悬停状态 */
+.actionButton:hover:not(:disabled),
+.copyButton:hover:not(:disabled),
+.editButton:hover:not(:disabled),
+.tryButton:hover:not(:disabled) {
+  background-color: rgba(128, 128, 128, 0.5);
+  border-color: rgba(128, 128, 128, 0.7);
+  transform: translateY(-1px);
 }
 
-.tryButton svg {
-  margin-right: 5px;
-  font-size: 18px;
+/* 激活状态 */
+.actionButton:active:not(:disabled),
+.copyButton:active:not(:disabled),
+.editButton:active:not(:disabled),
+.tryButton:active:not(:disabled) {
+  background-color: rgba(128, 128, 128, 0.7);
+  transform: translateY(0);
+}
+
+/* 禁用状态 */
+.actionButton:disabled,
+.copyButton:disabled,
+.editButton:disabled,
+.tryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 试用按钮特殊处理 - 确保链接样式不会覆盖自定义样式 */
+.tryButton,
+.tryButton:link,
+.tryButton:visited,
+.tryButton:hover,
+.tryButton:active {
+  color: var(--text-primary) !important;
+  text-decoration: none !important;
+}
+
+.tryButton:hover:not(:disabled) {
+  background-color: rgba(128, 128, 128, 0.5) !important;
+  border-color: rgba(128, 128, 128, 0.7) !important;
+  color: var(--text-primary) !important;
+  transform: translateY(-1px);
 }
