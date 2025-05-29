@@ -30,8 +30,13 @@ export default function TryPrompt() {
   const [messages, setMessages] = useState([]);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(true); // 默认折叠
   
+  // Ref 用于自动滚动和输入框高度调整
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
+  
+  // 添加一个状态来跟踪用户是否在聊天窗口底部
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const messagesContainerRef = useRef(null);
   
   // 供应商选项
   const providerOptions = [
@@ -165,11 +170,64 @@ export default function TryPrompt() {
       }
   }, [prompt, apiKey, provider]); // 依赖项包括 prompt, apiKey, provider
 
-  // 自动滚动到最新消息
+  // 监听滚动事件
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    
+    const handleScroll = () => {
+      // 计算是否滚动到底部附近
+      const isBottom = 
+        container.scrollHeight - container.scrollTop - container.clientHeight < 10; 
+      setIsAtBottom(isBottom);
+    };
+    
+    // 初始加载时检查是否在底部
+    handleScroll(); 
+    
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []); // 依赖项为空数组，只在组件挂载和卸载时运行
+
+  // 改进的自动滚动逻辑：确保DOM更新后再检测和滚动
+  useEffect(() => {
+    if (messages.length === 0) return;
+    
+    // 使用 setTimeout 确保 DOM 更新完成
+    setTimeout(() => {
+      // 获取当前最后一条消息
+      const lastMessage = messages[messages.length - 1];
+      
+      // 判断是否为新消息（用户消息或新的AI消息）
+      const isNewMessage = lastMessage.role === 'user' || 
+        (lastMessage.role === 'assistant' && !lastMessage.content);
+      
+      // 实时检查用户是否在底部
+      const container = messagesContainerRef.current;
+      const isCurrentlyAtBottom = container ? 
+        container.scrollHeight - container.scrollTop - container.clientHeight < 10 : true;
+      
+      // 简化的滚动条件：
+      // 1. 是新消息（总是滚动）
+      // 2. 用户在底部（跟随滚动）
+      if (isNewMessage || isCurrentlyAtBottom) {
+        const scrollBehavior = isCurrentlyAtBottom ? 'auto' : 'smooth';
+        messagesEndRef.current?.scrollIntoView({ behavior: scrollBehavior });
+      }
+    }, 0); // 使用 0 延迟确保在下一个事件循环中执行
   }, [messages]);
-  
+
+  // Effect 钩子：根据输入内容调整 textarea 高度
+  useEffect(() => {
+    const textarea = messageInputRef.current;
+    if (textarea) {
+      // 重置高度，让 scrollHeight 计算正确的高度
+      textarea.style.height = 'auto';
+      // 设置新的高度，scrollHeight 包含内容和内边距
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [userInput]); // 依赖项是 userInput，当输入内容变化时触发
+
   // 处理消息发送
   const handleSendMessage = async () => {
     if (!userInput.trim() || isGenerating) return;
@@ -483,7 +541,10 @@ export default function TryPrompt() {
           )}
           
           {/* 消息列表 */}
-          <div className={styles.messagesContainer}>
+          <div 
+            className={styles.messagesContainer} 
+            ref={messagesContainerRef}
+          >
             {messages.length === 0 ? (
               <div className={styles.emptyState}>
                 <MdChat size={48} />
