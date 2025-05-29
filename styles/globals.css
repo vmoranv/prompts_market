@@ -279,4 +279,47 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
-/* 您可以在这里添加更多的全局样式 */ 
+/* 全局滚动条样式 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--md-outline-variant, #cac4d0) var(--md-surface-container, #f3f3f3);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--md-surface-container, #f3f3f3);
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--md-outline-variant, #cac4d0);
+  border-radius: 4px;
+  border: 2px solid var(--md-surface-container, #f3f3f3);
+  transition: background-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--md-outline, #79747e);
+}
+
+/* 深色模式滚动条 */
+[data-theme="dark"] * {
+  scrollbar-color: var(--md-outline-variant, #49454f) var(--md-surface-container, #1c1b1f);
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-track {
+  background: var(--md-surface-container, #1c1b1f);
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-thumb {
+  background-color: var(--md-outline-variant, #49454f);
+  border-color: var(--md-surface-container, #1c1b1f);
+}
+
+[data-theme="dark"] *::-webkit-scrollbar-thumb:hover {
+  background-color: var(--md-outline, #938f99);
+}

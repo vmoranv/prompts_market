@@ -363,19 +363,25 @@ export default function PromptDetail() {
             </Link>
 
             <div className={styles.buttonContainer}>
+              <Link href={`/try-prompt/${id}`} className={styles.tryButton}>
+                <MdPlayArrow size={18} />
+                试用此Prompt
+              </Link>
               {canEdit && (
-                <Link href={`/edit-prompt/${prompt._id || id}`} className={`${styles.actionButton} ${styles.editButton}`} aria-label="编辑提示">
+                <button
+                  onClick={() => setEditing(!editing)}
+                  className={styles.editButton}
+                >
                   <MdEdit size={18} />
-                  <span>编辑</span>
-                </Link>
+                  编辑
+                </button>
               )}
               <button
-                className={`${styles.actionButton} ${copied ? styles.active : ''}`}
                 onClick={handleCopy}
-                aria-label="复制内容"
+                className={styles.copyButton}
               >
-                {copied ? <MdCheck /> : <MdContentCopy />}
-                <span>{copied ? '已复制' : '复制'}</span>
+                {copied ? <MdCheck size={18} /> : <MdContentCopy size={18} />}
+                {copied ? '已复制' : '复制'}
               </button>
               <button
                 className={`${styles.actionButton} ${isMarkdownEnabled ? styles.active : ''}`}
@@ -417,12 +423,6 @@ export default function PromptDetail() {
               <MdVisibility className={styles.statIcon} />
               <span>{prompt.viewCount || 0}</span>
             </div>
-          </div>
-          
-          <div className={styles.promptActions}>
-            <Link href={`/try-prompt/${id}`} className={styles.tryButton}>
-              <MdPlayArrow /> 试用此Prompt
-            </Link>
           </div>
         </div>
 

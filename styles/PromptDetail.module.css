@@ -143,13 +143,8 @@
 /* 按钮容器样式 */
 .buttonContainer {
   display: flex;
-  justify-content: flex-end; /* 按钮靠右对齐 */
-  align-items: center; /* 垂直居中对齐 */
-  gap: 0.75rem; /* 按钮之间的间距 */
-  /* width: 100%; /* 移除或调整此处的 width，让它根据内容自适应或在 flex 布局中调整 */
-  flex-wrap: wrap; /* 允许按钮换行 */
-  flex-grow: 1; /* 允许按钮容器占据剩余空间 */
-  justify-content: flex-end; /* 确保按钮在容器内靠右 */
+  gap: 0.75rem; /* 保持按钮间距一致 */
+  align-items: center;
 }
 
 .contentWrapper {

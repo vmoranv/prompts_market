@@ -35,13 +35,79 @@
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.75rem;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.settingsButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--md-primary-container);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.settingsButton:hover::before {
+  width: 100%;
+  height: 100%;
 }
 
 .settingsButton:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--md-primary);
+  transform: scale(1.05);
+}
+
+.sendButton {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 50%;
+  margin-left: 0.75rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.sendButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: var(--md-primary-container);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.sendButton:hover:not(:disabled)::before {
+  width: 100%;
+  height: 100%;
+}
+
+.sendButton:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sendButton:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 /* 设置面板 */
@@ -53,18 +119,42 @@
   height: calc(100vh - var(--nav-height, 4rem));
   background-color: var(--card-bg, var(--md-surface));
   color: var(--md-on-surface);
-  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.3);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2);
   transform: translateX(100%);
-  transition: transform 0.3s ease-in-out;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 99999;
   padding: 1.5rem;
   overflow-y: auto;
   box-sizing: border-box;
+  backdrop-filter: blur(10px);
 }
 
 .settingsPanelVisible {
   transform: translateX(0);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3);
 }
+
+.settingItem {
+  margin-bottom: 1.5rem;
+}
+
+@keyframes settingItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.settingItem:nth-child(1) { animation-delay: 0.1s; }
+.settingItem:nth-child(2) { animation-delay: 0.15s; }
+.settingItem:nth-child(3) { animation-delay: 0.2s; }
+.settingItem:nth-child(4) { animation-delay: 0.25s; }
+.settingItem:nth-child(5) { animation-delay: 0.3s; }
+
 
 .settingsHeader {
   display: flex;
@@ -228,19 +318,31 @@
 /* 修改系统提示词样式，支持折叠功能 */
 .systemPrompt {
   background-color: var(--md-surface-container);
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 1rem;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.systemPrompt:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .systemPromptHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   cursor: pointer;
   background-color: var(--md-surface-container-high);
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.systemPromptHeader:hover {
+  background-color: var(--md-surface-variant);
 }
 
 .systemPromptHeader h3 {
@@ -248,21 +350,44 @@
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-primary);
+  transition: color 0.2s ease;
 }
 
 .collapseIcon {
   font-size: 1.25rem;
   font-weight: bold;
   color: var(--text-secondary);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
+  display: inline-block;
+}
+
+.systemPromptHeader:hover .collapseIcon {
+  color: var(--md-primary);
+  transform: scale(1.1);
 }
 
 .systemPromptContent {
-  padding: 1rem;
+  padding: 1.25rem;
   font-size: 0.9375rem;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--text-secondary);
   white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 .messagesContainer {
   flex: 1;
@@ -290,16 +415,35 @@
 .message {
   position: relative;
   max-width: 85%;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+  animation: messageSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.message:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .userMessage {
   align-self: flex-end;
-  background-color: var(--primary-color);
-  color: white;
+  background: linear-gradient(135deg, var(--md-primary), var(--md-primary-container));
+  color: var(--md-on-primary);
   margin-left: auto;
+  animation-delay: 0.1s;
 }
 
 .aiMessage {
@@ -307,7 +451,9 @@
   background-color: var(--md-surface-container);
   color: var(--text-primary);
   margin-right: auto;
+  border: 1px solid var(--md-outline-variant);
 }
+
 
 .messageHeader {
   display: flex;
