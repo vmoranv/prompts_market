@@ -17,10 +17,13 @@ export default async function handler(req, res) {
   try {
     let models = [];
     let effectiveApiKey = useDefaultKey 
-      ? (provider === 'openai' 
-          ? process.env.OPENAI_DEFAULT_API_KEY 
-          : process.env.ZHIPU_DEFAULT_API_KEY)
-      : apiKey;
+          ? (provider === 'openai' 
+              ? process.env.OPENAI_DEFAULT_API_KEY 
+              : provider === 'zhipu' 
+                ? process.env.ZHIPU_DEFAULT_API_KEY
+                : process.env.GOOGLE_DEFAULT_API_KEY)
+          : apiKey;
+
       
     if (!effectiveApiKey) {
       return res.status(500).json({ 
@@ -70,7 +73,14 @@ export default async function handler(req, res) {
       models = [
         { value: 'glm-4-flash-250414', label: 'GLM-4-Flash (250414)' }
       ];
-    }
+    } else if (provider === 'gemini') {
+          // 返回Gemini模型列表
+          models = [
+            { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+            { value: 'gemini-2.5-flash-preview-05-20', label: 'Gemini 2.5 Flash Preview (05-20)' }
+          ];
+        }
+
 
     return res.status(200).json({ 
       success: true, 

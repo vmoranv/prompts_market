@@ -108,8 +108,10 @@ export default async function handler(req, res) {
       effectiveApiKey = process.env.OPENAI_DEFAULT_API_KEY;
     } else if (provider === 'zhipu') {
       effectiveApiKey = process.env.ZHIPU_DEFAULT_API_KEY;
+    } else if (provider === 'gemini') {
+      effectiveApiKey = process.env.GOOGLE_DEFAULT_API_KEY;
     }
-    
+
     if (!effectiveApiKey) {
       return res.status(500).json({
         success: false,
@@ -328,12 +330,178 @@ export default async function handler(req, res) {
         res.end();
       }
 
-    } else {
-      throw new Error('不支持的AI供应商');
-    }
+      } else if (provider === 'gemini') {
+            // 使用Gemini API进行流式输出
+            const apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta';
+            const modelName = model || 'gemini-2.0-flash';
+            
+            // 构建请求体，转换消息格式为Gemini格式
+            const geminiMessages = messages.map(msg => {
+              // Gemini使用"user"和"model"角色，而不是"user"和"assistant"
+              const role = msg.role === 'assistant' ? 'model' : 
+                          msg.role === 'system' ? 'user' : msg.role;
+              return {
+                role,
+                parts: [{ text: msg.content }]
+              };
+            });
+            
+            // 处理system消息：如果第一条是system消息，将其合并到第二条中(如果存在)
+            if (geminiMessages.length > 1 && messages[0].role === 'system') {
+              const systemContent = geminiMessages.shift().parts[0].text;
+              // 添加到第一条消息的前面（现在第一条是之前的第二条）
+              if (geminiMessages[0]) {
+                geminiMessages[0].parts[0].text = `${systemContent}\n\n${geminiMessages[0].parts[0].text}`;
+              } else {
+                // 如果只有一条系统消息，将其转为用户消息
+                geminiMessages.push({
+                  role: 'user',
+                  parts: [{ text: systemContent }]
+                });
+              }
+            }
+            
+            // 构建Gemini API请求URL
+            const geminiUrl = `${apiEndpoint}/models/${modelName}:streamGenerateContent?key=${effectiveApiKey}`;
+            
+            response = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                contents: geminiMessages,
+                generationConfig: {
+                  temperature: 0.7,
+                }
+              }),
+            });
 
-    // 对于流式输出，响应已经在上面的 while 循环中结束，这里不再需要返回
-    // return res.status(200).json({ success: true, result });
+            if (!response.ok) {
+              let errorText = await response.text();
+              try {
+                const errorData = JSON.parse(errorText);
+                throw new Error(errorData.error?.message || `Gemini API错误 ${response.status}`);
+              } catch (parseError) {
+                throw new Error(`Gemini API响应错误: ${errorText || response.status}`);
+              }
+            }
+
+            // 设置流式响应头
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Connection', 'keep-alive');
+
+            // 处理Gemini流式响应
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = ''; // 用于存储未完成的JSON数据
+
+            try {
+              // 持续读取流
+              while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) {
+                  // 处理缓冲区中剩余的数据
+                  if (buffer.trim()) {
+                    console.log('Gemini最终缓冲区内容:', buffer);
+                    try {
+                      const data = JSON.parse(buffer.trim());
+                      if (data.candidates && data.candidates[0]?.content?.parts) {
+                        const content = data.candidates[0].content.parts[0]?.text || '';
+                        if (content) {
+                          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                          if (res.flush) res.flush();
+                        }
+                      }
+                    } catch (finalParseError) {
+                      console.error('解析最终Gemini数据失败:', finalParseError, '数据:', buffer);
+                    }
+                  }
+                  // 流结束，发送结束事件
+                  res.write(`data: [DONE]\n\n`);
+                  res.end();
+                  break;
+                }
+                
+                // 解码二进制数据为文本
+                const chunk = decoder.decode(value, { stream: true });
+                buffer += chunk;
+                
+                console.log('Gemini收到chunk:', chunk);
+                console.log('当前buffer:', buffer);
+                
+                // 尝试解析缓冲区中的完整JSON对象
+                let jsonStart = 0;
+                while (jsonStart < buffer.length) {
+                  // 寻找JSON对象的开始
+                  const openBrace = buffer.indexOf('{', jsonStart);
+                  if (openBrace === -1) break;
+                  
+                  // 寻找匹配的结束括号
+                  let braceCount = 0;
+                  let jsonEnd = -1;
+                  
+                  for (let i = openBrace; i < buffer.length; i++) {
+                    if (buffer[i] === '{') {
+                      braceCount++;
+                    } else if (buffer[i] === '}') {
+                      braceCount--;
+                      if (braceCount === 0) {
+                        jsonEnd = i + 1;
+                        break;
+                      }
+                    }
+                  }
+                  
+                  // 如果找到完整的JSON对象
+                  if (jsonEnd > openBrace) {
+                    const jsonStr = buffer.substring(openBrace, jsonEnd);
+                    console.log('尝试解析JSON:', jsonStr);
+                    
+                    try {
+                      const data = JSON.parse(jsonStr);
+                      
+                      // 提取内容 - Gemini格式
+                      if (data.candidates && data.candidates[0]?.content?.parts) {
+                        const content = data.candidates[0].content.parts[0]?.text || '';
+                        if (content) {
+                          console.log('Gemini提取到内容:', content);
+                          // 转换为与其他AI提供商相同的格式发送给前端
+                          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                          // 强制刷新缓冲区
+                          if (res.flush) res.flush();
+                        }
+                      }
+                      
+                      // 更新jsonStart位置
+                      jsonStart = jsonEnd;
+                    } catch (parseError) {
+                      console.error('解析Gemini JSON失败:', parseError, '数据:', jsonStr);
+                      // 如果解析失败，继续寻找下一个可能的JSON对象
+                      jsonStart = openBrace + 1;
+                    }
+                  } else {
+                    // 没有找到完整的JSON对象，等待更多数据
+                    break;
+                  }
+                }
+                
+                // 保留未处理的数据
+                if (jsonStart > 0) {
+                  buffer = buffer.substring(jsonStart);
+                }
+              }
+            } catch (streamError) {
+              console.error('Gemini流处理错误:', streamError);
+              res.write(`data: [DONE]\n\n`);
+              res.end();
+            }
+
+    } else {
+      return res.status(400).json({ success: false, error: '不支持的AI供应商' });
+    }
 
   } catch (error) {
     console.error('生成失败:', error);

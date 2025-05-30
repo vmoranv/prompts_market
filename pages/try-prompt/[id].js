@@ -52,6 +52,7 @@ export default function TryPrompt() {
   const providerOptions = [
     { value: 'openai', label: 'OpenAI' },
     { value: 'zhipu', label: '智谱AI' },
+    { value: 'gemini', label: 'Google Gemini' },
   ];
 
   // 在组件开始处添加登录检查
@@ -94,21 +95,22 @@ export default function TryPrompt() {
           // 设置供应商，默认为智谱AI
           setProvider(parsed.provider || 'zhipu');
           
-          // 如果使用默认密钥或者有已保存的供应商和API密钥，尝试加载模型
-          if (parsed.useDefaultKey || (parsed.apiKey && parsed.provider)) {
-            fetchModels(parsed.provider, parsed.apiKey, parsed.useDefaultKey);
-          }
-          
-          // 如果有已保存的模型且该模型在可用列表中，设置模型
+          // 设置默认模型，不再自动获取模型列表
           if (parsed.model) {
             setModel(parsed.model);
+          } else {
+            // 根据供应商设置默认模型
+            const defaultModel = parsed.provider === 'openai' ? 'gpt-3.5-turbo' : 
+                                parsed.provider === 'gemini' ? 'gemini-2.0-flash' : 
+                                'glm-4-flash-250414';
+            setModel(defaultModel);
           }
         } catch (e) {
           console.error('解析保存的设置时出错:', e);
         }
       } else {
-        // 如果没有保存的设置，使用默认值并尝试获取模型
-        fetchModels('zhipu', null, true);
+        // 如果没有保存的设置，使用默认值，不获取模型
+        setModel('glm-4-flash-250414'); // 智谱AI默认模型
       }
     }
   }, []);
@@ -191,21 +193,6 @@ export default function TryPrompt() {
       setIsModelLoading(false);
     }
   };
-  
-  // Effect 钩子：在 provider 或 apiKey 变化时获取模型列表
-  useEffect(() => {
-    fetchModels(provider, apiKey, useDefaultKey);
-  }, [provider, apiKey, useDefaultKey]);
-
-  // Effect 钩子：在 prompt 加载完成后，获取模型列表
-  useEffect(() => {
-    if (prompt) {
-      // 如果使用默认密钥或者有设置自定义API密钥，获取模型列表
-      if (useDefaultKey || (provider && apiKey)) {
-        fetchModels(provider, apiKey, useDefaultKey);
-      }
-    }
-  }, [prompt, apiKey, provider, useDefaultKey]); // 依赖项增加 useDefaultKey
 
   // 改进的自动滚动逻辑：当用户在底部时使用自动滚动，不在底部时使用平滑滚动
   useEffect(() => {
@@ -564,11 +551,18 @@ export default function TryPrompt() {
           </Link>
           <button 
             className={styles.settingsButton} 
-            onClick={() => setShowSettings(true)}
+            onClick={() => {
+              setShowSettings(true);
+              // 当打开设置面板时才获取模型列表
+              if (modelOptions.length === 0) {
+                fetchModels(provider, apiKey, useDefaultKey);
+              }
+            }}
             title="API设置"
           >
             <MdSettings size={24} />
           </button>
+
         </div>
         
         {/* 对话主界面 */}
@@ -696,21 +690,6 @@ export default function TryPrompt() {
         
         {/* 默认API密钥选项 */}
         <div className={styles.settingItem}>
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={useDefaultKey}
-              onChange={(e) => setUseDefaultKey(e.target.checked)}
-            />
-            使用系统提供的默认API密钥
-          </label>
-          <p className={styles.settingDescription}>
-            每位用户限制每分钟发送一次消息
-          </p>
-        </div>
-        
-        {/* 供应商选择 */}
-        <div className={styles.settingItem}>
           <label>选择供应商</label>
           <div className={styles.radioGroup}>
             {providerOptions.map(option => (
@@ -722,7 +701,13 @@ export default function TryPrompt() {
                   checked={provider === option.value}
                   onChange={(e) => {
                     setProvider(e.target.value);
-                    setModel(''); // 清空模型选择，因为不同供应商的模型不同
+                    // 切换供应商时设置默认模型并获取模型列表
+                    const defaultModel = e.target.value === 'openai' ? 'gpt-3.5-turbo' : 
+                                        e.target.value === 'gemini' ? 'gemini-2.0-flash' : 
+                                        'glm-4-flash-250414';
+                    setModel(defaultModel);
+                    // 获取新供应商的模型列表
+                    fetchModels(e.target.value, apiKey, useDefaultKey);
                   }}
                 />
                 {option.label}
@@ -740,7 +725,9 @@ export default function TryPrompt() {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder={`输入${
-                provider === 'openai' ? 'OpenAI' : provider === 'zhipu' ? '智谱AI' : ''
+                provider === 'openai' ? 'OpenAI' : 
+                provider === 'zhipu' ? '智谱AI' : 
+                provider === 'gemini' ? 'Google Gemini' : ''
               } API密钥`}
               className={styles.settingInput}
             />
