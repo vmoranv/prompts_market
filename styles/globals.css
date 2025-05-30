@@ -111,6 +111,9 @@
   --md-inverse-on-surface: #313033;
   --md-inverse-primary: #6750A4;
   
+  /* hero 区域 */
+  --hero-bg-dark: #302942;
+  
   /* 阴影 */
   --shadow-elevation-low: 0 1px 3px rgba(0, 0, 0, 0.24);
   --shadow-elevation-medium: 0 4px 8px rgba(0, 0, 0, 0.3);
