@@ -222,16 +222,564 @@
   opacity: 1;
 }
 
+/* 移动端汉堡菜单按钮 */
+.mobileMenuButton {
+  display: none;
+  background: transparent;
+  color: var(--nav-text);
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.mobileMenuButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
+}
+
+.mobileMenuButton:hover::before {
+  opacity: 1;
+}
+
+/* 移动端全屏侧边栏 */
+.mobileMenu {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.mobileMenuOpen {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobileMenuOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.mobileMenuContent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 380px;
+  height: 100%;
+  background: var(--md-surface);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+.mobileMenuOpen .mobileMenuContent {
+  transform: translateX(0);
+}
+
+/* 侧边栏头部 */
+.mobileMenuHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.mobileMenuLogo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--nav-text);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.mobileMenuCloseButton {
+  background: transparent;
+  color: var(--nav-text);
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.mobileMenuCloseButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
+}
+
+.mobileMenuCloseButton:hover::before {
+  opacity: 1;
+}
+
+/* 侧边栏内容区域 */
+.mobileMenuItems {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobileMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  color: var(--md-on-surface);
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.mobileMenuItem:hover {
+  background: var(--md-surface-container-highest);
+  transform: translateX(4px);
+}
+
+/* 特殊菜单项样式 - 用于包含特殊功能的项目 */
+.mobileMenuItemSpecial {
+  justify-content: flex-start;
+  position: relative;
+  cursor: pointer;
+}
+
+/* 移动端菜单图标样式 */
+.mobileMenuIcon {
+  color: var(--md-on-surface) !important;
+  fill: var(--md-on-surface) !important;
+  flex-shrink: 0;
+  pointer-events: none; /* 图标不可点击 */
+}
+
+/* 移动端菜单中的组件容器样式调整 */
+.mobileMenuItemSpecial [data-component="mail-dropdown"],
+.mobileMenuItemSpecial [data-component="theme-toggle"] {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1001;
+}
+
+/* 确保下拉组件在移动端菜单中的按钮样式 */
+.mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .mailButton,
+.mobileMenuItemSpecial [data-component="theme-toggle"] .themeToggleContainer .themeToggleButton,
+.mobileMenuItemSpecial [data-component="theme-toggle"] button {
+  background: transparent !important;
+  border: none !important;
+  color: var(--md-on-surface) !important;
+  padding: 0.5rem !important;
+  min-width: auto !important;
+  height: auto !important;
+  border-radius: 8px !important;
+  transition: background-color 0.2s ease !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .mailButton:hover,
+.mobileMenuItemSpecial [data-component="theme-toggle"] .themeToggleContainer .themeToggleButton:hover,
+.mobileMenuItemSpecial [data-component="theme-toggle"] button:hover {
+  background: var(--md-surface-container-highest) !important;
+}
+
+/* 隐藏组件内部的图标，使用我们自己的图标 */
+.mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .mailButton svg,
+.mobileMenuItemSpecial [data-component="theme-toggle"] .themeToggleContainer .themeToggleButton svg,
+.mobileMenuItemSpecial [data-component="theme-toggle"] .themeToggleContainer .arrow,
+.mobileMenuItemSpecial [data-component="theme-toggle"] button svg {
+  display: none !important;
+}
+
+/* 确保下拉菜单在移动端正确显示 */
+.mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu {
+  position: fixed !important;
+  top: 50% !important;
+  left: 1rem !important;
+  right: 1rem !important;
+  width: auto !important;
+  max-width: calc(100vw - 2rem) !important;
+  transform: translateY(-50%) !important;
+  z-index: 1002 !important;
+  max-height: 60vh !important;
+}
+
+.mobileMenuItemSpecial [data-component="theme-toggle"] .themeToggleContainer .themeOptions,
+.mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  right: auto !important;
+  width: 200px !important;
+  z-index: 1002 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* 移动端下拉菜单背景遮罩 */
+.mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu::before,
+.mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+  backdrop-filter: blur(2px);
+}
+
+/* 用户信息区域 */
+.mobileUserInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  color: var(--md-on-surface);
+  text-decoration: none;
+  border-radius: 16px;
+  background: var(--md-primary-container);
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.mobileUserInfo:hover {
+  background: var(--md-primary-container);
+  opacity: 0.9;
+}
+
+.mobileUserAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--md-primary);
+}
+
+.mobileUserDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mobileUserName {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--md-on-primary-container);
+}
+
+.mobileUserRole {
+  font-size: 0.9rem;
+  color: var(--md-on-primary-container);
+  opacity: 0.8;
+}
+
+/* 分割线 */
+.mobileMenuDivider {
+  height: 1px;
+  background: var(--md-outline-variant);
+  margin: 1rem 0;
+  opacity: 0.5;
+}
+
+/* 登录/退出按钮 */
+.mobileSignInButton,
+.mobileSignOutButton {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border: none;
+  border-radius: 12px;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.mobileSignInButton:hover,
+.mobileSignOutButton:hover {
+  background: var(--md-primary);
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.mobileSignOutButton {
+  background: var(--md-error-container);
+  color: var(--md-on-error-container);
+}
+
+.mobileSignOutButton:hover {
+  background: var(--md-error-container);
+}
+
+/* 移动端通知徽章样式 */
+.mobileNotificationBadge {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--md-error);
+  color: var(--md-on-error);
+  font-size: 0.75rem;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  padding: 0 6px;
+  margin-left: auto;
+}
+
+/* 移动端主题指示器样式 */
+.mobileThemeIndicator {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: var(--md-on-surface-variant);
+  background: var(--md-surface-container);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  margin-left: auto;
+  font-weight: 500;
+}
+
+/* 移动端响应式适配 */
+@media (max-width: 768px) {
+  /* 邮件下拉菜单在移动端的特殊样式 */
+  .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu {
+    position: fixed !important;
+    top: 10% !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    z-index: 1002 !important;
+    max-height: 70vh !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* 主题切换下拉菜单在移动端的特殊样式 */
+  .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    right: auto !important;
+    width: 200px !important;
+    z-index: 1002 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* 确保主题选项在移动端菜单中可见 */
+  .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions.open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  /* 移动端下拉菜单的遮罩层 */
+  .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu::before,
+  .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+  }
+
+  /* 移动端邮件下拉菜单内容适配 */
+  .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu .notificationsList {
+    max-height: 50vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* 移动端主题选项按钮样式优化 */
+  .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions .themeOption {
+    padding: 1rem !important;
+    font-size: 1rem !important;
+    border-radius: 8px !important;
+  }
+
+  /* 移动端下拉菜单内容优化 */
+  .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu .dropdownHeader {
+    padding: 1.5rem 1.5rem 1rem 1.5rem !important;
+    border-bottom: 1px solid var(--md-outline-variant) !important;
+  }
+
+  .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu .dropdownTitle {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+  }
+
+  .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu .notificationsList {
+    padding: 0.5rem !important;
+  }
+
+  .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu .notificationItem {
+    padding: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    border-radius: 12px !important;
+    background: var(--md-surface-container) !important;
+  }
+
+  .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu .viewAllButton {
+    margin: 1rem !important;
+    padding: 1rem !important;
+    font-size: 1rem !important;
+    border-radius: 12px !important;
+  }
+
+  /* 主题选项在移动端的优化 */
+  .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions .themeOption {
+    padding: 1.25rem 1.5rem !important;
+    font-size: 1.1rem !important;
+    border-radius: 10px !important;
+    gap: 1rem !important;
+  }
+
+  .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions .themeOption svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions .themeOption.active {
+    background-color: var(--md-primary-container) !important;
+    color: var(--md-on-primary-container) !important;
+  }
+}
+
 /* 确保在小屏幕上导航栏也能良好显示 */
 @media (max-width: 768px) {
-  .navContainer {
-    flex-direction: column;
-    gap: 1rem;
+  .navLinks {
+    display: none;
   }
   
-  .navLinks {
-    width: 100%;
+  .mobileMenuButton {
+    display: flex;
+    align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
   }
-} 
+  
+  .mobileMenu {
+    display: block;
+  }
+  
+  .navContainer {
+    flex-direction: row;
+    gap: 0;
+  }
+}
+
+/* 当移动端菜单打开时的全局样式 */
+:global(body.mobile-menu-open) .mobileMenuItemSpecial [data-component="mail-dropdown"] .mailDropdownContainer .dropdownMenu {
+  position: fixed !important;
+  top: 10% !important;
+  left: 1rem !important;
+  right: 1rem !important;
+  width: auto !important;
+  max-width: none !important;
+  transform: none !important;
+  z-index: 1002 !important;
+  max-height: 70vh !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  animation: mobileSlideIn 0.3s ease-out !important;
+}
+
+:global(body.mobile-menu-open) .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  right: auto !important;
+  width: 220px !important;
+  z-index: 1002 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  animation: mobileSlideIn 0.3s ease-out !important;
+}
+
+@keyframes mobileSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 为主题选项添加特殊的居中动画 */
+:global(body.mobile-menu-open) .mobileMenuItemSpecial [data-component="theme-toggle"] .themeOptions {
+  animation: mobilePopIn 0.3s ease-out !important;
+}
+
+@keyframes mobilePopIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

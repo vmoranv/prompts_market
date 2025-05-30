@@ -6,7 +6,7 @@
 
 .hero {
   text-align: center;
-  padding: 3rem 1rem 4rem;
+  padding: 4rem 1rem 5rem;
   background-color: var(--md-primary);
   color: var(--md-on-primary);
   margin-bottom: 2rem;
@@ -18,11 +18,23 @@
   background-color: var(--md-primary-dark);
 }
 
+/* 深色模式下的 hero 区域样式调整 */
+[data-theme="dark"] .hero {
+  background-color: var(--hero-bg-dark);
+  color: var(--md-on-tertiary-container);
+}
+
 .title {
   font-size: 2.5rem;
   margin-bottom: 1rem;
   letter-spacing: -0.5px;
   font-weight: 700;
+  color: #FFFFFF; /* 浅色模式下为白色 */
+}
+
+/* 深色模式下的标题颜色调整 */
+[data-theme="dark"] .title {
+  color: var(--md-on-primary-container); /* 深色模式下使用适合的对比色 */
 }
 
 .description {
@@ -31,6 +43,11 @@
   opacity: 0.9;
   max-width: 700px;
   margin: 0 auto 2rem;
+}
+
+/* 深色模式下的描述文字颜色调整 */
+[data-theme="dark"] .description {
+  color: #FFFFFF; /* 深色模式下为白色 */
 }
 
 .features {
@@ -55,6 +72,11 @@
 .featureItem:hover {
   transform: translateY(-8px);
   box-shadow: var(--shadow-elevation-high);
+}
+
+/* 深色模式下的特性项边框 */
+[data-theme="dark"] .featureItem {
+  border: 2px solid var(--md-outline);
 }
 
 .featureIcon {
