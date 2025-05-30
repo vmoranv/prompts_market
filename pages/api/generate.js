@@ -68,12 +68,12 @@ export default async function handler(req, res) {
     const lastRequest = userRequestCache.get(userIdentifier) || 0;
     const timeElapsed = (now - lastRequest) / 1000;
     
-    // 对于默认密钥用户，限制更严格（60秒一次）
-    if (timeElapsed < 60) {
+    // 对于默认密钥用户，限制更严格（30秒一次）
+    if (timeElapsed < 30) {
       return res.status(429).json({
         success: false,
-        error: `请求过于频繁，请在 ${Math.ceil(60 - timeElapsed)} 秒后再试`,
-        remainingTime: Math.ceil(60 - timeElapsed)
+        error: `请求过于频繁，请在 ${Math.ceil(30 - timeElapsed)} 秒后再试`,
+        remainingTime: Math.ceil(30 - timeElapsed)
       });
     }
     

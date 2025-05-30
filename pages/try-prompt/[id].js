@@ -9,6 +9,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { SiOpenai, SiGooglegemini } from 'react-icons/si';
+import { FaBrain } from 'react-icons/fa';
 
 
 export default function TryPrompt() {
@@ -679,7 +681,7 @@ export default function TryPrompt() {
         </div>
       </div>
       
-      {/* 设置面板 - 移动到最后渲染 */}
+      {/* 设置面板 */}
       <div className={`${styles.settingsPanel} ${showSettings ? styles.settingsPanelVisible : ''}`}>
         <div className={styles.settingsHeader}>
           <h3>设置</h3>
@@ -690,10 +692,39 @@ export default function TryPrompt() {
         
         {/* 默认API密钥选项 */}
         <div className={styles.settingItem}>
+          <label>API密钥设置</label>
+          <div className={styles.apiKeyOptions}>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="apiKeyType"
+                value="default"
+                checked={useDefaultKey}
+                onChange={() => setUseDefaultKey(true)}
+              />
+              使用默认密钥（限制频率）
+            </label>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="apiKeyType"
+                value="custom"
+                checked={!useDefaultKey}
+                onChange={() => setUseDefaultKey(false)}
+              />
+              使用自定义密钥
+            </label>
+          </div>
+          <div className={styles.settingDescription}>
+            默认密钥有使用频率限制，自定义密钥无限制但需要自行承担费用
+          </div>
+        </div>
+
+        <div className={styles.settingItem}>
           <label>选择供应商</label>
-          <div className={styles.radioGroup}>
+          <div className={styles.providerGrid}>
             {providerOptions.map(option => (
-              <label key={option.value} className={styles.radioLabel}>
+              <label key={option.value} className={`${styles.providerCard} ${provider === option.value ? styles.providerCardSelected : ''}`}>
                 <input
                   type="radio"
                   name="provider"
@@ -701,55 +732,71 @@ export default function TryPrompt() {
                   checked={provider === option.value}
                   onChange={(e) => {
                     setProvider(e.target.value);
-                    // 切换供应商时设置默认模型并获取模型列表
                     const defaultModel = e.target.value === 'openai' ? 'gpt-3.5-turbo' : 
                                         e.target.value === 'gemini' ? 'gemini-2.0-flash' : 
                                         'glm-4-flash-250414';
                     setModel(defaultModel);
-                    // 获取新供应商的模型列表
                     fetchModels(e.target.value, apiKey, useDefaultKey);
                   }}
+                  className={styles.hiddenRadio}
                 />
-                {option.label}
+                <div className={styles.providerIcon}>
+                  {option.value === 'openai' && <SiOpenai size={24} />}
+                  {option.value === 'zhipu' && <FaBrain size={24} />}
+                  {option.value === 'gemini' && <SiGooglegemini size={24} />}
+                </div>
+                <span>{option.label}</span>
               </label>
             ))}
           </div>
         </div>
-        
+
         {/* 自定义API密钥设置，当不使用默认密钥时显示 */}
         {!useDefaultKey && (
           <div className={styles.settingItem}>
-            <label>API密钥</label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={`输入${
-                provider === 'openai' ? 'OpenAI' : 
-                provider === 'zhipu' ? '智谱AI' : 
-                provider === 'gemini' ? 'Google Gemini' : ''
-              } API密钥`}
-              className={styles.settingInput}
-            />
+            <label>自定义API密钥</label>
+            <div className={styles.inputWrapper}>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={`输入${
+                  provider === 'openai' ? 'OpenAI' : 
+                  provider === 'zhipu' ? '智谱AI' : 
+                  provider === 'gemini' ? 'Google Gemini' : ''
+                } API密钥`}
+                className={styles.settingInput}
+              />
+              <div className={styles.inputIcon}>🔑</div>
+            </div>
+            <div className={styles.settingDescription}>
+              请确保API密钥有效且有足够余额
+            </div>
           </div>
         )}
-        
+
         {/* 模型选择 */}
         <div className={styles.settingItem}>
           <label>选择模型</label>
-          <select
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className={styles.settingSelect}
-            disabled={isModelLoading}
-          >
-            {modelOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {isModelLoading && <span className={styles.loadingText}>加载中...</span>}
+          <div className={styles.selectWrapper}>
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className={styles.settingSelect}
+              disabled={isModelLoading}
+            >
+              {modelOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {isModelLoading && (
+              <div className={styles.loadingSpinner}>
+                <div className={styles.spinner}></div>
+              </div>
+            )}
+          </div>
         </div>
         
         <div className={styles.settingButtons}>

@@ -113,10 +113,10 @@
 /* 设置面板 */
 .settingsPanel {
   position: fixed;
-  top: var(--nav-height, 4rem);
+  top: calc(var(--nav-height, 4rem) + 16px);
   right: 0;
   width: 340px;
-  height: calc(100vh - var(--nav-height, 4rem));
+  height: calc(100vh - var(--nav-height, 4rem) - 16px);
   background-color: var(--card-bg, var(--md-surface));
   color: var(--md-on-surface);
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2);
@@ -201,9 +201,13 @@
 }
 
 .settingDescription {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--md-on-surface-variant);
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--md-surface-container-lowest);
+  border-radius: 6px;
+  border-left: 3px solid var(--md-primary);
 }
 
 .settingInput,
@@ -620,3 +624,150 @@
     max-width: 90%;
   }
 } 
+
+/* API密钥选项样式 */
+.apiKeyOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.apiKeyOptions .radioLabel {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid var(--md-outline);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--md-surface-container-lowest);
+}
+
+.apiKeyOptions .radioLabel:hover {
+  background-color: var(--md-surface-container-low);
+  border-color: var(--md-primary);
+}
+
+.apiKeyOptions .radioLabel input[type="radio"]:checked + * {
+  border-color: var(--md-primary);
+  background-color: var(--md-primary-container);
+}
+
+/* 供应商选择网格 */
+.providerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.providerCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.75rem;
+  border: 2px solid var(--md-outline);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--md-surface-container-lowest);
+  position: relative;
+  overflow: hidden;
+}
+
+.providerCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--md-primary-container), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.providerCard:hover::before {
+  opacity: 0.1;
+}
+
+.providerCardSelected {
+  border-color: var(--md-primary);
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.providerCardSelected::before {
+  opacity: 0.2;
+}
+
+.hiddenRadio {
+  display: none;
+}
+
+.providerIcon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  z-index: 1;
+  position: relative;
+}
+
+.providerCard span {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  z-index: 1;
+  position: relative;
+}
+
+/* 输入框包装器 */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  right: 0.75rem;
+  color: var(--md-on-surface-variant);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.settingInput {
+  padding-right: 2.5rem;
+}
+
+/* 选择框包装器 */
+.selectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.loadingSpinner {
+  position: absolute;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--md-outline);
+  border-top: 2px solid var(--md-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
