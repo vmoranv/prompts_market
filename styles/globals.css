@@ -44,8 +44,7 @@
   --pressed-overlay: rgba(0, 0, 0, 0.1);
   --selected-state: var(--md-primary-container);
   --primary-contrast: var(--md-on-primary-container);
-  
-  /* 应用变量 */
+    /* 应用变量 */
   --background: var(--md-background);
   --text-primary: var(--md-on-background);
   --text-secondary: var(--md-on-surface-variant);
@@ -55,6 +54,7 @@
   --card-border: var(--md-outline-variant);
   --nav-bg: var(--md-primary);
   --nav-text: var(--md-on-primary);
+  --nav-hover: var(--md-on-primary-container);
   --footer-bg: var(--md-surface-variant);
   --footer-border: var(--md-outline-variant);
   --error-color: var(--md-error);
@@ -68,11 +68,15 @@
   --border-radius-medium: 8px;
   --border-radius-large: 16px;
   --border-radius-extra-large: 28px;
-  
-  /* 过渡动画 */
+    /* 过渡动画 */
   --transition-fast: 100ms;
   --transition-medium: 200ms;
   --transition-slow: 300ms;
+  
+  /* 渐变边框配色 - 现代科技风格 */
+  --gradient-start: #667eea;
+  --gradient-middle: #764ba2;
+  --gradient-end: #f093fb;
 }
 
 /* 深色模式变量 */
@@ -118,8 +122,7 @@
   --pressed-overlay: rgba(255, 255, 255, 0.12);
   --selected-state: var(--md-primary-container);
   --primary-contrast: var(--md-on-primary-container);
-  
-  /* 应用变量 */
+    /* 应用变量 */
   --background: var(--md-background);
   --text-primary: var(--md-on-background);
   --text-secondary: var(--md-on-surface-variant);
@@ -129,13 +132,18 @@
   --card-border: var(--md-outline-variant);
   --nav-bg: var(--md-primary-container);
   --nav-text: var(--md-on-primary-container);
+  --nav-hover: var(--md-primary);
   --footer-bg: var(--md-surface-variant);
   --footer-border: var(--md-outline-variant);
   --error-color: var(--md-error);
-  --success-color: #2ecc71;
-  --prompt-list-bg: var(--md-surface);
+  --success-color: #2ecc71;  --prompt-list-bg: var(--md-surface);
   --hero-bg: var(--md-primary-container);
   --hero-text: var(--md-on-primary-container);
+  
+  /* 渐变边框配色 - 统一配色方案 */
+  --gradient-start: #667eea;
+  --gradient-middle: #764ba2;
+  --gradient-end: #f093fb;
 }
 
 /* 基础样式重置 */
