@@ -47,7 +47,7 @@
 
 /* 深色模式下的描述文字颜色调整 */
 [data-theme="dark"] .description {
-  color: #FFFFFF; /* 深色模式下为白色 */
+  color: var(--text-primary); /* 深色模式下为白色 */
 }
 
 .features {
