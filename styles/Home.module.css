@@ -84,11 +84,17 @@
 }
 
 .footer {
-  padding: 2rem 1rem;
+  padding: 1rem 1rem;
   background-color: var(--md-surface-variant);
   color: var(--md-on-surface-variant);
   text-align: center;
   margin-top: 2rem;
+  border-top-left-radius: var(--border-radius-extra-large);
+  border-top-right-radius: var(--border-radius-extra-large);
+  border: 2px solid var(--md-outline);
+  border-bottom: none;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
 }
 
 /* 搜索和排序区域 */

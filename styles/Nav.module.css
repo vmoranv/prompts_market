@@ -3,6 +3,23 @@
   color: var(--nav-text);
   padding: 0.8rem 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.nav::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--gradient-start) 0%,
+    var(--gradient-middle) 50%,
+    var(--gradient-end) 100%
+  );
+  pointer-events: none;
 }
 
 .navContainer {
@@ -15,9 +32,37 @@
 
 .logo {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
   color: var(--nav-text);
   text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  letter-spacing: -0.02em;
+}
+
+.logo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
+}
+
+.logo:hover {
+  transform: translateY(-1px);
+  color: var(--nav-text);
+}
+
+.logo:hover::before {
+  opacity: 1;
 }
 
 .navLinks {
@@ -29,11 +74,34 @@
 .navLink {
   color: var(--nav-text);
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.navLink::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
 }
 
 .navLink:hover {
-  color: var(--accent-color);
+  color: var(--nav-text);
+  transform: translateY(-1px);
+}
+
+.navLink:hover::before {
+  opacity: 1;
 }
 
 .iconLink {
@@ -41,12 +109,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.3s ease, transform 0.2s ease;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.iconLink::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
 }
 
 .iconLink:hover {
-  color: var(--accent-color);
-  transform: scale(1.1);
+  color: var(--nav-text);
+  transform: translateY(-1px) scale(1.05);
+}
+
+.iconLink:hover::before {
+  opacity: 1;
 }
 
 .userInfo {
@@ -54,13 +143,36 @@
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
-  color: inherit;
-  transition: opacity 0.2s ease;
+  color: var(--nav-text);
+  transition: all 0.2s ease;
   cursor: pointer;
+  position: relative;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.userInfo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
 }
 
 .userInfo:hover {
-  opacity: 0.85;
+  color: var(--nav-text);
+  transform: translateY(-1px);
+}
+
+.userInfo:hover::before {
+  opacity: 1;
 }
 
 .userAvatar {
@@ -71,19 +183,43 @@
 }
 
 .signButton {
-  background-color: var(--md-surface-container-highest);
+  background-color: rgba(255, 255, 255, 0.1);
   color: var(--nav-text);
-  border: 1px solid var(--md-outline-variant);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   padding: 0.5rem 1rem;
   cursor: pointer;
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.signButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
 }
 
 .signButton:hover {
-  background-color: var(--md-surface-container-high);
-  color: var(--accent-color);
-  border-color: var(--md-outline);
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--nav-text);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.signButton:hover::before {
+  opacity: 1;
 }
 
 /* 确保在小屏幕上导航栏也能良好显示 */
