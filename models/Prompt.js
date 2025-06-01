@@ -8,19 +8,19 @@ const PromptSchema = new mongoose.Schema({
   },
   title: {
     type: String,
-    required: [true, "请提供 Prompt 标题!"],
+    required: [true, "请填写标题"],
     trim: true,
-    maxlength: [100, "标题不能超过 100 个字符"],
+    maxlength: [100, "标题不能超过100个字符"],
   },
   content: {
     type: String,
-    required: [true, "请提供 Prompt 内容!"],
+    required: [true, "请填写内容"],
     trim: true,
   },
-  tags: {
-    type: [String], // 字符串数组
-    validate: [arrayLimit, '{PATH} 超出标签数量限制 (最多10个)'], // 自定义校验器
-    default: [],
+  tag: {
+    type: String,
+    required: [true, "请选择至少一个标签"],
+    trim: true,
   },
   status: {
     type: String,
@@ -59,27 +59,16 @@ function arrayLimit(val) {
   return val.length <= 10;
 }
 
-// 添加索引以提高查询性能
-// 1. 基本字段索引
-PromptSchema.index({ status: 1 }); // 状态索引，用于查询已发布的prompts
-PromptSchema.index({ author: 1 }); // 作者索引，用于查询用户的prompts
-PromptSchema.index({ tags: 1 }); // 标签索引，用于按标签筛选
-PromptSchema.index({ createdAt: -1 }); // 创建时间降序索引，用于排序
-PromptSchema.index({ likesCount: -1 }); // 点赞数降序索引，用于热门排序
+// 移除Schema定义中的索引属性，统一在这里定义所有索引
+// 删除tag字段上的index:true属性，改为在这里定义
 
-// 2. 复合索引 - 用于组合查询条件
-PromptSchema.index({ status: 1, createdAt: -1 }); // 常用组合：状态+时间
-PromptSchema.index({ status: 1, likesCount: -1 }); // 常用组合：状态+热度
-
-// 3. 文本索引 - 如果已在Atlas UI配置则可省略
-PromptSchema.index({ title: 'text', content: 'text', tags: 'text' });
-
-// 在Schema定义后添加索引
 // 增加复合索引来提高常见查询性能
 PromptSchema.index({ status: 1, createdAt: -1 }); // 状态和创建时间的复合索引
 PromptSchema.index({ author: 1, status: 1 }); // 作者和状态的复合索引
-PromptSchema.index({ tags: 1 }); // 标签索引
+PromptSchema.index({ tags: 1 }); // 标签索引 (这是之前重复的索引)
 PromptSchema.index({ title: "text", content: "text" }); // 全文索引用于搜索
+PromptSchema.index({ viewCount: -1 }); // 浏览量索引，用于热门排序
+PromptSchema.index({ likesCount: -1 }); // 点赞数索引，用于热门排序
 
 // 自动更新updatedAt字段
 PromptSchema.pre('save', function(next) {

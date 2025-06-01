@@ -1,3 +1,4 @@
+import dbConnect from '../lib/dbConnect';
 import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Home.module.css';
 import PromptsList from '../components/PromptsList';
@@ -6,10 +7,27 @@ import { useTheme } from '../contexts/ThemeContext';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { MdLightbulb, MdShare, MdSync, MdSearch, MdKeyboardArrowLeft, MdKeyboardArrowRight, MdTrendingUp, MdFavorite, MdAccessTime, MdVisibility } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
-import { Prompt } from '../models/Prompt';
-import { dbConnect } from '../lib/dbConnect';
+import Prompt from '../models/Prompt';
+import User from '../models/User';
 
-export default function Home({ initialPrompts }) {
+// 添加防抖钩子 - 移到组件外部
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  
+  return debouncedValue;
+}
+
+export default function Home({ initialPrompts, loadedFromSSR }) {
   const { data: session, status: sessionStatus } = useSession();
   const prevSessionStatus = useRef(null);
   const { isDark } = useTheme();
@@ -24,9 +42,10 @@ export default function Home({ initialPrompts }) {
     currentPage: 1,
   });
   const [allPrompts, setAllPrompts] = useState(initialPrompts || []);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!loadedFromSSR);
   const [error, setError] = useState(null);
   const [filterTag, setFilterTag] = useState('');
+  const [skipInitialFetch, setSkipInitialFetch] = useState(loadedFromSSR);
   
   // 判断当前用户是否为管理员
   const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(',') : [];
@@ -66,23 +85,6 @@ export default function Home({ initialPrompts }) {
     setCurrentPage(1); // 排序改变时重置到第一页
   };
   
-  // 添加防抖钩子
-  const useDebounce = (value, delay) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-    
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-      
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-    
-    return debouncedValue;
-  };
-
   // 分页处理函数
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= (paginationInfo.totalPages || 1)) {
@@ -104,15 +106,36 @@ export default function Home({ initialPrompts }) {
     return `${prefix}${sortBy}`;
   };
   
+  // 在组件顶部添加一个ref跟踪最新请求
+  const latestRequestRef = useRef('');
+
   // 获取所有 Prompt 的函数
   const fetchPrompts = async () => {
+    // 如果使用SSR数据且是首次加载，则跳过请求
+    if (skipInitialFetch) {
+      console.log('[API请求] 跳过初始请求，使用SSR数据');
+      setSkipInitialFetch(false);
+      return;
+    }
+    
+    // 构建请求标识符
+    const requestIdentifier = `${currentPage}-${sortBy}-${sortOrder}-${debouncedSearch || 'no-search'}`;
+    
+    // 防止重复请求
+    if (requestIdentifier === latestRequestRef.current) {
+      console.log(`[API请求] 跳过重复请求: ${requestIdentifier}`);
+      return;
+    }
+    
+    latestRequestRef.current = requestIdentifier;
+    
     setLoading(true);
     setError(null);
     try {
       // 构建排序字符串用于API调用
       const sortString = getSortString();
 
-      // 使用URL对象构建请求URL，更加健壮
+      // 使用URL对象构建请求URL
       const url = new URL('/api/prompts', window.location.origin);
       url.searchParams.append('sort', sortString);
       url.searchParams.append('page', currentPage.toString());
@@ -129,21 +152,28 @@ export default function Home({ initialPrompts }) {
       if (debouncedSearch) {
         url.searchParams.append('search', debouncedSearch);
       }
+      
+      // 只请求需要的字段，减少数据传输量
+      url.searchParams.append('fields', 'title,content,tag,likesCount,viewCount,author,createdAt');
 
       // 添加API请求日志
-      console.log(`[API请求] 发起请求: ${url.toString()}`);
+      console.log(`[API请求] 发起请求(来源: 客户端): ${url.toString()}`);
       const startTime = performance.now();
 
       // 使用 AbortController 设置请求超时
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
       
-      const res = await fetch(url.toString(), {
+      // 使用SWR或增量加载策略
+      // 如果是第一页，立即显示缓存数据，同时在后台刷新
+      const options = {
         signal: controller.signal,
         headers: {
-          'Cache-Control': 'no-cache', // 防止浏览器缓存
+          'Cache-Control': debouncedSearch ? 'no-cache' : 'max-age=60', // 搜索结果不缓存，其他缓存60秒
         }
-      });
+      };
+      
+      const res = await fetch(url.toString(), options);
       
       clearTimeout(timeoutId);
 
@@ -156,7 +186,13 @@ export default function Home({ initialPrompts }) {
       
       // 计算请求耗时并记录
       const endTime = performance.now();
-      console.log(`[API请求] 完成: ${url.toString()}, 耗时: ${(endTime - startTime).toFixed(2)}ms, 获取到 ${data.data?.length || 0} 条数据`);
+      const queryTime = (endTime - startTime).toFixed(2);
+      console.log(`[API请求] 完成: ${url.toString()}, 耗时: ${queryTime}ms, 获取到 ${data.data?.length || 0} 条数据`);
+
+      // 记录慢查询
+      if (endTime - startTime > 1000) {
+        console.warn(`[API请求] 检测到慢请求: ${url.toString()}, 耗时: ${queryTime}ms`);
+      }
 
       // 设置数据和分页信息
       setAllPrompts(data.data || []);
@@ -185,17 +221,21 @@ export default function Home({ initialPrompts }) {
   };
 
   // 对搜索进行防抖处理
-  const debouncedSearch = useDebounce(search, 300);
+  const debouncedSearch = useDebounce(search, 500);
 
   // 处理session状态变化
   useEffect(() => {
-    // 只有当session状态确定(已认证或未认证)且有更改时才重新获取数据
-    if (sessionStatus !== 'loading' && sessionStatus !== prevSessionStatus.current) {
-      prevSessionStatus.current = sessionStatus;
-      // 重置到第一页并刷新数据
-      setCurrentPage(1);
+    if (prevSessionStatus.current !== null && prevSessionStatus.current !== sessionStatus) {
+      console.log(`[会话状态] 状态改变: ${prevSessionStatus.current} -> ${sessionStatus}`);
+      // 会话状态改变（登录/登出）时重新获取数据
+      setSkipInitialFetch(false); // 会话状态变化时不跳过请求
+      
+      // 添加会话状态变化标记
+      console.log(`[请求跟踪] 会话状态变化触发请求`);
       fetchPrompts();
     }
+    prevSessionStatus.current = sessionStatus;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionStatus]);
 
   // 处理标签点击，更新过滤标签
@@ -254,6 +294,15 @@ export default function Home({ initialPrompts }) {
       prevPrompts.filter(prompt => prompt._id !== deletedPromptId)
     );
   };
+
+  useEffect(() => {
+    // 添加一个标志，避免重复请求
+    const requestId = `${currentPage}-${sortBy}-${sortOrder}-${debouncedSearch}`;
+    console.log(`[请求跟踪] 请求ID: ${requestId} 触发条件变化`);
+    
+    fetchPrompts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, sortBy, sortOrder, debouncedSearch]);
 
   return (
     <div className={styles.container}>
@@ -416,25 +465,63 @@ export async function getServerSideProps() {
   try {
     await dbConnect();
     
-    // 优化查询，只获取必要字段并限制数量
+    // 确保在查询前导入所有需要的模型 
+    console.log('[SSR] 开始查询初始提示词...');
+    const startTime = performance.now();
+
+    // 优化查询，避免在SSR阶段进行populate操作
     const query = { status: 'published' };
     const prompts = await Prompt.find(query)
-      .select('title content tags likesCount viewCount author createdAt')
-      .populate('author', 'name image')
+      .select('title content tag likesCount viewCount author createdAt')
       .sort({ createdAt: -1 })
       .limit(12)
-      .lean();
+      .lean(); // 使用lean()提高性能
     
+    // 手动获取作者信息，避免populate错误
+    const authorIds = [...new Set(prompts.filter(p => p.author).map(p => p.author))];
+    
+    let authorsMap = {};
+    if (authorIds.length > 0) {
+      const authors = await User.find({ _id: { $in: authorIds } })
+        .select('name image')
+        .lean();
+      
+      authorsMap = authors.reduce((map, author) => {
+        map[author._id.toString()] = {
+          _id: author._id,
+          name: author.name,
+          image: author.image
+        };
+        return map;
+      }, {});
+    }
+    
+    // 手动填充作者信息
+    const promptsWithAuthors = prompts.map(prompt => {
+      const authorId = prompt.author ? prompt.author.toString() : null;
+      return {
+        ...prompt,
+        author: authorId && authorsMap[authorId] ? authorsMap[authorId] : null
+      };
+    });
+    
+    const endTime = performance.now();
+    console.log(`[SSR] 查询完成，耗时: ${(endTime - startTime).toFixed(2)}ms，结果数: ${promptsWithAuthors.length}`);
+
     return {
       props: {
-        initialPrompts: JSON.parse(JSON.stringify(prompts)),
+        initialPrompts: JSON.parse(JSON.stringify(promptsWithAuthors)),
+        loadedFromSSR: true, // 标记数据来源于SSR
       },
     };
   } catch (error) {
-    console.error('预加载Prompts失败:', error);
+    console.error('[SSR] 预加载Prompts失败:', error);
+    
+    // 出错时返回空数组，但不中断渲染
     return {
       props: {
         initialPrompts: [],
+        loadedFromSSR: false, // 标记SSR加载失败
       },
     };
   }
