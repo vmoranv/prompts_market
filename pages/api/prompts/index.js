@@ -3,7 +3,7 @@ import Prompt from '../../../models/Prompt';
 import User from '../../../models/User'; 
 import { getToken } from 'next-auth/jwt'; 
 import { getSession } from 'next-auth/react'; // 导入 getSession
-import { getCached, setCache } from '../../../utils/cache';
+import { getCached, setCacheByType } from '../../../utils/cache';
 
 // 定义与前端一致的字数限制常量
 const MAX_TITLE_LENGTH = 50;
@@ -143,9 +143,26 @@ export default async function handler(req, res) {
           },
         };
 
-        // 缓存响应数据（缓存时间设为2分钟，避免数据过期）
-        setCache(cacheKey, responseData, 2 * 60 * 1000);
-        
+        // 缓存类型判断函数
+        const getCacheType = (userId, search, status) => {
+          if (search) {
+            return 'search';
+          }
+          if (userId) {
+            return 'user_prompts';
+          }
+          return 'prompts';
+        };
+
+        // 缓存设置函数
+        const cacheType = getCacheType(userId, search, status);
+        setCacheByType(cacheKey, responseData, cacheType);
+
+        // 日志输出
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`缓存已更新: ${cacheKey.substring(0, 50)}..., 类型: ${cacheType}`);
+        }
+
         res.status(200).json(responseData);
       } catch (error) {
         console.error('Error fetching prompts:', error);

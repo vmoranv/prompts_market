@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SessionProvider, useSession } from "next-auth/react";
 import { ThemeProvider } from "../contexts/ThemeContext";
+import { startCacheCleanup, warmupCommonData, getCacheStats } from '../utils/cache';
 import Nav from '../components/Nav';
 import '../styles/globals.css';
 
@@ -13,6 +14,37 @@ const StagewiseToolbar = process.env.NODE_ENV === 'development'
 function AppContent({ Component, pageProps }) {
   const { data: session, status } = useSession();
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+
+  // 在现有的useEffect之前添加缓存初始化
+  useEffect(() => {
+    // 初始化缓存系统
+    initializeCache();
+  }, []);
+  
+  const initializeCache = async () => {
+    try {
+      console.log('初始化缓存系统...');
+      
+      // 启动缓存清理任务
+      startCacheCleanup();
+      
+      // 延迟预热缓存，避免阻塞应用启动
+      setTimeout(async () => {
+        await warmupCommonData();
+        
+        // 在开发环境中显示缓存统计
+        if (process.env.NODE_ENV === 'development') {
+          setTimeout(() => {
+            const stats = getCacheStats();
+            console.log('缓存统计:', stats);
+          }, 1000);
+        }
+      }, 2000); // 2秒后开始预热
+      
+    } catch (error) {
+      console.error('缓存初始化失败:', error);
+    }
+  };
 
   // 获取未读通知数量
   useEffect(() => {

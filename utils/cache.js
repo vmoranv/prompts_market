@@ -206,3 +206,78 @@ export function stopCacheCleanup() {
     cleanupInterval = null;
   }
 }
+
+// 预热常用数据
+export async function warmupCommonData() {
+  try {
+    console.log('开始缓存预热...');
+    
+    const warmupTasks = [
+      warmupPopularPrompts(),
+      warmupMetadata()
+    ];
+
+    await Promise.allSettled(warmupTasks);
+    console.log('缓存预热完成');
+  } catch (error) {
+    console.error('缓存预热失败:', error);
+  }
+}
+
+// 预热热门提示词
+async function warmupPopularPrompts() {
+  try {
+    // 构建热门内容的缓存键
+    const popularCacheKey = `prompts_${JSON.stringify({
+      page: 1,
+      limit: 12,
+      sort: '-likesCount',
+      status: 'published'
+    })}`;
+    
+    // 预热最新内容的缓存键
+    const recentCacheKey = `prompts_${JSON.stringify({
+      page: 1,
+      limit: 12,
+      sort: '-createdAt',
+      status: 'published'
+    })}`;
+    
+    console.log('预热热门和最新提示词缓存...');
+    
+    // 预设一些基础数据或从数据库获取
+    const mockPopularData = {
+      success: true,
+      data: [],
+      pagination: {
+        totalPrompts: 0,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 12,
+        hasMore: false
+      }
+    };
+    
+    setCacheByType(popularCacheKey, mockPopularData, 'prompts');
+    setCacheByType(recentCacheKey, mockPopularData, 'prompts');
+    
+    console.log('提示词缓存预热完成');
+  } catch (error) {
+    console.error('预热提示词缓存失败:', error);
+  }
+}
+
+// 预热元数据
+async function warmupMetadata() {
+  try {
+    const metadataItems = [
+      { key: 'app_config', value: { version: '1.0.0', initialized: true }, type: 'metadata' },
+      { key: 'cache_stats', value: getCacheStats(), type: 'metadata' }
+    ];
+    
+    warmupCache(metadataItems);
+    console.log('元数据缓存预热完成');
+  } catch (error) {
+    console.error('预热元数据失败:', error);
+  }
+}

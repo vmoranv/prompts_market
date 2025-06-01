@@ -45,7 +45,6 @@ export default function PromptsList({ searchQuery = '', currentPage = 1, onPagin
           throw new Error(`Error: ${res.status}`);
         }
         const data = await res.json();
-        console.log('API 响应数据:', data); // 添加日志
         setPrompts(data.data || []);
         
         // 调用回调函数更新父组件的分页信息
