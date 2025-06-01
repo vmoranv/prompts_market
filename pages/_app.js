@@ -23,7 +23,6 @@ function AppContent({ Component, pageProps }) {
   
   const initializeCache = async () => {
     try {
-      console.log('初始化缓存系统...');
       
       // 启动缓存清理任务
       startCacheCleanup();
@@ -34,34 +33,28 @@ function AppContent({ Component, pageProps }) {
           // 在浏览器空闲时执行预热，不阻塞重要操作
           if (window.requestIdleCallback) {
             window.requestIdleCallback(async () => {
-              console.log('[缓存] 开始预热缓存数据...');
               const startTime = performance.now();
               
               await warmupCommonData();
               
               const endTime = performance.now();
-              console.log(`[缓存] 缓存预热完成，耗时: ${(endTime - startTime).toFixed(2)}ms`);
               
               // 在开发环境中显示缓存统计
               if (process.env.NODE_ENV === 'development') {
                 const stats = getCacheStats();
-                console.log('[缓存] 缓存统计:', stats);
               }
             }, { timeout: 500 }); // 设置最大等待时间
           } else {
             // 兼容不支持requestIdleCallback的浏览器
             setTimeout(async () => {
-              console.log('[缓存] 开始预热缓存数据...');
               const startTime = performance.now();
               
               await warmupCommonData();
               
               const endTime = performance.now();
-              console.log(`[缓存] 缓存预热完成，耗时: ${(endTime - startTime).toFixed(2)}ms`);
               
               if (process.env.NODE_ENV === 'development') {
                 const stats = getCacheStats();
-                console.log('[缓存] 缓存统计:', stats);
               }
             }, 100); // 使用较短的延迟
           }

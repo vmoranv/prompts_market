@@ -113,7 +113,6 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   const fetchPrompts = async () => {
     // 如果使用SSR数据且是首次加载，则跳过请求
     if (skipInitialFetch) {
-      console.log('[API请求] 跳过初始请求，使用SSR数据');
       setSkipInitialFetch(false);
       return;
     }
@@ -123,7 +122,6 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
     
     // 防止重复请求
     if (requestIdentifier === latestRequestRef.current) {
-      console.log(`[API请求] 跳过重复请求: ${requestIdentifier}`);
       return;
     }
     
@@ -157,7 +155,6 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
       url.searchParams.append('fields', 'title,content,tag,likesCount,viewCount,author,createdAt');
 
       // 添加API请求日志
-      console.log(`[API请求] 发起请求(来源: 客户端): ${url.toString()}`);
       const startTime = performance.now();
 
       // 使用 AbortController 设置请求超时
@@ -187,7 +184,6 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
       // 计算请求耗时并记录
       const endTime = performance.now();
       const queryTime = (endTime - startTime).toFixed(2);
-      console.log(`[API请求] 完成: ${url.toString()}, 耗时: ${queryTime}ms, 获取到 ${data.data?.length || 0} 条数据`);
 
       // 记录慢查询
       if (endTime - startTime > 1000) {
@@ -231,7 +227,6 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
       setSkipInitialFetch(false); // 会话状态变化时不跳过请求
       
       // 添加会话状态变化标记
-      console.log(`[请求跟踪] 会话状态变化触发请求`);
       fetchPrompts();
     }
     prevSessionStatus.current = sessionStatus;
@@ -298,7 +293,6 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   useEffect(() => {
     // 添加一个标志，避免重复请求
     const requestId = `${currentPage}-${sortBy}-${sortOrder}-${debouncedSearch}`;
-    console.log(`[请求跟踪] 请求ID: ${requestId} 触发条件变化`);
     
     fetchPrompts();
     // eslint-disable-next-line react-hooks/exhaustive-deps

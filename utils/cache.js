@@ -185,12 +185,10 @@ export function setItem(key, value, type = 'default', ttl = null) {
 
 // 预热缓存（可在应用启动时调用）
 export async function warmupCommonData() {
-  console.log('[缓存] 开始缓存预热...');
   
   // 检查是否已预热过
   const cacheKey = 'cache_warmed_up';
   if (getItem(cacheKey, 'metadata')) {
-    console.log('[缓存] 缓存已预热，跳过');
     return;
   }
   
@@ -207,7 +205,6 @@ export async function warmupCommonData() {
     ]);
     
     const endTime = performance.now();
-    console.log(`[缓存] 缓存预热完成，耗时: ${(endTime - startTime).toFixed(2)}ms`);
   } catch (error) {
     console.error('[缓存] 缓存预热失败:', error);
   }
@@ -232,7 +229,6 @@ async function warmupPopularPrompts() {
       status: 'published'
     })}`;
     
-    console.log('预热热门和最新提示词缓存...');
     
     // 预设一些基础数据或从数据库获取
     const mockPopularData = {
@@ -250,7 +246,6 @@ async function warmupPopularPrompts() {
     setCacheByType(popularCacheKey, mockPopularData, 'prompts');
     setCacheByType(recentCacheKey, mockPopularData, 'prompts');
     
-    console.log('提示词缓存预热完成');
   } catch (error) {
     console.error('预热提示词缓存失败:', error);
   }

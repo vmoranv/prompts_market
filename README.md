@@ -20,7 +20,7 @@
 |----------------|-------------------------------------|---------|
 | **用户认证**    | GitHub/Google OAuth 登录            | ✅ 完成 |
 | **内容管理**    | Prompt创建/编辑/删除                 | ✅ 完成 |
-|                | 管理员审核流程                       | ✅ 完成 |
+| **内容审核**    | 管理员审核流程                       | ✅ 完成 |
 | **社交互动**    | 评论/点赞/收藏功能                   | ✅ 完成 |
 | **内容发现**    | 高级搜索与过滤                       | ✅ 完成 |
 | **通知系统**    | 实时用户通知                         | ✅ 完成 |
@@ -79,6 +79,7 @@ pnpm dev
 | `NEXT_PUBLIC_ADMIN_EMAILS` | ✅   | `1761886648@qq.com` | 管理员邮箱列表 |
 | `OPENAI_DEFAULT_API_KEY`   | ✅   | `sk-proj-1234567890abcdef` | OpenAI API密钥 |
 | `ZHIPU_DEFAULT_API_KEY`    | ✅   | `sk-proj-1234567890abcdef` | 智谱 API密钥 |
+| `GOOGLE_DEFAULT_API_KEY`   | ✅   | `sk-proj-1234567890abcdef` | Google API密钥 |
 
 ### 生产环境构建
 ```bash
