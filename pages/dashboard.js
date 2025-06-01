@@ -139,10 +139,8 @@ export default function Dashboard() {
       setError('无效的用户ID格式');
       setLoadingPrompts(false);
       return;
-    }
-
-    // 2. 检查权限
-    if (!hasPermissionToView(session?.user?.id, userId, isAdmin)) {
+    }    // 2. 检查权限
+    if (!hasPermissionToView(session?.user?.id, userId, session?.user?.role === 'admin')) {
       setError('没有权限查看此用户的提示词');
       setLoadingPrompts(false);
       return;
