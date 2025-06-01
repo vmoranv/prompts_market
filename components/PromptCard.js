@@ -280,6 +280,17 @@ const PromptCard = ({ prompt, handleTagClick, onLikeSuccess, onDeleteSuccess }) 
         <div className={styles.promptContent}>
           {isClient ? <SafeMarkdown content={truncatedContent} /> : <p>{truncatedContent}</p>}
         </div>
+
+        {/* 添加标签显示区域 */}
+        {prompt.tags && prompt.tags.length > 0 && (
+          <div className={styles.tagsContainer}>
+            {prompt.tags.map((tag, index) => (
+              <span key={index} className={styles.tag}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         
         <div className={styles.cardFooter}>
           <div className={styles.stats}>

@@ -350,4 +350,52 @@
 .rejectedStatus {
   background-color: var(--md-error-container);
   color: var(--md-on-error-container);
-} 
+}
+
+.tagsContainer {
+  margin: 0.75rem 0 1rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.tag {
+  background-color: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  padding: 0.35rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+}
+
+.tag:hover {
+  background-color: var(--md-secondary);
+  color: var(--md-on-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tag:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .tagsContainer {
+    margin: 0.5rem 0 0.75rem 0;
+    gap: 0.375rem;
+  }
+  
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.625rem;
+    min-height: 1.25rem;
+  }
+}
