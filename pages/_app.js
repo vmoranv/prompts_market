@@ -28,21 +28,50 @@ function AppContent({ Component, pageProps }) {
       // 启动缓存清理任务
       startCacheCleanup();
       
-      // 延迟预热缓存，避免阻塞应用启动
-      setTimeout(async () => {
-        await warmupCommonData();
+      // 使用requestIdleCallback替代setTimeout，在浏览器空闲时进行预热
+      if (typeof window !== 'undefined') {
+        const warmupCacheWhenIdle = () => {
+          // 在浏览器空闲时执行预热，不阻塞重要操作
+          if (window.requestIdleCallback) {
+            window.requestIdleCallback(async () => {
+              console.log('[缓存] 开始预热缓存数据...');
+              const startTime = performance.now();
+              
+              await warmupCommonData();
+              
+              const endTime = performance.now();
+              console.log(`[缓存] 缓存预热完成，耗时: ${(endTime - startTime).toFixed(2)}ms`);
+              
+              // 在开发环境中显示缓存统计
+              if (process.env.NODE_ENV === 'development') {
+                const stats = getCacheStats();
+                console.log('[缓存] 缓存统计:', stats);
+              }
+            }, { timeout: 500 }); // 设置最大等待时间
+          } else {
+            // 兼容不支持requestIdleCallback的浏览器
+            setTimeout(async () => {
+              console.log('[缓存] 开始预热缓存数据...');
+              const startTime = performance.now();
+              
+              await warmupCommonData();
+              
+              const endTime = performance.now();
+              console.log(`[缓存] 缓存预热完成，耗时: ${(endTime - startTime).toFixed(2)}ms`);
+              
+              if (process.env.NODE_ENV === 'development') {
+                const stats = getCacheStats();
+                console.log('[缓存] 缓存统计:', stats);
+              }
+            }, 100); // 使用较短的延迟
+          }
+        };
         
-        // 在开发环境中显示缓存统计
-        if (process.env.NODE_ENV === 'development') {
-          setTimeout(() => {
-            const stats = getCacheStats();
-            console.log('缓存统计:', stats);
-          }, 1000);
-        }
-      }, 2000); // 2秒后开始预热
-      
+        // 在第一次渲染后调用
+        warmupCacheWhenIdle();
+      }
     } catch (error) {
-      console.error('缓存初始化失败:', error);
+      console.error('[缓存] 缓存初始化失败:', error);
     }
   };
 

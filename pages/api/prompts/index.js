@@ -23,6 +23,10 @@ export default async function handler(req, res) {
   const pageNumber = parseInt(page, 10);
   const limitNumber = parseInt(limit, 10);
 
+  if (method === 'POST' || (method === 'GET' && req.query.userId)) {
+    const session = await getSession({ req });
+  }
+
   switch (method) {
     case 'GET':
       try {
@@ -80,30 +84,6 @@ export default async function handler(req, res) {
               { content: searchRegex },
               { tags: searchRegex },
             ];
-          }
-        }
-
-        // 添加搜索过滤
-        if (search) {
-          const searchRegex = { $regex: search, $options: 'i' };
-          // 将搜索条件应用到 $or 子句中，或者直接应用到 query 中
-          if (query.$or) {
-             // 如果已经有 $or 条件（用户登录且 status=all），则将搜索条件添加到每个子句中
-             query.$or = query.$or.map(orClause => ({
-                 ...orClause,
-                 $or: [
-                     { title: searchRegex },
-                     { content: searchRegex },
-                     { tags: searchRegex },
-                 ]
-             }));
-          } else {
-             // 如果没有 $or 条件，直接将搜索条件添加到 query 中
-             query.$or = [
-                 { title: searchRegex },
-                 { content: searchRegex },
-                 { tags: searchRegex },
-             ];
           }
         }
 
@@ -171,7 +151,6 @@ export default async function handler(req, res) {
       break;
     case 'POST':
       try {
-        const session = await getSession({ req });
         if (!session) {
           return res.status(401).json({ success: false, error: '需要登录才能创建 Prompt' });
         }

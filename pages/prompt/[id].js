@@ -113,7 +113,7 @@ export default function PromptDetail() {
     
     setTimeout(() => {
       setCopied(false);
-    }, 2000);
+    }, 200);
   };
   
   // 格式化日期函数 (使用原生 JS Date 方法)

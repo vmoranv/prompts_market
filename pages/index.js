@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Home.module.css';
 import PromptsList from '../components/PromptsList';
 import Head from 'next/head';
@@ -6,9 +6,12 @@ import { useTheme } from '../contexts/ThemeContext';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { MdLightbulb, MdShare, MdSync, MdSearch, MdKeyboardArrowLeft, MdKeyboardArrowRight, MdTrendingUp, MdFavorite, MdAccessTime, MdVisibility } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
+import { Prompt } from '../models/Prompt';
+import { dbConnect } from '../lib/dbConnect';
 
-export default function Home() {
-  const { data: session, status } = useSession();
+export default function Home({ initialPrompts }) {
+  const { data: session, status: sessionStatus } = useSession();
+  const prevSessionStatus = useRef(null);
   const { isDark } = useTheme();
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -20,7 +23,7 @@ export default function Home() {
     hasMore: false,
     currentPage: 1,
   });
-  const [allPrompts, setAllPrompts] = useState([]);
+  const [allPrompts, setAllPrompts] = useState(initialPrompts || []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterTag, setFilterTag] = useState('');
@@ -121,12 +124,21 @@ export default function Home() {
         apiUrl += `&status=published`;
       }
 
+      // 添加API请求日志
+      console.log(`[API请求] 发起请求: ${apiUrl}`);
+      const startTime = performance.now();
+
       const res = await fetch(apiUrl);
 
       if (!res.ok) {
+        console.error(`[API请求] 失败: ${apiUrl}, 状态码: ${res.status}`);
         throw new Error(`Failed to fetch prompts: ${res.status}`);
       }
       const data = await res.json();
+      
+      // 计算请求耗时并记录
+      const endTime = performance.now();
+      console.log(`[API请求] 完成: ${apiUrl}, 耗时: ${(endTime - startTime).toFixed(2)}ms, 获取到 ${data.data?.length || 0} 条数据`);
 
       // 直接使用从 API 获取的数据，因为 API 已经处理了过滤和排序
       setAllPrompts(data.data || []);
@@ -135,9 +147,8 @@ export default function Home() {
           setPaginationInfo(data.pagination);
       }
 
-
     } catch (err) {
-      console.error('Error fetching prompts:', err);
+      console.error('[API请求] 错误:', err);
       setError(err.message);
       setAllPrompts([]); // 出错时清空列表
       setPaginationInfo({ // 出错时重置分页信息
@@ -153,11 +164,17 @@ export default function Home() {
   // 对搜索进行防抖处理
   const debouncedSearch = useDebounce(search, 300);
 
-  // 修改useEffect依赖
+  // 处理session状态变化
   useEffect(() => {
-    fetchPrompts();
-  }, [sortBy, sortOrder, filterTag, session, currentPage, debouncedSearch]);
-  
+    // 只有当session状态确定(已认证或未认证)且有更改时才重新获取数据
+    if (sessionStatus !== 'loading' && sessionStatus !== prevSessionStatus.current) {
+      prevSessionStatus.current = sessionStatus;
+      // 重置到第一页并刷新数据
+      setCurrentPage(1);
+      fetchPrompts();
+    }
+  }, [sessionStatus]);
+
   // 处理标签点击，更新过滤标签
   const handleTagClick = (tag) => {
     setFilterTag(tag);
@@ -370,4 +387,32 @@ export default function Home() {
       </footer>
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  try {
+    await dbConnect();
+    
+    // 优化查询，只获取必要字段并限制数量
+    const query = { status: 'published' };
+    const prompts = await Prompt.find(query)
+      .select('title content tags likesCount viewCount author createdAt')
+      .populate('author', 'name image')
+      .sort({ createdAt: -1 })
+      .limit(12)
+      .lean();
+    
+    return {
+      props: {
+        initialPrompts: JSON.parse(JSON.stringify(prompts)),
+      },
+    };
+  } catch (error) {
+    console.error('预加载Prompts失败:', error);
+    return {
+      props: {
+        initialPrompts: [],
+      },
+    };
+  }
 } 

@@ -137,7 +137,7 @@ export default function CreatePromptPage() {
       setSuccessMessage(data.message || 'Prompt 创建成功，等待审核！');
       setTimeout(() => {
         router.push('/'); 
-      }, 2000); 
+      }, 200); 
 
     } catch (error) {
       console.error('创建 Prompt 失败:', error);

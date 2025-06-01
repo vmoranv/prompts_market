@@ -100,7 +100,7 @@ const PromptCard = ({ prompt, handleTagClick, onLikeSuccess, onDeleteSuccess }) 
 
     setTimeout(() => {
       setCopied(false);
-    }, 2000);
+    }, 200);
   };
 
   const formatDate = (dateString) => {

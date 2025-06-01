@@ -175,52 +175,41 @@ export function clearCacheByType(type) {
   return keysToDelete.length;
 }
 
-// 预热缓存（可在应用启动时调用）
-export function warmupCache(warmupData) {
-  if (Array.isArray(warmupData)) {
-    warmupData.forEach(({ key, value, type }) => {
-      setCacheByType(key, value, type);
-    });
-  }
+export function getItem(key, type = 'default') {
+  return getCached(`${type}_${key}`);
 }
 
-// 定期清理任务（建议在应用启动时启动）
-let cleanupInterval = null;
+export function setItem(key, value, type = 'default', ttl = null) {
+  return setCache(`${type}_${key}`, value, ttl);
+}
 
-export function startCacheCleanup(intervalMs = 2 * 60 * 1000) { // 每2分钟清理一次
-  if (cleanupInterval) {
-    clearInterval(cleanupInterval);
+// 预热缓存（可在应用启动时调用）
+export async function warmupCommonData() {
+  console.log('[缓存] 开始缓存预热...');
+  
+  // 检查是否已预热过
+  const cacheKey = 'cache_warmed_up';
+  if (getItem(cacheKey, 'metadata')) {
+    console.log('[缓存] 缓存已预热，跳过');
+    return;
   }
   
-  cleanupInterval = setInterval(() => {
-    const cleaned = cleanupExpiredCache();
-    if (cleaned > 0) {
-      console.log(`Cleaned ${cleaned} expired cache entries`);
-    }
-  }, intervalMs);
-}
-
-export function stopCacheCleanup() {
-  if (cleanupInterval) {
-    clearInterval(cleanupInterval);
-    cleanupInterval = null;
-  }
-}
-
-// 预热常用数据
-export async function warmupCommonData() {
+  // 标记为已预热
+  setItem(cacheKey, { warmedUp: true, timestamp: Date.now() }, 'metadata', 24 * 60 * 60 * 1000); // 24小时
+  
+  // 使用Promise.all并行预热，提高效率
   try {
-    console.log('开始缓存预热...');
+    const startTime = performance.now();
     
-    const warmupTasks = [
+    await Promise.all([
       warmupPopularPrompts(),
       warmupMetadata()
-    ];
-
-    await Promise.allSettled(warmupTasks);
-    console.log('缓存预热完成');
+    ]);
+    
+    const endTime = performance.now();
+    console.log(`[缓存] 缓存预热完成，耗时: ${(endTime - startTime).toFixed(2)}ms`);
   } catch (error) {
-    console.error('缓存预热失败:', error);
+    console.error('[缓存] 缓存预热失败:', error);
   }
 }
 
@@ -267,6 +256,29 @@ async function warmupPopularPrompts() {
   }
 }
 
+// 定期清理任务
+let cleanupInterval = null;
+
+export function startCacheCleanup(intervalMs = TTL) { 
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+  }
+  
+  cleanupInterval = setInterval(() => {
+    const cleaned = cleanupExpiredCache();
+    if (cleaned > 0) {
+      console.log(`Cleaned ${cleaned} expired cache entries`);
+    }
+  }, intervalMs);
+}
+
+export function stopCacheCleanup() {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+}
+
 // 预热元数据
 async function warmupMetadata() {
   try {
@@ -275,7 +287,9 @@ async function warmupMetadata() {
       { key: 'cache_stats', value: getCacheStats(), type: 'metadata' }
     ];
     
-    warmupCache(metadataItems);
+    for (const item of metadataItems) {
+      setItem(item.key, item.value, item.type);
+    }
     console.log('元数据缓存预热完成');
   } catch (error) {
     console.error('预热元数据失败:', error);
