@@ -3,6 +3,7 @@ import Prompt from '../../../models/Prompt';
 import User from '../../../models/User'; 
 import { getToken } from 'next-auth/jwt'; 
 import { getSession } from 'next-auth/react'; // 导入 getSession
+import { getCached, setCache } from '../../../utils/cache';
 
 // 定义与前端一致的字数限制常量
 const MAX_TITLE_LENGTH = 50;
@@ -25,23 +26,61 @@ export default async function handler(req, res) {
   switch (method) {
     case 'GET':
       try {
+        // 构建缓存键
+        const cacheKey = `prompts_${JSON.stringify({
+          page,
+          limit,
+          search,
+          sort,
+          userId,
+          status
+        })}`;
+        
+        // 尝试从缓存获取数据
+        const cachedData = getCached(cacheKey);
+        if (cachedData) {
+          return res.status(200).json(cachedData);
+        }
+
         let query = {};
 
         // 构建查询条件
         if (userId && status === 'all') {
-          // 如果用户已登录且请求状态为 'all'，则查询所有已发布的 Prompt
-          // 以及该用户自己的待审核和已拒绝的 Prompt
-          query.$or = [
-            { status: 'published' },
-            { author: userId, status: { $in: ['pending', 'rejected'] } }
-          ];
-        } else if (userId) {
-          // 如果指定了 userId 但不是 'all' 状态，则只查询该用户的指定状态 Prompt
-          query.author = userId;
-          query.status = status;
+          // 分别查询已发布的和用户自己的未发布内容，然后合并
+          const publishedQuery = { status: 'published' };
+          const userQuery = { author: userId, status: { $in: ['pending', 'rejected'] } };
+          
+          if (search) {
+            const searchRegex = { $regex: search, $options: 'i' };
+            const searchCondition = {
+              $or: [
+                { title: searchRegex },
+                { content: searchRegex },
+                { tags: searchRegex },
+              ]
+            };
+            publishedQuery.$and = [publishedQuery, searchCondition];
+            userQuery.$and = [userQuery, searchCondition];
+          }
+          
+          query = { $or: [publishedQuery, userQuery] };
         } else {
-          // 如果没有指定 userId，则根据 status 参数查询（默认为 'published'）
-          query.status = status;
+          // 简化其他查询条件
+          if (userId) {
+            query.author = userId;
+            query.status = status;
+          } else {
+            query.status = status;
+          }
+          
+          if (search) {
+            const searchRegex = { $regex: search, $options: 'i' };
+            query.$or = [
+              { title: searchRegex },
+              { content: searchRegex },
+              { tags: searchRegex },
+            ];
+          }
         }
 
         // 添加搜索过滤
@@ -71,27 +110,28 @@ export default async function handler(req, res) {
         // 添加排序
         let sortOption = { createdAt: -1 }; // 默认按创建时间降序
         if (sort) {
-          // 示例: sort=viewCount 或 sort=-viewCount
           const sortField = sort.startsWith('-') ?
             sort.substring(1) : sort;
           const sortOrder = sort.startsWith('-') ? -1 : 1;
           // 确保排序字段是 Prompt 模型中存在的字段
           if (['createdAt', 'likesCount', 'viewCount'].includes(sortField)) {
-             sortOption = { [sortField]: sortOrder };
+            sortOption = { [sortField]: sortOrder };
           }
         }
 
         const totalPrompts = await Prompt.countDocuments(query);
         const prompts = await Prompt.find(query)
-          .populate('author', 'name image _id')
-          .sort(sortOption) // 应用排序
+          .select('title content tags likesCount viewCount author createdAt')
+          .populate('author', 'name image')
+          .sort(sortOption)
           .limit(limitNumber)
-          .skip((pageNumber - 1) * limitNumber);
+          .skip((pageNumber - 1) * limitNumber)
+          .lean();
 
         const totalPages = Math.ceil(totalPrompts / limitNumber);
         const hasMore = pageNumber < totalPages;
 
-        res.status(200).json({
+        const responseData = {
           success: true,
           data: prompts,
           pagination: {
@@ -101,10 +141,15 @@ export default async function handler(req, res) {
             pageSize: limitNumber,
             hasMore,
           },
-        });
+        };
+
+        // 缓存响应数据（缓存时间设为2分钟，避免数据过期）
+        setCache(cacheKey, responseData, 2 * 60 * 1000);
+        
+        res.status(200).json(responseData);
       } catch (error) {
-        console.error('Error fetching prompts:', error); // 记录详细错误
-        res.status(500).json({ success: false, error: error.message || '服务器错误' }); // 返回更详细的错误信息
+        console.error('Error fetching prompts:', error);
+        res.status(500).json({ success: false, error: error.message || '服务器错误' });
       }
       break;
     case 'POST':

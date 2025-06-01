@@ -63,6 +63,23 @@ export default function Home() {
     setCurrentPage(1); // 排序改变时重置到第一页
   };
   
+  // 添加防抖钩子
+  const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+    
+    return debouncedValue;
+  };
+
   // 分页处理函数
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= (paginationInfo.totalPages || 1)) {
@@ -133,11 +150,14 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    // 添加currentPage作为依赖项，确保页面变化时重新获取数据
-    fetchPrompts();
-  }, [sortBy, sortOrder, filterTag, session, currentPage]); // 添加currentPage作为依赖项
+  // 对搜索进行防抖处理
+  const debouncedSearch = useDebounce(search, 300);
 
+  // 修改useEffect依赖
+  useEffect(() => {
+    fetchPrompts();
+  }, [sortBy, sortOrder, filterTag, session, currentPage, debouncedSearch]);
+  
   // 处理标签点击，更新过滤标签
   const handleTagClick = (tag) => {
     setFilterTag(tag);

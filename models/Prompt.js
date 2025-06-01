@@ -59,8 +59,20 @@ function arrayLimit(val) {
   return val.length <= 10;
 }
 
-// 为 title 和 content 创建文本索引，方便后续搜索 (如果需要更高级的搜索，考虑 Atlas Search)
-// PromptSchema.index({ title: 'text', content: 'text', tags: 'text' }); // 如果用 MongoDB Atlas，可以直接在 Atlas UI 配置
+// 添加索引以提高查询性能
+// 1. 基本字段索引
+PromptSchema.index({ status: 1 }); // 状态索引，用于查询已发布的prompts
+PromptSchema.index({ author: 1 }); // 作者索引，用于查询用户的prompts
+PromptSchema.index({ tags: 1 }); // 标签索引，用于按标签筛选
+PromptSchema.index({ createdAt: -1 }); // 创建时间降序索引，用于排序
+PromptSchema.index({ likesCount: -1 }); // 点赞数降序索引，用于热门排序
+
+// 2. 复合索引 - 用于组合查询条件
+PromptSchema.index({ status: 1, createdAt: -1 }); // 常用组合：状态+时间
+PromptSchema.index({ status: 1, likesCount: -1 }); // 常用组合：状态+热度
+
+// 3. 文本索引 - 如果已在Atlas UI配置则可省略
+PromptSchema.index({ title: 'text', content: 'text', tags: 'text' });
 
 // 自动更新updatedAt字段
 PromptSchema.pre('save', function(next) {
