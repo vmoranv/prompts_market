@@ -74,6 +74,13 @@ PromptSchema.index({ status: 1, likesCount: -1 }); // 常用组合：状态+热�
 // 3. 文本索引 - 如果已在Atlas UI配置则可省略
 PromptSchema.index({ title: 'text', content: 'text', tags: 'text' });
 
+// 在Schema定义后添加索引
+// 增加复合索引来提高常见查询性能
+PromptSchema.index({ status: 1, createdAt: -1 }); // 状态和创建时间的复合索引
+PromptSchema.index({ author: 1, status: 1 }); // 作者和状态的复合索引
+PromptSchema.index({ tags: 1 }); // 标签索引
+PromptSchema.index({ title: "text", content: "text" }); // 全文索引用于搜索
+
 // 自动更新updatedAt字段
 PromptSchema.pre('save', function(next) {
   this.updatedAt = Date.now();

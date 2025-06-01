@@ -112,49 +112,72 @@ export default function Home({ initialPrompts }) {
       // 构建排序字符串用于API调用
       const sortString = getSortString();
 
-      let apiUrl = `/api/prompts?sort=${sortString}&page=${currentPage}`;
-
-      // 如果用户已登录，获取该用户的所有提示词（包括未审核和被拒绝的）
-      // 否则，只获取已发布的公共提示词
+      // 使用URL对象构建请求URL，更加健壮
+      const url = new URL('/api/prompts', window.location.origin);
+      url.searchParams.append('sort', sortString);
+      url.searchParams.append('page', currentPage.toString());
+      
+      // 添加其他查询参数
       if (session?.user?.id) {
-        // 获取当前用户的所有 Prompt，并应用排序
-        apiUrl += `&userId=${session.user.id}&status=all`; // status=all 获取所有状态
+        url.searchParams.append('userId', session.user.id);
+        url.searchParams.append('status', 'all'); 
       } else {
-        // 获取所有已发布的 Prompt，并应用排序
-        apiUrl += `&status=published`;
+        url.searchParams.append('status', 'published');
+      }
+      
+      // 如果有搜索词，添加搜索参数
+      if (debouncedSearch) {
+        url.searchParams.append('search', debouncedSearch);
       }
 
       // 添加API请求日志
-      console.log(`[API请求] 发起请求: ${apiUrl}`);
+      console.log(`[API请求] 发起请求: ${url.toString()}`);
       const startTime = performance.now();
 
-      const res = await fetch(apiUrl);
+      // 使用 AbortController 设置请求超时
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+      
+      const res = await fetch(url.toString(), {
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache', // 防止浏览器缓存
+        }
+      });
+      
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
-        console.error(`[API请求] 失败: ${apiUrl}, 状态码: ${res.status}`);
-        throw new Error(`Failed to fetch prompts: ${res.status}`);
+        console.error(`[API请求] 失败: ${url.toString()}, 状态码: ${res.status}`);
+        throw new Error(`获取提示词失败: ${res.status}`);
       }
+      
       const data = await res.json();
       
       // 计算请求耗时并记录
       const endTime = performance.now();
-      console.log(`[API请求] 完成: ${apiUrl}, 耗时: ${(endTime - startTime).toFixed(2)}ms, 获取到 ${data.data?.length || 0} 条数据`);
+      console.log(`[API请求] 完成: ${url.toString()}, 耗时: ${(endTime - startTime).toFixed(2)}ms, 获取到 ${data.data?.length || 0} 条数据`);
 
-      // 直接使用从 API 获取的数据，因为 API 已经处理了过滤和排序
+      // 设置数据和分页信息
       setAllPrompts(data.data || []);
-      // 更新分页信息（如果 API 返回了分页信息）
       if (data.pagination) {
-          setPaginationInfo(data.pagination);
+        setPaginationInfo(data.pagination);
       }
 
     } catch (err) {
-      console.error('[API请求] 错误:', err);
-      setError(err.message);
-      setAllPrompts([]); // 出错时清空列表
-      setPaginationInfo({ // 出错时重置分页信息
-          totalPages: 1,
-          hasMore: false,
-          currentPage: 1,
+      if (err.name === 'AbortError') {
+        console.error('[API请求] 请求超时');
+        setError('请求超时，请稍后重试');
+      } else {
+        console.error('[API请求] 错误:', err);
+        setError(err.message);
+      }
+      
+      setAllPrompts([]);
+      setPaginationInfo({
+        totalPages: 1,
+        hasMore: false,
+        currentPage: 1,
       });
     } finally {
       setLoading(false);

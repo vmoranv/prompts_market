@@ -43,10 +43,14 @@ export default async function handler(req, res) {
         // 尝试从缓存获取数据
         const cachedData = getCached(cacheKey);
         if (cachedData) {
+          console.log(`[MongoDB] 缓存命中: ${cacheKey}`);
           return res.status(200).json(cachedData);
         }
 
         let query = {};
+        
+        // 记录查询开始时间
+        const queryStartTime = performance.now();
 
         // 构建查询条件
         if (userId && status === 'all') {
@@ -141,6 +145,15 @@ export default async function handler(req, res) {
         // 日志输出
         if (process.env.NODE_ENV === 'development') {
           console.log(`缓存已更新: ${cacheKey.substring(0, 50)}..., 类型: ${cacheType}`);
+        }
+
+        // 在查询完成后添加性能日志
+        const queryEndTime = performance.now();
+        console.log(`[MongoDB] 查询完成，耗时: ${(queryEndTime - queryStartTime).toFixed(2)}ms，结果数: ${prompts.length}`);
+        
+        // 确保为慢查询添加警告日志
+        if (queryEndTime - queryStartTime > 1000) {
+          console.warn(`[MongoDB] 检测到慢查询: ${cacheKey}，耗时: ${(queryEndTime - queryStartTime).toFixed(2)}ms`);
         }
 
         res.status(200).json(responseData);
