@@ -46,6 +46,11 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   const [error, setError] = useState(null);
   const [filterTag, setFilterTag] = useState('');
   const [skipInitialFetch, setSkipInitialFetch] = useState(loadedFromSSR);
+  const [allLoadedPrompts, setAllLoadedPrompts] = useState(initialPrompts || []);
+  const [filteredPrompts, setFilteredPrompts] = useState(initialPrompts || []);
+  const [searchMode, setSearchMode] = useState('local'); // 'local' 或 'server'
+  const [hasMoreData, setHasMoreData] = useState(true); // 标记是否还有更多数据可加载
+  const [isChangingPage, setIsChangingPage] = useState(false);
   
   // 判断当前用户是否为管理员
   const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS ? process.env.NEXT_PUBLIC_ADMIN_EMAILS.split(',') : [];
@@ -58,11 +63,51 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
     { value: 'viewCount', label: '最多浏览', icon: MdVisibility },
   ];
   
-  // 搜索处理函数
+  // 搜索处理函数优化
   const handleSearch = (e) => {
     e.preventDefault();
-    setCurrentPage(1); // 搜索时重置到第一页
-    setIsSearching(true);
+    
+    // 决定搜索模式: 本地或服务器
+    // 如果搜索内容较短且已加载数据足够多，使用本地搜索
+    if (search.length <= 3 && allLoadedPrompts.length >= 30) {
+      setSearchMode('local');
+      performLocalSearch(search);
+    } else {
+      setSearchMode('server');
+      setCurrentPage(1); // 搜索时重置到第一页
+      setIsSearching(true);
+    }
+  };
+  
+  // 添加本地搜索实现
+  const performLocalSearch = (searchTerm) => {
+    if (!searchTerm.trim()) {
+      setFilteredPrompts(allLoadedPrompts);
+      return;
+    }
+    
+    setLoading(true);
+    const term = searchTerm.toLowerCase().trim();
+    
+    // 使用本地数据进行过滤
+    const results = allLoadedPrompts.filter(prompt => 
+      prompt.title?.toLowerCase().includes(term) || 
+      prompt.content?.toLowerCase().includes(term) || 
+      prompt.tag?.some(t => t.toLowerCase().includes(term))
+    );
+    
+    setFilteredPrompts(results);
+    
+    // 更新分页信息
+    setPaginationInfo({
+      totalPrompts: results.length,
+      totalPages: Math.ceil(results.length / 12),
+      currentPage: 1,
+      pageSize: 12,
+      hasMore: results.length > 12
+    });
+    
+    setLoading(false);
   };
   
   // 清除搜索
@@ -88,6 +133,7 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   // 分页处理函数
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= (paginationInfo.totalPages || 1)) {
+      setIsChangingPage(true);
       setCurrentPage(newPage);
     }
   };
@@ -113,7 +159,18 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   const fetchPrompts = async () => {
     // 如果使用SSR数据且是首次加载，则跳过请求
     if (skipInitialFetch) {
+      console.log('[API请求] 跳过初始请求，使用SSR数据');
       setSkipInitialFetch(false);
+      
+      // 将SSR数据添加到本地缓存
+      setAllLoadedPrompts(initialPrompts);
+      setFilteredPrompts(initialPrompts);
+      return;
+    }
+    
+    // 如果是本地搜索模式且不是翻页操作，直接使用已有数据
+    if (searchMode === 'local' && !isChangingPage) {
+      performLocalSearch(debouncedSearch);
       return;
     }
     
@@ -122,6 +179,7 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
     
     // 防止重复请求
     if (requestIdentifier === latestRequestRef.current) {
+      console.log(`[API请求] 跳过重复请求: ${requestIdentifier}`);
       return;
     }
     
@@ -190,10 +248,32 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
         console.warn(`[API请求] 检测到慢请求: ${url.toString()}, 耗时: ${queryTime}ms`);
       }
 
-      // 设置数据和分页信息
+      // 在获取到数据后，更新本地缓存
+      if (currentPage === 1) {
+        setAllLoadedPrompts(data.data || []);
+      } else {
+        // 合并新数据，避免重复
+        const newPromptsMap = new Map(data.data.map(p => [p._id, p]));
+        const updatedPrompts = [...allLoadedPrompts];
+        
+        // 添加新提示词，避免重复
+        data.data.forEach(prompt => {
+          if (!updatedPrompts.some(p => p._id === prompt._id)) {
+            updatedPrompts.push(prompt);
+          }
+        });
+        
+        setAllLoadedPrompts(updatedPrompts);
+      }
+      
+      // 设置当前页面显示的提示词
       setAllPrompts(data.data || []);
+      setFilteredPrompts(data.data || []);
+      
+      // 根据分页信息判断是否还有更多数据
       if (data.pagination) {
         setPaginationInfo(data.pagination);
+        setHasMoreData(data.pagination.hasMore);
       }
 
     } catch (err) {
@@ -290,13 +370,24 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
     );
   };
 
-  useEffect(() => {
-    // 添加一个标志，避免重复请求
-    const requestId = `${currentPage}-${sortBy}-${sortOrder}-${debouncedSearch}`;
+  // 添加加载更多函数
+  const loadMorePrompts = async () => {
+    if (!hasMoreData || loading) return;
     
-    fetchPrompts();
+    setIsChangingPage(true);
+    setCurrentPage(prev => prev + 1);
+  };
+
+  useEffect(() => {
+    // 当使用服务器搜索模式时，或本地搜索但缓存数据不足时，发起请求
+    if (searchMode === 'server' || (searchMode === 'local' && allLoadedPrompts.length < 30)) {
+      fetchPrompts();
+    } else if (searchMode === 'local') {
+      // 否则使用本地搜索
+      performLocalSearch(debouncedSearch);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, sortBy, sortOrder, debouncedSearch]);
+  }, [currentPage, sortBy, sortOrder, debouncedSearch, searchMode]);
 
   return (
     <div className={styles.container}>
@@ -341,9 +432,9 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
                 <MdSearch className={styles.searchIcon} />
                 <input
                   type="text"
-                  value={search}
-                  onChange={handleSearchChange}
                   placeholder="搜索提示词或标签..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                   className={styles.searchInput}
                 />
               </div>
@@ -455,31 +546,28 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   );
 }
 
-export async function getServerSideProps() {
+export async function getStaticProps() {
   try {
     await dbConnect();
-    
-    // 确保在查询前导入所有需要的模型 
-    console.log('[SSR] 开始查询初始提示词...');
+
+    console.log('[ISR] 开始查询初始提示词...');
     const startTime = performance.now();
 
-    // 优化查询，避免在SSR阶段进行populate操作
     const query = { status: 'published' };
     const prompts = await Prompt.find(query)
       .select('title content tag likesCount viewCount author createdAt')
       .sort({ createdAt: -1 })
-      .limit(12)
-      .lean(); // 使用lean()提高性能
-    
-    // 手动获取作者信息，避免populate错误
+      .limit(24)
+      .lean();
+
     const authorIds = [...new Set(prompts.filter(p => p.author).map(p => p.author))];
-    
+
     let authorsMap = {};
     if (authorIds.length > 0) {
       const authors = await User.find({ _id: { $in: authorIds } })
         .select('name image')
         .lean();
-      
+
       authorsMap = authors.reduce((map, author) => {
         map[author._id.toString()] = {
           _id: author._id,
@@ -489,8 +577,7 @@ export async function getServerSideProps() {
         return map;
       }, {});
     }
-    
-    // 手动填充作者信息
+
     const promptsWithAuthors = prompts.map(prompt => {
       const authorId = prompt.author ? prompt.author.toString() : null;
       return {
@@ -498,25 +585,26 @@ export async function getServerSideProps() {
         author: authorId && authorsMap[authorId] ? authorsMap[authorId] : null
       };
     });
-    
+
     const endTime = performance.now();
-    console.log(`[SSR] 查询完成，耗时: ${(endTime - startTime).toFixed(2)}ms，结果数: ${promptsWithAuthors.length}`);
+    console.log(`[ISR] 查询完成，耗时: ${(endTime - startTime).toFixed(2)}ms，结果数: ${promptsWithAuthors.length}`);
 
     return {
       props: {
         initialPrompts: JSON.parse(JSON.stringify(promptsWithAuthors)),
-        loadedFromSSR: true, // 标记数据来源于SSR
+        loadedFromSSR: true, // 标记数据来源于静态生成
       },
+      revalidate: 60, // 每 60 秒重新生成一次页面
     };
   } catch (error) {
-    console.error('[SSR] 预加载Prompts失败:', error);
-    
-    // 出错时返回空数组，但不中断渲染
+    console.error('[ISR] 预加载Prompts失败:', error);
+
     return {
       props: {
         initialPrompts: [],
-        loadedFromSSR: false, // 标记SSR加载失败
+        loadedFromSSR: false,
       },
+      revalidate: 60,
     };
   }
 } 

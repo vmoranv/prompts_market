@@ -24,8 +24,9 @@ const PromptSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'published', 'rejected', 'archived'],
-    default: 'pending', // 新创建的 Prompt 默认为待审核
+    enum: ['draft', 'published', 'archived'],
+    default: 'draft',
+    required: true,
   },
   likesCount: {
     type: Number,
@@ -69,6 +70,11 @@ PromptSchema.index({ tags: 1 }); // 标签索引 (这是之前重复的索引)
 PromptSchema.index({ title: "text", content: "text" }); // 全文索引用于搜索
 PromptSchema.index({ viewCount: -1 }); // 浏览量索引，用于热门排序
 PromptSchema.index({ likesCount: -1 }); // 点赞数索引，用于热门排序
+
+// 添加索引
+PromptSchema.index({ status: 1, createdAt: -1 });
+PromptSchema.index({ status: 1, likesCount: -1 });
+PromptSchema.index({ status: 1, viewCount: -1 });
 
 // 自动更新updatedAt字段
 PromptSchema.pre('save', function(next) {
