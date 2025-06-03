@@ -1,5 +1,6 @@
 # 🚀 Prompt 市场
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/vmoranv/prompts_market)
 ![Project Status](https://img.shields.io/badge/status-active-success.svg)
 ![Next.js Version](https://img.shields.io/badge/next.js-14.2.3-blue.svg)
 ![MongoDB Atlas](https://img.shields.io/badge/MongoDB-7.0-green.svg)
@@ -53,8 +54,8 @@ graph TD
 ### 本地开发
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/<your-username>/prompt-marketplace.git
-cd prompt-marketplace
+git clone https://github.com/vmoranv/prompts_market.git
+cd prompts_market
 
 # 2. 安装依赖
 pnpm install  # 推荐使用pnpm
