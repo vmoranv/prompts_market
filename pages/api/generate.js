@@ -60,7 +60,20 @@ export default async function handler(req, res) {
   const userIdentifier = `${userId}_${userIP}`;
   
   // 获取请求中的参数
-  const { messages, provider, model, apiKey, useDefaultKey } = req.body;
+  const { messages, provider, model, apiKey, useDefaultKey, isQueueRequest } = req.body;
+  
+  // 添加调试信息
+  console.log('API 收到请求:', {
+    provider,
+    model,
+    messageCount: messages?.length || 0,
+    isQueueRequest: isQueueRequest || false,
+    userId: userId.substring(0, 10) + '...',
+    messagesPreview: messages?.slice(-2)?.map(msg => ({
+      role: msg.role,
+      content: msg.content?.substring(0, 100) + '...'
+    })) || []
+  });
   
   // 增强的速率限制检查
   if (useDefaultKey) {
@@ -68,37 +81,51 @@ export default async function handler(req, res) {
     const lastRequest = userRequestCache.get(userIdentifier) || 0;
     const timeElapsed = (now - lastRequest) / 1000;
     
-    // 对于默认密钥用户，限制更严格（30秒一次）
-    if (timeElapsed < 30) {
-      return res.status(429).json({
-        success: false,
-        error: `请求过于频繁，请在 ${Math.ceil(30 - timeElapsed)} 秒后再试`,
-        remainingTime: Math.ceil(30 - timeElapsed)
-      });
+    // 如果是队列请求，使用更宽松的限制
+    if (isQueueRequest) {
+      // 队列请求之间只需要很短的间隔（2秒），防止过度并发
+      if (timeElapsed < 2) {
+        return res.status(429).json({
+          success: false,
+          error: `队列处理过于频繁，请等待 ${Math.ceil(2 - timeElapsed)} 秒`,
+          remainingTime: Math.ceil(2 - timeElapsed)
+        });
+      }
+    } else {
+      // 对于用户主动发起的请求，限制更严格（30秒一次）
+      if (timeElapsed < 30) {
+        return res.status(429).json({
+          success: false,
+          error: `请求过于频繁，请在 ${Math.ceil(30 - timeElapsed)} 秒后再试`,
+          remainingTime: Math.ceil(30 - timeElapsed)
+        });
+      }
     }
     
     // 更新最后请求时间
     userRequestCache.set(userIdentifier, now);
     
     // 可选：添加日志记录用于监控
-    console.log(`用户 ${userId} (IP: ${userIP}) 使用默认密钥发起请求`);
+    console.log(`用户 ${userId} (IP: ${userIP}) 使用默认密钥发起${isQueueRequest ? '队列' : '常规'}请求`);
   } else {
     // 即使使用自定义密钥，也要有基本的速率限制防止滥用
     const now = Date.now();
     const lastRequest = userRequestCache.get(userIdentifier) || 0;
     const timeElapsed = (now - lastRequest) / 1000;
     
-    // 自定义密钥用户限制较宽松（10秒一次）
-    if (timeElapsed < 10) {
+    // 自定义密钥用户限制较宽松
+    const limitTime = isQueueRequest ? 1 : 10; // 队列请求1秒，常规请求10秒
+    if (timeElapsed < limitTime) {
       return res.status(429).json({
         success: false,
-        error: `请求过于频繁，请在 ${Math.ceil(10 - timeElapsed)} 秒后再试`,
-        remainingTime: Math.ceil(10 - timeElapsed)
+        error: `请求过于频繁，请在 ${Math.ceil(limitTime - timeElapsed)} 秒后再试`,
+        remainingTime: Math.ceil(limitTime - timeElapsed)
       });
     }
     
     userRequestCache.set(userIdentifier, now);
   }
+
   
   // 决定使用哪个API密钥
   let effectiveApiKey;

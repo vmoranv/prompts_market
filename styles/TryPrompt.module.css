@@ -765,3 +765,299 @@
   100% { transform: rotate(360deg); }
 }
 
+/* 多 Prompt 对话页面专用样式 */
+
+/* Prompt 队列显示样式 */
+.promptQueueList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: var(--md-surface-container-lowest);
+  border-radius: 8px;
+}
+
+.promptQueueItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--md-surface);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.promptQueueItem:hover {
+  background-color: var(--md-surface-variant);
+  border-color: var(--md-primary);
+}
+
+.promptOrder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.promptTitle {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-on-surface);
+}
+
+.removePromptButton {
+  background: none;
+  border: none;
+  color: var(--md-error);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.removePromptButton:hover {
+  background-color: var(--md-error-container);
+  color: var(--md-on-error-container);
+}
+
+/* Prompt 管理样式 */
+.promptManagement {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.availablePrompts,
+.currentQueue {
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.availablePrompts h4,
+.currentQueue h4 {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background-color: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.promptList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.promptItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--md-outline-variant);
+  transition: background-color 0.2s ease;
+}
+
+.promptItem:last-child {
+  border-bottom: none;
+}
+
+.promptItem:hover {
+  background-color: var(--md-surface-variant);
+}
+
+.promptItemSelected {
+  background-color: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+}
+
+.promptInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.promptName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-on-surface);
+}
+
+.promptDescription {
+  font-size: 0.75rem;
+  color: var(--md-on-surface-variant);
+  line-height: 1.3;
+}
+
+.addPromptButton {
+  background-color: var(--md-primary);
+  color: var(--md-on-primary);
+  border: none;
+  border-radius: 20px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addPromptButton:hover:not(:disabled) {
+  background-color: var(--md-primary-dark);
+  transform: scale(1.1);
+}
+
+.addPromptButton:disabled {
+  background-color: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  cursor: not-allowed;
+}
+
+/* 当前队列样式 */
+.queueList {
+  display: flex;
+  flex-direction: column;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.queueItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--md-outline-variant);
+  transition: background-color 0.2s ease;
+}
+
+.queueItem:last-child {
+  border-bottom: none;
+}
+
+.queueItem:hover {
+  background-color: var(--md-surface-variant);
+}
+
+.queueOrder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: var(--md-secondary);
+  color: var(--md-on-secondary);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.queuePromptName {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--md-on-surface);
+}
+
+.removeQueueButton {
+  background: none;
+  border: none;
+  color: var(--md-error);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.removeQueueButton:hover {
+  background-color: var(--md-error-container);
+  color: var(--md-on-error-container);
+}
+
+/* 消息时间戳样式 */
+.messageTime {
+  font-size: 0.625rem;
+  color: var(--md-on-surface-variant);
+  margin-left: 0.5rem;
+  opacity: 0.7;
+}
+
+/* 加载容器样式 */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: var(--md-background);
+}
+
+.loadingSpinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--md-outline);
+  border-top: 3px solid var(--md-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loadingText {
+  font-size: 0.875rem;
+  color: var(--md-on-surface-variant);
+}
+
+/* 错误状态样式优化 */
+.message.errorMessage {
+  border-left: 4px solid var(--md-error);
+  background-color: var(--md-error-container);
+  color: var(--md-on-error-container);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .promptQueueItem {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+  
+  .promptOrder {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.625rem;
+  }
+  
+  .promptTitle {
+    font-size: 0.8125rem;
+  }
+  
+  .promptManagement {
+    gap: 0.75rem;
+  }
+  
+  .promptList {
+    max-height: 150px;
+  }
+  
+  .queueList {
+    max-height: 120px;
+  }
+}
