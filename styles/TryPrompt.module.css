@@ -31,39 +31,32 @@
 }
 
 .settingsButton {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--md-surface-variant, rgba(231, 224, 236, 0.8));
+  color: var(--md-on-surface-variant, rgba(73, 69, 78, 1));
+  border: 1px solid var(--md-outline-variant, rgba(202, 196, 208, 1));
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  padding: 0.75rem;
-  border-radius: 50%;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.settingsButton::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: var(--md-primary-container);
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  transform: translate(-50%, -50%);
-  z-index: -1;
-}
-
-.settingsButton:hover::before {
-  width: 100%;
-  height: 100%;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-elevation-low);
+  height: 2.5rem;
 }
 
 .settingsButton:hover {
-  color: var(--md-primary);
-  transform: scale(1.05);
+  background-color: var(--md-surface-variant-hover, rgba(231, 224, 236, 1));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-elevation-medium);
+}
+
+.settingsButton:active {
+  transform: translateY(0);
+  background-color: var(--md-surface-variant-active, rgba(221, 214, 226, 1));
 }
 
 .sendButton {
@@ -256,7 +249,8 @@
   gap: 0.75rem;
   margin-top: 2rem;
   justify-content: space-between;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .saveButton,
