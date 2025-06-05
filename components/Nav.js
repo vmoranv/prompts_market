@@ -175,7 +175,15 @@ export default function Nav({ unreadNotificationsCount = 0 }) {
                 <Link href="/create-prompt" className={styles.mobileMenuItem} onClick={closeMobileMenu}>
                   <MdAddCircleOutline size={20} />
                   <span>创建 Prompt</span>
-                </Link>                {/* 邮件通知 */}
+                </Link> 
+                
+                {/* 多Prompt聊天 */}
+                <Link href="/try-prompt" className={styles.mobileMenuItem} onClick={closeMobileMenu}>
+                  <MdChat size={20} />
+                  <span>多Prompt聊天</span>
+                </Link>
+
+                {/* 邮件通知 */}
                 <div 
                   className={`${styles.mobileMenuItem} ${styles.mobileMenuItemSpecial}`}
                   onClick={() => {
