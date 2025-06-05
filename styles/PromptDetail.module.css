@@ -143,8 +143,9 @@
 /* 按钮容器样式 */
 .buttonContainer {
   display: flex;
-  gap: 0.75rem; /* 保持按钮间距一致 */
-  align-items: center;
+  flex-wrap: wrap; /* 允许按钮换行 */
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .contentWrapper {
@@ -627,6 +628,22 @@
   }
 
   .commentContent {
+    font-size: 0.9rem;
+  }
+
+  .buttonContainer {
+    justify-content: flex-start; /* 左对齐 */
+    gap: 0.5rem;
+  }
+  
+  .tryButton,
+  .editButton,
+  .copyButton,
+  .actionButton {
+    flex: 1 1 30%; /* 每个按钮占据30%宽度，可以换行 */
+    min-width: 100px; /* 最小宽度防止过小 */
+    justify-content: center;
+    padding: 0.5rem;
     font-size: 0.9rem;
   }
 }
