@@ -359,9 +359,25 @@
   display: inline-block;
 }
 
+.collapseIcon.collapsed {
+  transform: rotate(45deg);
+}
+
+.collapseIcon.expanded {
+  transform: rotate(0deg);
+}
+
 .systemPromptHeader:hover .collapseIcon {
   color: var(--md-primary);
-  transform: scale(1.1);
+  transform: scale(1.1) rotate(var(--rotation, 0deg));
+}
+
+.systemPromptHeader:hover .collapseIcon.collapsed {
+  --rotation: 45deg;
+}
+
+.systemPromptHeader:hover .collapseIcon.expanded {
+  --rotation: 0deg;
 }
 
 .systemPromptContent {
@@ -775,8 +791,54 @@
   padding: 1rem;
   background-color: var(--md-surface-container-lowest);
   border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top;
+  overflow: hidden;
 }
 
+.queueSlideDown {
+  animation: queueSlideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes queueSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.8);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    max-height: 500px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+.queueSlideUp {
+  animation: queueSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes queueSlideUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    max-height: 500px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.8);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* 队列项目的交错动画 */
 .promptQueueItem {
   display: flex;
   align-items: center;
@@ -786,7 +848,22 @@
   border: 1px solid var(--md-outline-variant);
   border-radius: 8px;
   transition: all 0.2s ease;
+  animation: queueItemSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateX(-20px);
 }
+
+@keyframes queueItemSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 
 .promptQueueItem:hover {
   background-color: var(--md-surface-variant);

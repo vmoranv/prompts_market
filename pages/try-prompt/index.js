@@ -35,7 +35,9 @@ export default function TryPromptConversationPage() {
   const [lastMessageTime, setLastMessageTime] = useState(0);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  
+  const [isQueueCollapsed, setIsQueueCollapsed] = useState(false);
+  const [isQueueAnimating, setIsQueueAnimating] = useState(false);
+
   // Refs
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
@@ -584,7 +586,29 @@ export default function TryPromptConversationPage() {
     }
   };
 
-  return (
+  // 处理队列折叠切换
+  const handleQueueToggle = () => {
+    if (isQueueAnimating) return; // 防止动画过程中重复触发
+    
+    setIsQueueAnimating(true);
+    
+    if (!isQueueCollapsed) {
+      // 收起时：先播放收起动画，然后设置为收起状态
+      setIsQueueCollapsed(true);
+      // 动画完成后重置动画状态
+      setTimeout(() => {
+        setIsQueueAnimating(false);
+      }, 300);
+    } else {
+      // 展开时：先设置为展开状态，然后播放展开动画
+      setIsQueueCollapsed(false);
+      setTimeout(() => {
+        setIsQueueAnimating(false);
+      }, 300);
+    }
+  };
+
+    return (
     <>
       <Head>
         <title>多 Prompt 对话 - Promptopia</title>
@@ -619,26 +643,49 @@ export default function TryPromptConversationPage() {
           {/* Prompt 队列显示 */}
           {promptQueue.length > 0 && (
             <div className={styles.systemPrompt}>
-              <div className={styles.systemPromptHeader}>
+              <div 
+                className={styles.systemPromptHeader}
+                onClick={handleQueueToggle}
+              >
                 <h3>当前 Prompt 队列 ({promptQueue.length})</h3>
+                <span className={`${styles.collapseIcon} ${isQueueCollapsed ? styles.collapsed : styles.expanded}`}>
+                  {isQueueCollapsed ? '+' : '-'}
+                </span>
               </div>
-              <div className={styles.promptQueueList}>
-                {promptQueue.map((prompt, index) => (
-                  <div key={prompt._id} className={styles.promptQueueItem}>
-                    <span className={styles.promptOrder}>{index + 1}</span>
-                    <span className={styles.promptTitle}>{prompt.title}</span>
-                    <button
-                      className={styles.removePromptButton}
-                      onClick={() => removePromptFromQueue(prompt._id)}
-                      title="移除"
+              {(!isQueueCollapsed || isQueueAnimating) && (
+                <div 
+                  className={`${styles.promptQueueList} ${
+                    isQueueCollapsed && isQueueAnimating ? styles.queueSlideUp : styles.queueSlideDown
+                  }`}
+                  key={isQueueCollapsed ? "queue-collapsing" : "queue-expanded"}
+                >
+                  {promptQueue.map((prompt, index) => (
+                    <div 
+                      key={prompt._id} 
+                      className={styles.promptQueueItem}
+                      style={{
+                        animationDelay: isQueueCollapsed ? `${(promptQueue.length - index - 1) * 0.03}s` : `${index * 0.05}s`
+                      }}
                     >
-                      <MdDelete size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                      <span className={styles.promptOrder}>{index + 1}</span>
+                      <span className={styles.promptTitle}>{prompt.title}</span>
+                      <button
+                        className={styles.removePromptButton}
+                        onClick={(e) => {
+                          e.stopPropagation(); // 防止触发折叠
+                          removePromptFromQueue(prompt._id);
+                        }}
+                        title="移除"
+                      >
+                        <MdDelete size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
+
           
           {/* 消息列表 */}
           <div 
