@@ -146,3 +146,47 @@
   padding: 50px;
   font-size: 1.5em;
 } 
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0;
+  padding: 20px;
+}
+
+.pageButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #333;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  min-width: 44px;
+  justify-content: center;
+}
+
+.pageButton:hover:not(.disabled) {
+  background-color: #f5f5f5;
+  border-color: #999;
+}
+
+.pageButton.disabled {
+  background-color: #f9f9f9;
+  color: #ccc;
+  cursor: not-allowed;
+  border-color: #eee;
+}
+
+.pageInfo {
+  margin: 0 15px;
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+}

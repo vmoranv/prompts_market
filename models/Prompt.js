@@ -60,9 +60,6 @@ function arrayLimit(val) {
   return val.length <= 10;
 }
 
-// 移除Schema定义中的索引属性，统一在这里定义所有索引
-// 删除tag字段上的index:true属性，改为在这里定义
-
 // 增加复合索引来提高常见查询性能
 PromptSchema.index({ status: 1, createdAt: -1 }); // 状态和创建时间的复合索引
 PromptSchema.index({ author: 1, status: 1 }); // 作者和状态的复合索引

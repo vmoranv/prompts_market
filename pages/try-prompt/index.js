@@ -815,9 +815,6 @@ export default function TryPromptConversationPage() {
                   >
                     <div className={styles.promptInfo}>
                       <span className={styles.promptName}>{prompt.title}</span>
-                      <span className={styles.promptDescription}>
-                        {prompt.description || '暂无描述'}
-                      </span>
                     </div>
                     <button
                       className={styles.addPromptButton}

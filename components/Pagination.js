@@ -8,8 +8,18 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
     return null;
   }
 
-  // 生成页码数组
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  // 计算要显示的页码范围
+  const maxDisplayedPages = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxDisplayedPages / 2));
+  let endPage = Math.min(totalPages, startPage + maxDisplayedPages - 1);
+  
+  // 调整起始页，确保显示足够的页码
+  if (endPage - startPage + 1 < maxDisplayedPages) {
+    startPage = Math.max(1, endPage - maxDisplayedPages + 1);
+  }
+  
+  // 生成页码数组 - 只显示部分页码以避免过多按钮
+  const pages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 
   return (
     <div className={styles.pagination}>

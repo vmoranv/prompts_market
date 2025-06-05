@@ -1,5 +1,5 @@
 import dbConnect from '../lib/dbConnect';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import styles from '../styles/Home.module.css';
 import PromptsList from '../components/PromptsList';
 import Head from 'next/head';
@@ -27,7 +27,7 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
-export default function Home({ initialPrompts, loadedFromSSR }) {
+export default function Home({ initialPrompts, loadedFromSSR, initialPagination }) {
   const { data: session, status: sessionStatus } = useSession();
   const prevSessionStatus = useRef(null);
   const { isDark } = useTheme();
@@ -36,11 +36,15 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   const [isSearching, setIsSearching] = useState(false);
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [paginationInfo, setPaginationInfo] = useState({
-    totalPages: 1,
-    hasMore: false,
-    currentPage: 1,
-  });
+  const [paginationInfo, setPaginationInfo] = useState(
+    initialPagination || {
+      totalPages: Math.max(1, Math.ceil((initialPrompts?.length || 0) / 12)),
+      hasMore: (initialPrompts?.length || 0) > 12,
+      currentPage: 1,
+      totalPrompts: initialPrompts?.length || 0,
+      pageSize: 12
+    }
+  );
   const [allPrompts, setAllPrompts] = useState(initialPrompts || []);
   const [loading, setLoading] = useState(!loadedFromSSR);
   const [error, setError] = useState(null);
@@ -132,12 +136,20 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   
   // 分页处理函数
   const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= (paginationInfo.totalPages || 1)) {
+    if (newPage >= 1 && newPage <= (paginationInfo.totalPages || 1) && newPage !== currentPage) {
+      // 重置状态
       setIsChangingPage(true);
+      setError(null); // 清除可能的错误信息
       setCurrentPage(newPage);
+      
+      // 强制使用服务器模式，确保获取正确页面数据
+      setSearchMode('server');
+      
+      // 强制设置加载状态，确保UI反馈
+      setLoading(true);
     }
   };
-  
+
   // 回调函数，用于接收 PromptsList 传递的分页信息
   const handlePaginationUpdate = (newPagination) => {
     setPaginationInfo(newPagination);
@@ -165,20 +177,25 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
       // 将SSR数据添加到本地缓存
       setAllLoadedPrompts(initialPrompts);
       setFilteredPrompts(initialPrompts);
+      // 确保分页信息已正确设置
+      if (initialPagination) {
+        setPaginationInfo(initialPagination);
+      }
+      setIsChangingPage(false);
       return;
     }
-    
+
     // 如果是本地搜索模式且不是翻页操作，直接使用已有数据
     if (searchMode === 'local' && !isChangingPage) {
       performLocalSearch(debouncedSearch);
       return;
     }
-    
+
     // 构建请求标识符
-    const requestIdentifier = `${currentPage}-${sortBy}-${sortOrder}-${debouncedSearch || 'no-search'}`;
-    
-    // 防止重复请求
-    if (requestIdentifier === latestRequestRef.current) {
+    const requestIdentifier = `${currentPage}-${sortBy}-${sortOrder}-${debouncedSearch || 'no-search'}-${isChangingPage ? 'page-change' : 'normal'}`;
+
+    // 防止重复请求，但翻页操作始终允许发送新请求
+    if (requestIdentifier === latestRequestRef.current && !isChangingPage) {
       console.log(`[API请求] 跳过重复请求: ${requestIdentifier}`);
       return;
     }
@@ -195,15 +212,16 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
       const url = new URL('/api/prompts', window.location.origin);
       url.searchParams.append('sort', sortString);
       url.searchParams.append('page', currentPage.toString());
-      
-      // 添加其他查询参数
-      if (session?.user?.id) {
+
+      // 修复：仅在个人页面时添加用户ID，确保公共页面不会被筛选为用户内容
+      const isPersonalPage = window.location.pathname.includes('/profile');
+      if (isPersonalPage && session?.user?.id) {
         url.searchParams.append('userId', session.user.id);
         url.searchParams.append('status', 'all'); 
       } else {
         url.searchParams.append('status', 'published');
       }
-      
+            
       // 如果有搜索词，添加搜索参数
       if (debouncedSearch) {
         url.searchParams.append('search', debouncedSearch);
@@ -265,15 +283,44 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
         
         setAllLoadedPrompts(updatedPrompts);
       }
-      
+
       // 设置当前页面显示的提示词
-      setAllPrompts(data.data || []);
-      setFilteredPrompts(data.data || []);
-      
+      const newPrompts = data.data || [];
+      if (newPrompts.length > 0 || isChangingPage) { // 即使数据为空也要更新，确保翻页生效
+        setAllPrompts(newPrompts);
+        // 如果是搜索结果或翻页操作也更新过滤后的提示词
+        if (isSearching || isChangingPage) {
+          setFilteredPrompts(newPrompts);
+        }
+      } else if (newPrompts.length === 0 && currentPage === 1) {
+        // 只有在第一页没有数据时才显示空结果
+        setAllPrompts([]);
+        setFilteredPrompts([]);
+        console.warn(`[数据更新] 警告：获取到空数据`);
+      } else {
+        console.warn(`[数据更新] 警告：获取到空数据，保留当前显示`);
+      }
+
       // 根据分页信息判断是否还有更多数据
       if (data.pagination) {
-        setPaginationInfo(data.pagination);
+        setPaginationInfo({
+          ...data.pagination,
+          totalPages: data.pagination.totalPages || 1,
+          currentPage: currentPage
+        });
         setHasMoreData(data.pagination.hasMore);
+        // 重置翻页状态
+        setIsChangingPage(false);
+      } else {
+        // 如果没有分页信息，设置默认值
+        setPaginationInfo({
+          totalPages: 1,
+          hasMore: false,
+          currentPage: currentPage,
+          totalPrompts: data.data ? data.data.length : 0,
+          pageSize: 12
+        });
+        setIsChangingPage(false);
       }
 
     } catch (err) {
@@ -285,14 +332,17 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
         setError(err.message);
       }
       
-      setAllPrompts([]);
-      setPaginationInfo({
-        totalPages: 1,
-        hasMore: false,
-        currentPage: 1,
-      });
+      // 错误时记录错误，但保留现有数据
+      console.error(`[API错误] ${err.message}`);
+      
+      // 如果是翻页操作失败，重置为原来的页码
+      if (isChangingPage) {
+        console.warn(`[翻页失败] 重置回第${currentPage}页`);
+        setCurrentPage(prev => Math.max(1, prev)); // 保持当前页码，避免返回第一页
+      }
     } finally {
       setLoading(false);
+      setIsChangingPage(false);
     }
   };
 
@@ -346,10 +396,19 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
     );
   };
 
-  // 根据搜索文本或过滤标签显示 Prompt
-  const displayedPrompts = search
-    ? filterPrompts(search)
-    : filterPromptsByTag(filterTag);
+  // 根据搜索文本或过滤标签显示 Prompt - 修复翻页数据展示问题
+  const displayedPrompts = useMemo(() => {
+    // 如果有搜索内容，使用搜索过滤结果
+    if (search) {
+      return searchMode === 'local' ? filteredPrompts : allPrompts;
+    }
+    // 如果有标签过滤，使用标签过滤
+    if (filterTag) {
+      return filterPromptsByTag(filterTag);
+    }
+    // 默认显示当前页面的所有prompts
+    return allPrompts;
+  }, [search, filterTag, allPrompts, filteredPrompts, searchMode]);
   
   // 处理点赞成功后的 Prompt 列表更新
   const handleLikeSuccess = (promptId, newLikesCount, likedByCurrentUser) => {
@@ -379,15 +438,22 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
   };
 
   useEffect(() => {
-    // 当使用服务器搜索模式时，或本地搜索但缓存数据不足时，发起请求
+    // 等待会话加载完成
+    if (sessionStatus === 'loading') return;
+    
+    // 翻页操作需要特别处理以确保获取正确数据
+    if (isChangingPage) {
+      fetchPrompts();
+      return;
+    }
+    
+    // 根据情况处理搜索模式
     if (searchMode === 'server' || (searchMode === 'local' && allLoadedPrompts.length < 30)) {
       fetchPrompts();
     } else if (searchMode === 'local') {
-      // 否则使用本地搜索
       performLocalSearch(debouncedSearch);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, sortBy, sortOrder, debouncedSearch, searchMode]);
+  }, [currentPage, sortBy, sortOrder, debouncedSearch, searchMode, sessionStatus, isChangingPage]);
 
   return (
     <div className={styles.container}>
@@ -480,6 +546,8 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
           <p>加载中...</p>
         ) : error ? (
           <p className={styles.error}>加载 Prompt 失败: {error}</p>
+        ) : displayedPrompts.length === 0 ? (
+          <p>当前页面没有找到提示词</p>
         ) : (
           <PromptsList 
             data={displayedPrompts}
@@ -489,17 +557,18 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
             sortBy={getSortString()}
             onLikeSuccess={handleLikeSuccess}
             onDeleteSuccess={handlePromptDeleted}
+            key={`prompts-page-${currentPage}`} // 添加key确保组件重新渲染
           />
         )}
         
         {/* 分页控件 */}
-        {(paginationInfo.totalPages > 1 || paginationInfo.totalPrompts > 0) && (
+        {(paginationInfo.totalPrompts > 0 || displayedPrompts.length > 0) && (
           <div className={styles.pagination}>
             {/* 首页按钮 */}
             <button
-              onClick={() => handlePageChange(1)} // 点击跳转到第一页
-              disabled={currentPage === 1} // 当前页是第一页时禁用
-              className={styles.pageButton}
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
             >
               首页
             </button>
@@ -507,33 +576,34 @@ export default function Home({ initialPrompts, loadedFromSSR }) {
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className={styles.pageButton}
+              className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
             >
               <MdKeyboardArrowLeft />
               上一页
             </button>
             <span className={styles.pageInfo}>
-              第 {currentPage} 页 {paginationInfo.totalPages > 0 ? `/ 共 ${paginationInfo.totalPages} 页` : ''}
+              第 {currentPage} 页 / 共 {Math.max(1, paginationInfo.totalPages)} 页
             </span>
             {/* 下一页按钮 */}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
-              disabled={!paginationInfo.hasMore || currentPage >= paginationInfo.totalPages}
-              className={styles.pageButton}
+              disabled={currentPage >= paginationInfo.totalPages}
+              className={`${styles.pageButton} ${currentPage >= paginationInfo.totalPages ? styles.disabled : ''}`}
             >
               下一页
               <MdKeyboardArrowRight />
             </button>
             {/* 尾页按钮 */}
             <button
-              onClick={() => handlePageChange(paginationInfo.totalPages)} // 点击跳转到最后一页
-              disabled={currentPage === paginationInfo.totalPages} // 当前页是最后一页时禁用
-              className={styles.pageButton}
+              onClick={() => handlePageChange(paginationInfo.totalPages)}
+              disabled={currentPage === paginationInfo.totalPages}
+              className={`${styles.pageButton} ${currentPage === paginationInfo.totalPages ? styles.disabled : ''}`}
             >
               尾页
             </button>
           </div>
         )}
+
 
         {/* 添加 Vercel Speed Insights */}
         <SpeedInsights />
@@ -592,17 +662,30 @@ export async function getStaticProps() {
     return {
       props: {
         initialPrompts: JSON.parse(JSON.stringify(promptsWithAuthors)),
-        loadedFromSSR: true, // 标记数据来源于静态生成
+        loadedFromSSR: true,
+        initialPagination: {
+          totalPages: Math.ceil(promptsWithAuthors.length / 12),
+          hasMore: promptsWithAuthors.length >= 24,
+          currentPage: 1,
+          totalPrompts: promptsWithAuthors.length,
+          pageSize: 12
+        }
       },
-      revalidate: 60, // 每 60 秒重新生成一次页面
+      revalidate: 60,
     };
   } catch (error) {
     console.error('[ISR] 预加载Prompts失败:', error);
-
     return {
       props: {
         initialPrompts: [],
         loadedFromSSR: false,
+        initialPagination: {
+          totalPages: 1,
+          hasMore: false,
+          currentPage: 1,
+          totalPrompts: 0,
+          pageSize: 12
+        }
       },
       revalidate: 60,
     };
