@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { MdAddCircleOutline, MdMenu, MdClose, MdEmail, MdBrightness4 } from 'react-icons/md';
+import { MdAddCircleOutline, MdMenu, MdClose, MdEmail, MdBrightness4, MdChat } from 'react-icons/md';
 import ThemeToggle from './ThemeToggle';
 import MailDropdown from './MailDropdown';
 import { useTheme } from '../contexts/ThemeContext';
@@ -89,6 +89,11 @@ export default function Nav({ unreadNotificationsCount = 0 }) {
               {/* 创建新 Prompt 按钮 */}
               <Link href="/create-prompt" className={styles.iconLink} title="创建新 Prompt">
                 <MdAddCircleOutline size={24} />
+              </Link>
+              
+              {/* 多Prompt聊天按钮 */}
+              <Link href="/try-prompt" className={styles.iconLink} title="多Prompt聊天">
+                <MdChat size={24} />
               </Link>
               
               {/* 用户信息和登出按钮 */}
