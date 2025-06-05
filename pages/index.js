@@ -5,7 +5,7 @@ import PromptsList from '../components/PromptsList';
 import Head from 'next/head';
 import { useTheme } from '../contexts/ThemeContext';
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import { MdLightbulb, MdShare, MdSync, MdSearch, MdKeyboardArrowLeft, MdKeyboardArrowRight, MdTrendingUp, MdFavorite, MdAccessTime, MdVisibility } from 'react-icons/md';
+import { MdLightbulb, MdShare, MdSync, MdSearch, MdKeyboardArrowLeft, MdKeyboardArrowRight, MdTrendingUp, MdFavorite, MdAccessTime, MdVisibility, MdFirstPage, MdLastPage } from 'react-icons/md';
 import { useSession } from 'next-auth/react';
 import Prompt from '../models/Prompt';
 import User from '../models/User';
@@ -561,45 +561,52 @@ export default function Home({ initialPrompts, loadedFromSSR, initialPagination 
           />
         )}
         
-        {/* 分页控件 */}
+        {/* 简化的分页控件 - 移除包装div */}
         {(paginationInfo.totalPrompts > 0 || displayedPrompts.length > 0) && (
           <div className={styles.pagination}>
-            {/* 首页按钮 */}
+            {/* 首页按钮 - 直接应用隐藏样式 */}
             <button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
-              className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
+              className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''} ${styles.desktopOnly}`}
+              title="首页"
             >
-              首页
+              <MdFirstPage />
             </button>
+            
             {/* 上一页按钮 */}
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
+              title="上一页"
             >
               <MdKeyboardArrowLeft />
-              上一页
             </button>
+            
+            {/* 页码信息 */}
             <span className={styles.pageInfo}>
-              第 {currentPage} 页 / 共 {Math.max(1, paginationInfo.totalPages)} 页
+              {currentPage}/{Math.max(1, paginationInfo.totalPages)}
             </span>
+            
             {/* 下一页按钮 */}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= paginationInfo.totalPages}
               className={`${styles.pageButton} ${currentPage >= paginationInfo.totalPages ? styles.disabled : ''}`}
+              title="下一页"
             >
-              下一页
               <MdKeyboardArrowRight />
             </button>
-            {/* 尾页按钮 */}
+            
+            {/* 尾页按钮 - 直接应用隐藏样式 */}
             <button
               onClick={() => handlePageChange(paginationInfo.totalPages)}
               disabled={currentPage === paginationInfo.totalPages}
-              className={`${styles.pageButton} ${currentPage === paginationInfo.totalPages ? styles.disabled : ''}`}
+              className={`${styles.pageButton} ${currentPage === paginationInfo.totalPages ? styles.disabled : ''} ${styles.desktopOnly}`}
+              title="尾页"
             >
-              尾页
+              <MdLastPage />
             </button>
           </div>
         )}

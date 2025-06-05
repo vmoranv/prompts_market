@@ -154,6 +154,7 @@
   gap: 10px;
   margin: 30px 0;
   padding: 20px;
+  flex-wrap: nowrap;
 }
 
 .pageButton {
@@ -170,6 +171,7 @@
   font-size: 14px;
   min-width: 44px;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .pageButton:hover:not(.disabled) {
@@ -189,4 +191,73 @@
   font-size: 14px;
   color: #666;
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 修改分页控件图标大小 */
+.pageButton svg {
+  font-size: 20px;
+}
+
+.desktopOnly {
+  display: inline-flex;
+}
+
+/* 修改媒体查询断点，确保更小屏幕设备正确隐藏 */
+@media (max-width: 768px) {
+  .desktopOnly {
+    display: none !important;
+  }
+  
+  .pagination {
+    gap: 5px;
+    padding: 15px 5px;
+  }
+  
+  .pageButton {
+    padding: 6px 10px;
+    min-width: 32px;
+  }
+  
+  .pageInfo {
+    margin: 0 8px;
+    font-size: 13px;
+  }
+}
+
+/* 进一步优化小屏幕显示 */
+@media (max-width: 480px) {
+  .pagination {
+    gap: 2px;
+    padding: 10px 2px;
+    margin: 15px 0;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap !important;
+    overflow-x: visible;
+  }
+  
+  .pageButton {
+    padding: 4px 6px;
+    min-width: 28px;
+    height: 28px;
+    margin: 0 1px;
+  }
+  
+  .pageInfo {
+    padding: 0 4px;
+    margin: 0 4px;
+    font-size: 12px;
+    min-width: auto;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .pageButton svg {
+    font-size: 16px;
+  }
+  
+  .desktopOnly {
+    display: none !important;
+  }
 }
